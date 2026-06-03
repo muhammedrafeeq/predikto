@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import webpush from "web-push";
+
+webpush.setVapidDetails(
+  process.env.VAPID_EMAIL || "mailto:admin@predikto.app",
+  process.env.VAPID_PUBLIC_KEY || "",
+  process.env.VAPID_PRIVATE_KEY || ""
+);
 
 export async function POST(
   request: Request,
@@ -124,6 +131,38 @@ export async function POST(
       "UPDATE matches SET status = 'resulted' WHERE id = $1",
       [matchId]
     );
+
+    // 6. Get match details for notification text
+    const matchRes = await query(
+      "SELECT team_home, team_away FROM matches WHERE id = $1",
+      [matchId]
+    );
+    const matchRow = matchRes.rows[0];
+    const notifTitle = "Results Published! 🏆";
+    const notifBody = `${matchRow.team_home} vs ${matchRow.team_away} — ${correctAnswers.score}. Check your points!`;
+
+    // 7. Fetch all users to create in-app notifications
+    const allUsers = await query("SELECT id FROM users WHERE is_active = true");
+    for (const u of allUsers.rows) {
+      await query(
+        `INSERT INTO notifications (user_id, title, body) VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [u.id, notifTitle, notifBody]
+      ).catch(() => {}); // ignore if table doesn't exist yet
+    }
+
+    // 8. Send push to subscribed users
+    const subsRes = await query(
+      "SELECT user_id, endpoint, p256dh, auth FROM push_subscriptions"
+    ).catch(() => ({ rows: [] }));
+
+    const pushPayload = JSON.stringify({ title: notifTitle, body: notifBody, url: "/matches" });
+    for (const sub of subsRes.rows) {
+      webpush.sendNotification(
+        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+        pushPayload
+      ).catch(() => {}); // ignore failed pushes
+    }
 
     return NextResponse.json({
       success: true,

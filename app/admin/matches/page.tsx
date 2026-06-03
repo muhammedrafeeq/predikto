@@ -329,20 +329,11 @@ export default function MatchManager() {
               {/* Action buttons based on status */}
               <div className="flex gap-3">
                 <button
-                  onClick={() => router.push(`/admin/matches/${match.id}/questions`)}
-                  className="flex-1 h-11 rounded-lg label-sm font-bold text-on-surface bg-white/5 border border-white/10 hover:bg-white/10 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  onClick={() => router.push(`/admin/matches/${match.id}/entries`)}
+                  className="flex-1 h-11 rounded-lg label-sm font-bold text-on-primary-container bg-primary-container hover:shadow-[0_0_15px_rgba(139,128,255,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <Edit className="w-4 h-4" /> Config Questions
+                  <Activity className="w-4 h-4" /> Predictions
                 </button>
-
-                {statusInfo.type === "upcoming" && (
-                  <button
-                    onClick={() => router.push(`/admin/matches/${match.id}/entries`)}
-                    className="flex-1 h-11 rounded-lg label-sm font-bold text-on-primary-container bg-primary-container hover:shadow-[0_0_15px_rgba(139,128,255,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Activity className="w-4 h-4" /> Live Entries
-                  </button>
-                )}
 
                 {statusInfo.type === "live" && (
                   <button
@@ -355,10 +346,10 @@ export default function MatchManager() {
 
                 {statusInfo.type === "resulted" && (
                   <button
-                    onClick={() => router.push(`/admin/matches/${match.id}/entries`)}
-                    className="flex-1 h-11 rounded-lg label-sm font-bold text-on-primary-container bg-primary-container hover:shadow-[0_0_15px_rgba(139,128,255,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                    onClick={() => router.push(`/admin/matches/${match.id}/results`)}
+                    className="flex-1 h-11 rounded-lg label-sm font-bold text-on-tertiary-container bg-tertiary-container hover:shadow-[0_0_15px_rgba(255,185,85,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <Activity className="w-4 h-4" /> View Submissions
+                    <CheckCircle className="w-4 h-4" /> Edit Result
                   </button>
                 )}
               </div>

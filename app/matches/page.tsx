@@ -6,6 +6,7 @@ import {
   Timer, CheckCircle2, ChevronRight, Trophy, User,
   Shield, Zap, Star, Lock, Calendar, Download, History,
 } from "lucide-react";
+import NotificationBar from "@/components/NotificationBar";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Match {
@@ -588,6 +589,7 @@ export default function MatchCenter() {
               <span className="text-white/90 text-sm font-semibold">{user?.name || "Competitor"}</span>
               <span className="text-amber-400 font-bold text-xs">{user?.points || 0} pts</span>
             </div>
+            <NotificationBar />
             {!isStandalone && deferredPrompt && (
               <button
                 onClick={handleInstall}

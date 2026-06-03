@@ -438,7 +438,7 @@ export default function PredictPage({ params }: PredictPageProps) {
           <div className={`animate-fade-in stagger-3 md:col-span-12 lg:col-span-4 flex flex-col gap-2 relative ${dropdownOpen ? "z-30" : "z-10"}`}>
             <label className="text-label-md text-on-surface-variant px-1 flex items-center gap-1.5 font-semibold text-left select-none text-xs">
               <User className="w-4 h-4 text-outline" />
-              TOP SCORER <span className="text-white/25 font-normal">(Optional)</span>
+              MAN OF THE MATCH <span className="text-white/25 font-normal">(Optional)</span>
             </label>
             <div className="surface-glass-1 rounded-lg p-4 flex flex-col gap-4 h-full relative">
               <div className="relative">

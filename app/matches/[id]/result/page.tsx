@@ -38,6 +38,28 @@ const SoccerBallIcon = ({ className = "w-6 h-6 text-primary" }: { className?: st
   </svg>
 );
 
+const COUNTRY_FLAGS: Record<string, string> = {
+  "mexico": "mx", "south africa": "za", "south korea": "kr", "czech republic": "cz",
+  "canada": "ca", "bosnia & herzegovina": "ba", "bosnia and herzegovina": "ba",
+  "qatar": "qa", "switzerland": "ch",
+  "brazil": "br", "morocco": "ma", "haiti": "ht", "scotland": "gb-sct",
+  "usa": "us", "paraguay": "py", "australia": "au", "turkey": "tr",
+  "germany": "de", "curaçao": "cw", "curacao": "cw", "ivory coast": "ci", "ecuador": "ec",
+  "netherlands": "nl", "japan": "jp", "sweden": "se", "tunisia": "tn",
+  "belgium": "be", "egypt": "eg", "iran": "ir", "new zealand": "nz",
+  "spain": "es", "cape verde": "cv", "saudi arabia": "sa", "uruguay": "uy",
+  "france": "fr", "senegal": "sn", "iraq": "iq", "norway": "no",
+  "argentina": "ar", "algeria": "dz", "austria": "at", "jordan": "jo",
+  "portugal": "pt", "dr congo": "cd", "uzbekistan": "uz", "colombia": "co",
+  "england": "gb-eng", "croatia": "hr", "ghana": "gh", "panama": "pa",
+  "korea republic": "kr", "czechia": "cz",
+};
+
+const getFlag = (name: string) => {
+  const code = COUNTRY_FLAGS[name.toLowerCase().trim()];
+  return code ? `https://flagcdn.com/w80/${code}.png` : null;
+};
+
 const teamStyles: Record<string, { code: string; bgClass: string; textClass: string }> = {
   "man united": { code: "MUN", bgClass: "bg-red-600 shadow-red-900/20", textClass: "text-white" },
   "man city": { code: "MCI", bgClass: "bg-blue-600 shadow-blue-900/20", textClass: "text-white" },
@@ -221,8 +243,8 @@ export default function ResultPage({ params }: ResultPageProps) {
     },
     {
       id: "scorer",
-      label: "First Goalscorer",
-      question: "Who scores the opening goal?",
+      label: "Man of the Match",
+      question: "Who is the man of the match?",
       bet: breakdown.scorer?.userAnswer || "No prediction",
       correct: breakdown.scorer?.correctAnswer || "Not set",
       isCorrect: breakdown.scorer?.isCorrect || false,
@@ -307,10 +329,18 @@ export default function ResultPage({ params }: ResultPageProps) {
           <div className="flex items-center justify-center gap-8 md:gap-12 w-full">
             {/* Home Team */}
             <div className="flex flex-col items-center w-1/3">
-              <div className={`h-20 w-20 md:h-24 md:w-24 rounded-full flex items-center justify-center text-2xl md:text-3xl font-extrabold shadow-lg mb-2 select-none ${homeStyle.bgClass} ${homeStyle.textClass}`}>
-                {homeStyle.code}
-              </div>
-              <span className="headline-md font-bold text-white text-sm md:text-base text-center break-words w-full">{match.teamHome}</span>
+              {getFlag(match.teamHome) ? (
+                <img
+                  src={getFlag(match.teamHome)!}
+                  alt={match.teamHome}
+                  className="h-20 w-20 md:h-24 md:w-24 rounded-full object-cover shadow-lg mb-2 select-none border border-white/10"
+                />
+              ) : (
+                <div className={`h-20 w-20 md:h-24 md:w-24 rounded-full flex items-center justify-center text-2xl md:text-3xl font-extrabold shadow-lg mb-2 select-none ${homeStyle.bgClass} ${homeStyle.textClass}`}>
+                  {homeStyle.code}
+                </div>
+              )}
+              <span className="headline-md font-bold text-white text-sm md:text-base text-center wrap-break-word w-full">{match.teamHome}</span>
             </div>
 
             {/* Score Center */}
@@ -323,10 +353,18 @@ export default function ResultPage({ params }: ResultPageProps) {
 
             {/* Away Team */}
             <div className="flex flex-col items-center w-1/3">
-              <div className={`h-20 w-20 md:h-24 md:w-24 rounded-full flex items-center justify-center text-2xl md:text-3xl font-extrabold shadow-lg mb-2 select-none ${awayStyle.bgClass} ${awayStyle.textClass}`}>
-                {awayStyle.code}
-              </div>
-              <span className="headline-md font-bold text-white text-sm md:text-base text-center break-words w-full">{match.teamAway}</span>
+              {getFlag(match.teamAway) ? (
+                <img
+                  src={getFlag(match.teamAway)!}
+                  alt={match.teamAway}
+                  className="h-20 w-20 md:h-24 md:w-24 rounded-full object-cover shadow-lg mb-2 select-none border border-white/10"
+                />
+              ) : (
+                <div className={`h-20 w-20 md:h-24 md:w-24 rounded-full flex items-center justify-center text-2xl md:text-3xl font-extrabold shadow-lg mb-2 select-none ${awayStyle.bgClass} ${awayStyle.textClass}`}>
+                  {awayStyle.code}
+                </div>
+              )}
+              <span className="headline-md font-bold text-white text-sm md:text-base text-center wrap-break-word w-full">{match.teamAway}</span>
             </div>
           </div>
         </section>

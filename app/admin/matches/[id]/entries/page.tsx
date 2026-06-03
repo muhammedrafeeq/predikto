@@ -169,7 +169,7 @@ export default function MatchEntries({
                 <th className="p-4 font-semibold">User</th>
                 <th className="p-4 font-semibold">Match Outcome</th>
                 <th className="p-4 font-semibold">Scoreline</th>
-                <th className="p-4 font-semibold">Top Scorer</th>
+                <th className="p-4 font-semibold">Man of the Match</th>
                 <th className="p-4 font-semibold text-right">Points</th>
               </tr>
             </thead>

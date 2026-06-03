@@ -162,8 +162,8 @@ export default function Home() {
 
           <div className="p-6 rounded-lg bg-surface-container/50 border border-outline-variant/30 flex flex-col items-center text-center gap-3">
             <div className="w-10 h-10 rounded-full bg-secondary/10 text-secondary flex items-center justify-center font-bold">2x</div>
-            <h4 className="label-md uppercase">Top Scorer</h4>
-            <p className="label-sm text-on-surface-variant">Correctly guess the key match goalscorer for another 2 points.</p>
+            <h4 className="label-md uppercase">Man of the Match</h4>
+            <p className="label-sm text-on-surface-variant">Correctly guess the man of the match for another 2 points.</p>
           </div>
 
           <div className="p-6 rounded-lg bg-surface-container/50 border border-outline-variant/30 flex flex-col items-center text-center gap-3">

@@ -410,7 +410,7 @@ export default function ResultEntry({
               <div className={`space-y-3 relative ${dropdownOpen ? "z-30" : "z-10"}`}>
                 <label className="label-md text-on-surface-variant flex items-center gap-2 select-none uppercase tracking-wider">
                   <Search className="w-4 h-4 text-primary" />
-                  Match Top Scorer
+                  Man of the Match
                 </label>
                 <div className="relative group">
                   <input

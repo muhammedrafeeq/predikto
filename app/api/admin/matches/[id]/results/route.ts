@@ -2,12 +2,6 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import webpush from "web-push";
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || "mailto:admin@predikto.app",
-  process.env.VAPID_PUBLIC_KEY || "",
-  process.env.VAPID_PRIVATE_KEY || ""
-);
-
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -152,6 +146,13 @@ export async function POST(
     }
 
     // 8. Send push to subscribed users
+    if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+      webpush.setVapidDetails(
+        process.env.VAPID_EMAIL || "mailto:admin@predikto.app",
+        process.env.VAPID_PUBLIC_KEY,
+        process.env.VAPID_PRIVATE_KEY
+      );
+    }
     const subsRes = await query(
       "SELECT user_id, endpoint, p256dh, auth FROM push_subscriptions"
     ).catch(() => ({ rows: [] }));

@@ -41,7 +41,7 @@ export default function NotificationBar() {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
+        applicationServerKey: urlBase64ToUint8Array(publicKey) as unknown as string,
       });
 
       await fetch("/api/notifications/subscribe", {

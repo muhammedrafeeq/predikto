@@ -8,11 +8,15 @@ import {
   Plus,
   ShieldAlert,
   ShieldCheck,
-  CheckCircle,
   XCircle,
-  Eye,
   Unlock,
   Lock,
+  Trash2,
+  AlertTriangle,
+  Pencil,
+  KeyRound,
+  Phone,
+  UserCog,
 } from "lucide-react";
 
 interface User {
@@ -26,6 +30,8 @@ interface User {
   winRate: number;
 }
 
+type EditMode = "name" | "phone" | "pin" | null;
+
 export default function UserRegistry() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +39,7 @@ export default function UserRegistry() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeDropdownId, setActiveDropdownId] = useState<number | null>(null);
 
-  // Form states for creating a new user
+  // Create user form
   const [newUserName, setNewUserName] = useState("");
   const [newUserPhone, setNewUserPhone] = useState("");
   const [newUserPin, setNewUserPin] = useState("");
@@ -41,16 +47,27 @@ export default function UserRegistry() {
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch users on mount
+  // Edit modal
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editMode, setEditMode] = useState<EditMode>(null);
+  const [editValue, setEditValue] = useState("");
+  const [editValue2, setEditValue2] = useState(""); // confirm pin
+  const [editError, setEditError] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  // Delete modal
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
   useEffect(() => {
     async function fetchUsers() {
       try {
         const res = await fetch("/api/admin/users");
         if (res.ok) {
           const data = await res.json();
-          if (data.success) {
-            setUsers(data.users);
-          }
+          if (data.success) setUsers(data.users);
         }
       } catch (err) {
         console.error("Error fetching users:", err);
@@ -61,7 +78,6 @@ export default function UserRegistry() {
     fetchUsers();
   }, []);
 
-  // Filter users based on query
   const filteredUsers = users.filter((user) => {
     const q = searchQuery.toLowerCase().trim();
     return (
@@ -71,22 +87,20 @@ export default function UserRegistry() {
     );
   });
 
-  // Toggle user activation status
+  const patchUser = async (id: number, body: Record<string, unknown>) => {
+    const res = await fetch(`/api/admin/users/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.json();
+  };
+
   const toggleUserStatus = async (user: User) => {
     try {
-      const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !user.isActive }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          // Update local state
-          setUsers((prev) =>
-            prev.map((u) => (u.id === user.id ? { ...u, isActive: data.user.isActive } : u))
-          );
-        }
+      const data = await patchUser(user.id, { isActive: !user.isActive });
+      if (data.success) {
+        setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, isActive: data.user.isActive } : u)));
       }
     } catch (err) {
       console.error("Failed to toggle status:", err);
@@ -95,22 +109,12 @@ export default function UserRegistry() {
     }
   };
 
-  // Toggle user role (user/admin)
   const toggleUserRole = async (user: User) => {
     const newRole = user.role === "admin" ? "user" : "admin";
     try {
-      const res = await fetch(`/api/admin/users/${user.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role: newRole }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          setUsers((prev) =>
-            prev.map((u) => (u.id === user.id ? { ...u, role: data.user.role } : u))
-          );
-        }
+      const data = await patchUser(user.id, { role: newRole });
+      if (data.success) {
+        setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, role: data.user.role } : u)));
       }
     } catch (err) {
       console.error("Failed to toggle role:", err);
@@ -119,7 +123,81 @@ export default function UserRegistry() {
     }
   };
 
-  // Submit new user
+  const openEdit = (user: User, mode: EditMode) => {
+    setEditUser(user);
+    setEditMode(mode);
+    setEditValue(mode === "name" ? user.name : mode === "phone" ? user.phone : "");
+    setEditValue2("");
+    setEditError("");
+    setActiveDropdownId(null);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editUser || !editMode) return;
+    setEditError("");
+
+    if (editMode === "name") {
+      if (!editValue.trim()) { setEditError("Name cannot be empty"); return; }
+    } else if (editMode === "phone") {
+      if (!editValue.trim()) { setEditError("Phone cannot be empty"); return; }
+    } else if (editMode === "pin") {
+      if (!/^\d{4}$/.test(editValue)) { setEditError("PIN must be exactly 4 digits"); return; }
+      if (editValue !== editValue2) { setEditError("PINs do not match"); return; }
+    }
+
+    setEditSubmitting(true);
+    try {
+      const body: Record<string, string> = {};
+      if (editMode === "name") body.name = editValue.trim();
+      else if (editMode === "phone") body.phone = editValue.trim();
+      else if (editMode === "pin") body.pin = editValue;
+
+      const data = await patchUser(editUser.id, body);
+      if (data.success) {
+        setUsers((prev) => prev.map((u) => (u.id === editUser.id ? { ...u, ...data.user } : u)));
+        setEditUser(null);
+        setEditMode(null);
+      } else {
+        setEditError(data.error || "Update failed");
+      }
+    } catch {
+      setEditError("Internal server error");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const openDelete = (user: User) => {
+    setDeleteUser(user);
+    setDeleteConfirmText("");
+    setDeleteError("");
+    setActiveDropdownId(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteUser) return;
+    if (deleteConfirmText !== deleteUser.name) {
+      setDeleteError(`Type "${deleteUser.name}" exactly to confirm`);
+      return;
+    }
+    setDeleteSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/users/${deleteUser.id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setUsers((prev) => prev.filter((u) => u.id !== deleteUser.id));
+        setDeleteUser(null);
+      } else {
+        setDeleteError(data.error || "Delete failed");
+      }
+    } catch {
+      setDeleteError("Internal server error");
+    } finally {
+      setDeleteSubmitting(false);
+    }
+  };
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
@@ -130,9 +208,8 @@ export default function UserRegistry() {
       setSubmitting(false);
       return;
     }
-
-    if (newUserPin.trim().length !== 4 || isNaN(parseInt(newUserPin, 10))) {
-      setErrorMsg("PIN must be a 4-digit number");
+    if (!/^\d{4}$/.test(newUserPin.trim())) {
+      setErrorMsg("PIN must be exactly 4 digits");
       setSubmitting(false);
       return;
     }
@@ -141,60 +218,44 @@ export default function UserRegistry() {
       const res = await fetch("/api/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newUserName.trim(),
-          phone: newUserPhone.trim(),
-          pin: newUserPin.trim(),
-          role: newUserRole,
-        }),
+        body: JSON.stringify({ name: newUserName.trim(), phone: newUserPhone.trim(), pin: newUserPin.trim(), role: newUserRole }),
       });
-
       const data = await res.json();
-
       if (res.ok && data.success) {
-        // Add to user list
         setUsers((prev) => [data.user, ...prev]);
-        // Reset form
-        setNewUserName("");
-        setNewUserPhone("");
-        setNewUserPin("");
-        setNewUserRole("user");
+        setNewUserName(""); setNewUserPhone(""); setNewUserPin(""); setNewUserRole("user");
         setIsModalOpen(false);
       } else {
         setErrorMsg(data.error || "Failed to create user");
       }
-    } catch (err) {
-      console.error("Create user error:", err);
+    } catch {
       setErrorMsg("Internal server error. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Initials generator for avatar fallback
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
+  const getInitials = (name: string) =>
+    name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
+
+  const editModeLabel: Record<NonNullable<EditMode>, string> = {
+    name: "Change Name",
+    phone: "Change Phone",
+    pin: "Change PIN",
   };
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-sm text-on-surface-variant animate-pulse font-mono">
-          Fetching User Registry...
-        </p>
+        <p className="text-sm text-on-surface-variant animate-pulse font-mono">Fetching User Registry...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header section */}
+      {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="headline-lg text-on-surface mb-1">User Registry</h2>
@@ -205,7 +266,6 @@ export default function UserRegistry() {
             </p>
           </div>
         </div>
-
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary label-md font-bold rounded-lg active:scale-95 transition-all shadow-lg shadow-primary/20"
@@ -215,7 +275,7 @@ export default function UserRegistry() {
         </button>
       </header>
 
-      {/* Search filters */}
+      {/* Search */}
       <div className="surface-glass-1 rounded-xl p-3 flex items-center gap-3 w-full max-w-md">
         <Search className="w-5 h-5 text-on-surface-variant" />
         <input
@@ -227,7 +287,7 @@ export default function UserRegistry() {
         />
       </div>
 
-      {/* Users Bento Grid */}
+      {/* Users Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredUsers.map((user) => (
           <div
@@ -236,39 +296,46 @@ export default function UserRegistry() {
               !user.isActive ? "grayscale-[0.6] opacity-75 border-red-500/10" : ""
             }`}
           >
-            {/* Context menu trigger */}
+            {/* Context menu */}
             <div className="absolute top-4 right-4 z-10">
               <button
-                onClick={() =>
-                  setActiveDropdownId(activeDropdownId === user.id ? null : user.id)
-                }
+                onClick={() => setActiveDropdownId(activeDropdownId === user.id ? null : user.id)}
                 className="p-1 hover:bg-white/10 rounded-full transition-colors text-on-surface-variant hover:text-on-surface"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
 
-              {/* Action Dropdown Menu */}
               {activeDropdownId === user.id && (
                 <>
-                  <div
-                    onClick={() => setActiveDropdownId(null)}
-                    className="fixed inset-0 z-20"
-                  />
-                  <div className="absolute right-0 mt-1 w-44 bg-[#181822] border border-white/10 rounded-lg shadow-2xl z-30 py-1 overflow-hidden">
+                  <div onClick={() => setActiveDropdownId(null)} className="fixed inset-0 z-20" />
+                  <div className="absolute right-0 mt-1 w-48 bg-[#181822] border border-white/10 rounded-lg shadow-2xl z-30 py-1 overflow-hidden">
+                    <button
+                      onClick={() => openEdit(user, "name")}
+                      className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm hover:bg-white/5 text-on-surface transition-colors"
+                    >
+                      <Pencil className="w-4 h-4 text-primary" /> Change Name
+                    </button>
+                    <button
+                      onClick={() => openEdit(user, "phone")}
+                      className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm hover:bg-white/5 text-on-surface transition-colors"
+                    >
+                      <Phone className="w-4 h-4 text-primary" /> Change Phone
+                    </button>
+                    <button
+                      onClick={() => openEdit(user, "pin")}
+                      className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm hover:bg-white/5 text-on-surface transition-colors"
+                    >
+                      <KeyRound className="w-4 h-4 text-secondary" /> Change PIN
+                    </button>
+                    <div className="h-px bg-white/5 my-1" />
                     <button
                       onClick={() => toggleUserStatus(user)}
                       className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm hover:bg-white/5 text-on-surface transition-colors"
                     >
                       {user.isActive ? (
-                        <>
-                          <Lock className="w-4 h-4 text-error" />
-                          Block User
-                        </>
+                        <><Lock className="w-4 h-4 text-error" /> Block User</>
                       ) : (
-                        <>
-                          <Unlock className="w-4 h-4 text-secondary" />
-                          Unblock User
-                        </>
+                        <><Unlock className="w-4 h-4 text-secondary" /> Unblock User</>
                       )}
                     </button>
                     <button
@@ -276,16 +343,17 @@ export default function UserRegistry() {
                       className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm hover:bg-white/5 text-on-surface transition-colors"
                     >
                       {user.role === "admin" ? (
-                        <>
-                          <ShieldAlert className="w-4 h-4 text-error" />
-                          Revoke Admin
-                        </>
+                        <><ShieldAlert className="w-4 h-4 text-error" /> Revoke Admin</>
                       ) : (
-                        <>
-                          <ShieldCheck className="w-4 h-4 text-secondary" />
-                          Promote Admin
-                        </>
+                        <><ShieldCheck className="w-4 h-4 text-secondary" /> Promote Admin</>
                       )}
+                    </button>
+                    <div className="h-px bg-white/5 my-1" />
+                    <button
+                      onClick={() => openDelete(user)}
+                      className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm hover:bg-error/10 text-error transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" /> Delete User
                     </button>
                   </div>
                 </>
@@ -298,11 +366,7 @@ export default function UserRegistry() {
                 <div className="w-14 h-14 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary font-bold text-xl">
                   {getInitials(user.name)}
                 </div>
-                <div
-                  className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-[#131318] rounded-full shadow-[0_0_10px_currentColor] ${
-                    user.isActive ? "bg-secondary text-secondary" : "bg-outline text-outline"
-                  }`}
-                />
+                <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-[#131318] rounded-full shadow-[0_0_10px_currentColor] ${user.isActive ? "bg-secondary text-secondary" : "bg-outline text-outline"}`} />
               </div>
               <div>
                 <h3 className="label-md text-white text-base font-bold flex items-center gap-2">
@@ -313,54 +377,32 @@ export default function UserRegistry() {
                     </span>
                   )}
                 </h3>
-                <p className="text-on-surface-variant label-sm mt-0.5 font-mono">
-                  {user.phone}
-                </p>
+                <p className="text-on-surface-variant label-sm mt-0.5 font-mono">{user.phone}</p>
               </div>
             </div>
 
-            {/* Stats Breakdown */}
+            {/* Stats */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex flex-col justify-center">
-                <p className="text-[10px] uppercase text-on-surface-variant tracking-wider font-semibold mb-1">
-                  Predictions
-                </p>
+                <p className="text-[10px] uppercase text-on-surface-variant tracking-wider font-semibold mb-1">Predictions</p>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-headline-md font-extrabold text-primary font-mono">
-                    {user.predictionsCount}
-                  </span>
-                  {user.predictionsCount > 0 && (
-                    <span className="text-[10px] text-secondary font-bold font-mono">
-                      +10%
-                    </span>
-                  )}
+                  <span className="text-headline-md font-extrabold text-primary font-mono">{user.predictionsCount}</span>
+                  {user.predictionsCount > 0 && <span className="text-[10px] text-secondary font-bold font-mono">+10%</span>}
                 </div>
               </div>
               <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex flex-col justify-center">
-                <p className="text-[10px] uppercase text-on-surface-variant tracking-wider font-semibold mb-1">
-                  Win Rate
-                </p>
+                <p className="text-[10px] uppercase text-on-surface-variant tracking-wider font-semibold mb-1">Win Rate</p>
                 <div className="flex items-baseline">
-                  <span className="text-headline-md font-extrabold text-primary font-mono">
-                    {user.winRate}%
-                  </span>
+                  <span className="text-headline-md font-extrabold text-primary font-mono">{user.winRate}%</span>
                 </div>
               </div>
             </div>
 
-            {/* Footer indicator */}
+            {/* Footer */}
             <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-1 select-none">
               <div className="flex items-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    user.isActive ? "bg-secondary animate-pulse-slow" : "bg-outline"
-                  }`}
-                />
-                <span
-                  className={`text-[12px] font-semibold ${
-                    user.isActive ? "text-secondary" : "text-on-surface-variant"
-                  }`}
-                >
+                <span className={`w-2 h-2 rounded-full ${user.isActive ? "bg-secondary animate-pulse-slow" : "bg-outline"}`} />
+                <span className={`text-[12px] font-semibold ${user.isActive ? "text-secondary" : "text-on-surface-variant"}`}>
                   {user.isActive ? "Active" : "Blocked"}
                 </span>
               </div>
@@ -371,7 +413,7 @@ export default function UserRegistry() {
           </div>
         ))}
 
-        {/* Enroll New Expert dashed card */}
+        {/* Add card */}
         <button
           onClick={() => setIsModalOpen(true)}
           className="rounded-xl border-2 border-dashed border-white/10 hover:border-primary/40 flex flex-col items-center justify-center gap-3 p-6 group transition-all duration-300 h-full min-h-[175px] hover:bg-white/5 select-none"
@@ -379,25 +421,174 @@ export default function UserRegistry() {
           <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform border border-white/5 group-hover:border-primary/20">
             <Plus className="w-6 h-6 text-primary" />
           </div>
-          <p className="label-md font-bold text-on-surface-variant group-hover:text-primary transition-colors">
-            Enroll New Expert
-          </p>
+          <p className="label-md font-bold text-on-surface-variant group-hover:text-primary transition-colors">Enroll New Expert</p>
         </button>
       </div>
 
-      {/* Modal Dialog Overlay for Creating User */}
+      {/* ── Edit Modal ── */}
+      {editMode && editUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-sm surface-glass-1 rounded-xl p-6 flex flex-col gap-4 shadow-2xl border border-white/10">
+            <header className="flex justify-between items-center border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2">
+                <UserCog className="w-5 h-5 text-primary" />
+                <h3 className="font-bold text-white text-base">{editModeLabel[editMode]}</h3>
+              </div>
+              <button
+                onClick={() => { setEditUser(null); setEditMode(null); }}
+                className="p-1 hover:bg-white/10 rounded-full text-on-surface-variant hover:text-white transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </header>
+
+            <p className="text-xs text-white/40">Editing: <span className="text-white font-semibold">{editUser.name}</span></p>
+
+            {editError && (
+              <div className="p-3 bg-error/10 border border-error/30 text-error rounded-lg text-sm">{editError}</div>
+            )}
+
+            <form onSubmit={handleEditSubmit} className="flex flex-col gap-4">
+              {editMode === "name" && (
+                <div>
+                  <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">New Name</label>
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    placeholder="Full name"
+                    className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none"
+                    type="text"
+                  />
+                </div>
+              )}
+
+              {editMode === "phone" && (
+                <div>
+                  <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">New Phone</label>
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    placeholder="+91XXXXXXXXXX"
+                    className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none font-mono"
+                    type="tel"
+                  />
+                </div>
+              )}
+
+              {editMode === "pin" && (
+                <>
+                  <div>
+                    <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">New 4-Digit PIN</label>
+                    <input
+                      autoFocus
+                      maxLength={4}
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value.replace(/\D/g, ""))}
+                      placeholder="••••"
+                      className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none font-mono text-center tracking-[0.5em] text-xl"
+                      type="password"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Confirm PIN</label>
+                    <input
+                      maxLength={4}
+                      value={editValue2}
+                      onChange={(e) => setEditValue2(e.target.value.replace(/\D/g, ""))}
+                      placeholder="••••"
+                      className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none font-mono text-center tracking-[0.5em] text-xl"
+                      type="password"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { setEditUser(null); setEditMode(null); }}
+                  className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg font-bold text-sm text-on-surface transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="flex-1 py-3 bg-primary text-on-primary rounded-lg font-bold text-sm transition-all disabled:opacity-50"
+                >
+                  {editSubmitting ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm surface-glass-1 rounded-2xl p-6 flex flex-col gap-5 border border-error/20 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-error/10 border border-error/20 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-error" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-base">Delete User?</h3>
+                <p className="text-xs text-white/50 mt-0.5">This cannot be undone.</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-white/60 leading-relaxed">
+              This will permanently delete <span className="text-white font-semibold">{deleteUser.name}</span> and all their predictions, scores, and notifications.
+            </p>
+
+            <div>
+              <label className="block text-xs text-white/50 mb-2">
+                Type <span className="text-white font-mono font-semibold">{deleteUser.name}</span> to confirm
+              </label>
+              <input
+                autoFocus
+                value={deleteConfirmText}
+                onChange={(e) => { setDeleteConfirmText(e.target.value); setDeleteError(""); }}
+                placeholder={deleteUser.name}
+                className="w-full bg-[#050507] border border-error/20 rounded-lg p-3 text-on-surface focus:border-error focus:outline-none font-mono text-sm"
+                type="text"
+              />
+              {deleteError && (
+                <p className="text-xs text-error mt-2">{deleteError}</p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteUser(null)}
+                className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-bold text-white/70 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteSubmitting || deleteConfirmText !== deleteUser.name}
+                className="flex-1 py-3 rounded-xl bg-error/80 hover:bg-error text-white text-sm font-bold transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {deleteSubmitting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Create User Modal ── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="w-full max-w-md surface-glass-1 rounded-xl p-6 relative flex flex-col gap-4 shadow-2xl border-white/15 animate-in fade-in zoom-in-95 duration-200">
             <header className="flex justify-between items-center border-b border-white/5 pb-3">
-              <h3 className="headline-md font-bold text-primary tracking-tight">
-                Enroll New Expert
-              </h3>
+              <h3 className="headline-md font-bold text-primary tracking-tight">Enroll New Expert</h3>
               <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setErrorMsg("");
-                }}
+                onClick={() => { setIsModalOpen(false); setErrorMsg(""); }}
                 className="p-1 hover:bg-white/10 rounded-full transition-colors text-on-surface-variant hover:text-white"
               >
                 <XCircle className="w-6 h-6" />
@@ -413,9 +604,7 @@ export default function UserRegistry() {
 
             <form onSubmit={handleCreateUser} className="space-y-4">
               <div>
-                <label className="block label-md text-on-surface-variant mb-1">
-                  Full Name
-                </label>
+                <label className="block label-md text-on-surface-variant mb-1">Full Name</label>
                 <input
                   required
                   value={newUserName}
@@ -427,9 +616,7 @@ export default function UserRegistry() {
               </div>
 
               <div>
-                <label className="block label-md text-on-surface-variant mb-1">
-                  Phone Number
-                </label>
+                <label className="block label-md text-on-surface-variant mb-1">Phone Number</label>
                 <input
                   required
                   value={newUserPhone}
@@ -442,23 +629,19 @@ export default function UserRegistry() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block label-md text-on-surface-variant mb-1">
-                    4-Digit PIN
-                  </label>
+                  <label className="block label-md text-on-surface-variant mb-1">4-Digit PIN</label>
                   <input
                     required
                     maxLength={4}
                     value={newUserPin}
-                    onChange={(e) => setNewUserPin(e.target.value)}
+                    onChange={(e) => setNewUserPin(e.target.value.replace(/\D/g, ""))}
                     placeholder="e.g. 1234"
                     className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none font-mono text-center tracking-widest"
                     type="password"
                   />
                 </div>
                 <div>
-                  <label className="block label-md text-on-surface-variant mb-1">
-                    System Role
-                  </label>
+                  <label className="block label-md text-on-surface-variant mb-1">System Role</label>
                   <select
                     value={newUserRole}
                     onChange={(e) => setNewUserRole(e.target.value)}
@@ -473,10 +656,7 @@ export default function UserRegistry() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setErrorMsg("");
-                  }}
+                  onClick={() => { setIsModalOpen(false); setErrorMsg(""); }}
                   className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg font-bold transition-all text-on-surface cursor-pointer text-center"
                 >
                   Cancel

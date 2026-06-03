@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Timer, CheckCircle2, XCircle, Trophy, Shield, ArrowLeft, History } from "lucide-react";
+import ShareCard from "@/components/ShareCard";
 
 interface ResultPageProps {
   params: Promise<{ id: string }>;
@@ -99,6 +100,7 @@ export default function ResultPage({ params }: ResultPageProps) {
   
   // Confetti particles list
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
+  const shareCardRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
     async function loadData() {
@@ -458,12 +460,65 @@ export default function ResultPage({ params }: ResultPageProps) {
               </div>
             </div>
 
-            <button
-              onClick={() => router.push("/leaderboard")}
-              className="mt-8 w-full max-w-md py-3.5 rounded-md bg-gradient-to-r from-primary-container to-primary text-on-primary-container font-label-md label-md uppercase tracking-widest shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer text-xs font-bold"
-            >
-              View Leaderboard
-            </button>
+            <div className="mt-8 w-full max-w-md flex flex-col gap-3">
+              <button
+                onClick={() => router.push("/leaderboard")}
+                className="w-full py-3.5 rounded-md bg-gradient-to-r from-primary-container to-primary text-on-primary-container font-label-md label-md uppercase tracking-widest shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer text-xs font-bold"
+              >
+                View Leaderboard
+              </button>
+              {breakdown && match && (
+                <ShareCard
+                  cardRef={shareCardRef}
+                  whatsappText={`⚽ ${match.teamHome} ${displayScoreHome}-${displayScoreAway} ${match.teamAway} | I scored ${breakdown.totalPoints}/11 pts on Predikto FIFA WC 2026! 🏆`}
+                  label="Share Result"
+                  className="w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-md text-xs font-bold text-white bg-[#25D366]/15 border border-[#25D366]/30 hover:bg-[#25D366]/25 transition-all active:scale-95"
+                />
+              )}
+            </div>
+
+            {/* Hidden share card */}
+            {breakdown && match && (
+              <div
+                ref={shareCardRef}
+                style={{
+                  position: "fixed", left: "-9999px", top: 0,
+                  width: "360px",
+                  background: "linear-gradient(135deg, #0a0a0f 0%, #0d1a0d 100%)",
+                  borderRadius: "20px", padding: "28px 24px",
+                  fontFamily: "sans-serif", color: "#fff",
+                  border: "1.5px solid rgba(67,223,158,0.2)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                  <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7", letterSpacing: "-0.5px" }}>PREDIK<span style={{ color: "#fff" }}>TO</span></div>
+                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.15em" }}>FIFA WC 2026</div>
+                </div>
+                {/* Score */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px", marginBottom: "20px", padding: "16px", background: "rgba(255,255,255,0.04)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 700, textAlign: "center", flex: 1 }}>{match.teamHome}</span>
+                  <span style={{ fontSize: "32px", fontWeight: 900, fontFamily: "monospace", color: "#fff", padding: "0 8px" }}>{displayScoreHome} - {displayScoreAway}</span>
+                  <span style={{ fontSize: "14px", fontWeight: 700, textAlign: "center", flex: 1 }}>{match.teamAway}</span>
+                </div>
+                {/* Predictions */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "20px" }}>
+                  {predictionRows.map(row => (
+                    <div key={row.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "12px", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <span style={{ color: "rgba(255,255,255,0.5)" }}>{row.label}</span>
+                      <span style={{ color: row.isCorrect ? "#43df9e" : "#ff6b6b", fontWeight: 700 }}>{row.isCorrect ? "✓" : "✗"} {row.bet}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* Points */}
+                <div style={{ textAlign: "center", padding: "16px", background: "rgba(168,85,247,0.1)", borderRadius: "12px", border: "1px solid rgba(168,85,247,0.2)" }}>
+                  <div style={{ fontSize: "40px", fontWeight: 900, color: "#a855f7", fontFamily: "monospace" }}>{breakdown.totalPoints}</div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "4px" }}>Points Earned</div>
+                </div>
+                <div style={{ marginTop: "16px", textAlign: "center", fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
+                  predikto.app • Join & predict the World Cup 🌍
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </main>

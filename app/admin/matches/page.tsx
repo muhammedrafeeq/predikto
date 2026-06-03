@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { Share2, Loader2 } from "lucide-react";
 import {
   Calendar,
   Plus,
@@ -104,6 +105,33 @@ export default function MatchManager() {
   const [deadline, setDeadline] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sharingId, setSharingId] = useState<number | null>(null);
+  const shareCardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  const handleShareMatch = useCallback(async (match: Match) => {
+    const el = shareCardRefs.current.get(match.id);
+    if (!el || sharingId) return;
+    setSharingId(match.id);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(el, { backgroundColor: "#0a0a0f", scale: 2, useCORS: true, allowTaint: true, logging: false });
+      const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95));
+      const file = new File([blob], "predikto-result.png", { type: "image/png" });
+      const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Result is in! Check it out on Predikto FIFA WC 2026 🏆`;
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text });
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      }
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Result is in on Predikto FIFA WC 2026 🏆`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      }
+    } finally {
+      setSharingId(null);
+    }
+  }, [sharingId]);
 
   useEffect(() => {
     async function fetchMatches() {
@@ -326,6 +354,46 @@ export default function MatchManager() {
                 </div>
               </div>
 
+              {/* Hidden share card for this match */}
+              {isResulted && (
+                <div
+                  ref={(el) => { if (el) shareCardRefs.current.set(match.id, el); else shareCardRefs.current.delete(match.id); }}
+                  style={{
+                    position: "fixed", left: "-9999px", top: 0,
+                    width: "360px",
+                    background: "linear-gradient(135deg, #0a0a0f 0%, #0d0a1a 100%)",
+                    borderRadius: "20px", padding: "28px 24px",
+                    fontFamily: "sans-serif", color: "#fff",
+                    border: "1.5px solid rgba(168,85,247,0.25)",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                    <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7" }}>PREDIK<span style={{ color: "#fff" }}>TO</span></div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.15em" }}>FIFA WC 2026</div>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "20px 16px", background: "rgba(255,255,255,0.04)", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.08)", marginBottom: "16px" }}>
+                    <div style={{ textAlign: "center", flex: 1 }}>
+                      {getFlag(match.teamHome) && <img src={getFlag(match.teamHome)!} alt={match.teamHome} style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover", marginBottom: "8px", display: "block", marginLeft: "auto", marginRight: "auto" }} />}
+                      <div style={{ fontSize: "13px", fontWeight: 700 }}>{match.teamHome}</div>
+                    </div>
+                    <div style={{ fontSize: "11px", fontWeight: 900, color: "#a855f7", textTransform: "uppercase", letterSpacing: "0.1em" }}>FT</div>
+                    <div style={{ textAlign: "center", flex: 1 }}>
+                      {getFlag(match.teamAway) && <img src={getFlag(match.teamAway)!} alt={match.teamAway} style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover", marginBottom: "8px", display: "block", marginLeft: "auto", marginRight: "auto" }} />}
+                      <div style={{ fontSize: "13px", fontWeight: 700 }}>{match.teamAway}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "center", gap: "24px", padding: "12px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ fontSize: "20px", fontWeight: 900, color: "#43df9e" }}>{match.predictionsCount}</div>
+                      <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Predictions</div>
+                    </div>
+                  </div>
+                  <div style={{ marginTop: "14px", textAlign: "center", fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
+                    predikto.app • Join & predict the World Cup 🌍
+                  </div>
+                </div>
+              )}
+
               {/* Action buttons based on status */}
               <div className="flex gap-3">
                 <button
@@ -342,6 +410,17 @@ export default function MatchManager() {
                   <CheckCircle className="w-4 h-4" />
                   {statusInfo.type === "resulted" ? "Edit Result" : "Set Result"}
                 </button>
+
+                {isResulted && (
+                  <button
+                    onClick={() => handleShareMatch(match)}
+                    disabled={sharingId === match.id}
+                    className="h-11 w-11 rounded-lg label-sm font-bold text-[#25D366] bg-[#25D366]/10 border border-[#25D366]/25 hover:bg-[#25D366]/20 transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 shrink-0"
+                    title="Share result"
+                  >
+                    {sharingId === match.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                  </button>
+                )}
               </div>
             </div>
           );

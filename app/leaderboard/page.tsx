@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History } from "lucide-react";
 import { useRouter } from "next/navigation";
+import ShareCard from "@/components/ShareCard";
 
 interface RankingPlayer {
   rank: number;
@@ -55,6 +56,7 @@ export default function Leaderboard() {
   const [currentUser, setCurrentUser] = useState<{ id: number; name: string; points: number; role?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [multiplier, setMultiplier] = useState(0);
+  const shareCardRef = useRef<HTMLDivElement>(null!);
 
   useEffect(() => {
     async function loadData() {
@@ -248,6 +250,77 @@ export default function Leaderboard() {
             <span className="text-xl font-black text-white mt-0.5">{averagePoints}</span>
           </div>
         </section>
+
+        {/* Share My Rank */}
+        {currentUser && (() => {
+          const myRank = rankings.find(p => p.id === currentUser.id);
+          if (!myRank) return null;
+          const whatsappText = `🏆 I'm ranked #${myRank.rank} with ${myRank.points} pts on Predikto FIFA WC 2026! Can you beat me? 🔥`;
+          return (
+            <div className="mb-10">
+              {/* Hidden share card — captured by html2canvas */}
+              <div
+                ref={shareCardRef}
+                style={{
+                  position: "fixed",
+                  left: "-9999px",
+                  top: 0,
+                  width: "360px",
+                  background: "linear-gradient(135deg, #0a0a0f 0%, #1a0a2e 100%)",
+                  borderRadius: "20px",
+                  padding: "28px 24px",
+                  fontFamily: "sans-serif",
+                  color: "#fff",
+                  border: "1.5px solid rgba(168,85,247,0.3)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
+                  <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7", letterSpacing: "-0.5px" }}>PREDIK<span style={{ color: "#fff" }}>TO</span></div>
+                  <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.15em" }}>FIFA WC 2026</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
+                  <div style={{
+                    width: "64px", height: "64px", borderRadius: "50%",
+                    background: "linear-gradient(135deg, #a855f7, #6366f1)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "22px", fontWeight: 900, boxShadow: "0 0 20px rgba(168,85,247,0.4)"
+                  }}>
+                    {getInitials(myRank.name)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "18px", fontWeight: 900 }}>{myRank.name}</div>
+                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px", textTransform: "uppercase", letterSpacing: "0.1em" }}>{getTier(myRank.points)}</div>
+                  </div>
+                  <div style={{ marginLeft: "auto", textAlign: "right" }}>
+                    <div style={{ fontSize: "38px", fontWeight: 900, color: "#a855f7", lineHeight: 1 }}>#{myRank.rank}</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "4px" }}>RANK</div>
+                  </div>
+                </div>
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "16px", display: "flex", justifyContent: "center", gap: "32px" }}>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "26px", fontWeight: 900, color: "#f59e0b" }}>{myRank.points}</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Points</div>
+                  </div>
+                  <div style={{ textAlign: "center" }}>
+                    <div style={{ fontSize: "26px", fontWeight: 900 }}>{rankings.length}</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Players</div>
+                  </div>
+                </div>
+                <div style={{ marginTop: "16px", textAlign: "center", fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
+                  predikto.app • Join & predict the World Cup 🌍
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <ShareCard
+                  cardRef={shareCardRef}
+                  whatsappText={whatsappText}
+                  label="Share My Rank"
+                />
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Premium Interactive 3D Podium */}
         <section className="flex items-end justify-center gap-3.5 md:gap-6 mb-14 max-w-xl mx-auto h-[320px] select-none px-2">

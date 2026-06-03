@@ -15,6 +15,8 @@ import {
   PlusCircle,
   FileCheck,
   CheckCircle,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 
 interface Stats {
@@ -50,6 +52,9 @@ export default function AdminDashboard() {
   });
   const [activeMarkets, setActiveMarkets] = useState<ActiveMarket[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [resetMsg, setResetMsg] = useState("");
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -82,6 +87,23 @@ export default function AdminDashboard() {
       </div>
     );
   }
+
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      const res = await fetch("/api/admin/reset", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setResetMsg("All predictions, results and scores cleared.");
+        setShowResetConfirm(false);
+        setTimeout(() => setResetMsg(""), 4000);
+      }
+    } catch {
+      setResetMsg("Reset failed.");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   // Helper to trigger hover transition effects on card icons
   const statCards = [
@@ -230,6 +252,21 @@ export default function AdminDashboard() {
               </span>
               <ChevronRight className="w-5 h-5 text-on-surface-variant" />
             </button>
+
+            <button
+              onClick={() => setShowResetConfirm(true)}
+              className="w-full h-16 rounded-xl bg-error/5 border border-error/20 hover:bg-error/10 active:scale-98 flex items-center justify-between px-6 text-error label-md font-bold transition-all"
+            >
+              <span className="flex items-center gap-3">
+                <Trash2 className="w-5 h-5" />
+                Reset All Data
+              </span>
+              <ChevronRight className="w-5 h-5 text-error/50" />
+            </button>
+
+            {resetMsg && (
+              <p className="text-xs text-secondary text-center font-semibold">{resetMsg}</p>
+            )}
           </div>
 
           {/* Active Markets Panel */}
@@ -267,6 +304,42 @@ export default function AdminDashboard() {
           </div>
         </section>
       </div>
+
+      {/* Reset confirmation modal */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm surface-glass-1 rounded-2xl p-6 flex flex-col gap-5 border border-error/20 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-error/10 border border-error/20 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-error" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-base">Reset All Data?</h3>
+                <p className="text-xs text-white/50 mt-0.5">This cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-sm text-white/60 leading-relaxed">
+              This will permanently delete all <span className="text-white font-semibold">predictions</span>, <span className="text-white font-semibold">results</span>, and <span className="text-white font-semibold">scores</span>, and reset all matches to upcoming status.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-bold text-white/70 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={resetting}
+                className="flex-1 py-3 rounded-xl bg-error/80 hover:bg-error text-white text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                {resetting ? "Clearing..." : "Yes, Reset"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

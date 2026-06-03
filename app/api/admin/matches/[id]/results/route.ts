@@ -96,9 +96,10 @@ export async function POST(
       for (const pred of preds) {
         const correctAns = correctAnswers[pred.type];
         // Case insensitive and trim comparison
+        const normalize = (s: string) => s.trim().toLowerCase().replace(/\s*-\s*/g, "-");
         if (
           correctAns !== undefined &&
-          pred.answer.trim().toLowerCase() === correctAns.trim().toLowerCase()
+          normalize(pred.answer) === normalize(correctAns)
         ) {
           totalPoints += pred.points;
           correctCount++;

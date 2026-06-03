@@ -72,7 +72,8 @@ export async function GET(
       const uAns = row.user_answer ? row.user_answer.trim() : null;
       const cAns = row.correct_answer ? row.correct_answer.trim() : null;
 
-      const isCorrect = uAns !== null && cAns !== null && uAns.toLowerCase() === cAns.toLowerCase();
+      const normalize = (s: string) => s.toLowerCase().replace(/\s*-\s*/g, "-");
+      const isCorrect = uAns !== null && cAns !== null && normalize(uAns) === normalize(cAns);
       const pointsPossible = parseInt(row.question_points, 10);
       const pointsEarned = isCorrect ? pointsPossible : 0;
 

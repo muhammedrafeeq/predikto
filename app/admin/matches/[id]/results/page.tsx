@@ -167,7 +167,7 @@ export default function ResultEntry({
       winnerValue = match.teamAway;
     }
 
-    const scoreValue = `${homeScore} - ${awayScore}`;
+    const scoreValue = `${homeScore}-${awayScore}`;
 
     try {
       // Simulate computing animation for 1.2s

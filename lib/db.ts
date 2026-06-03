@@ -1,5 +1,9 @@
 import { Pool, QueryResult, QueryResultRow } from "pg";
 
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
+
 let pool: Pool;
 
 if (process.env.NODE_ENV === "production") {
@@ -7,7 +11,7 @@ if (process.env.NODE_ENV === "production") {
     connectionString: process.env.DATABASE_URL,
     max: 10,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000,
   });
 } else {
   // Prevent multiple pools during hot reloading in Next.js development mode

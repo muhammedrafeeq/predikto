@@ -113,7 +113,7 @@ export default function MatchManager() {
           const data = await res.json();
           if (data.success) {
             const sorted = [...data.matches].sort(
-              (a: Match, b: Match) => new Date(b.matchTime).getTime() - new Date(a.matchTime).getTime()
+              (a: Match, b: Match) => new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime()
             );
             setMatches(sorted);
           }
@@ -335,23 +335,13 @@ export default function MatchManager() {
                   <Activity className="w-4 h-4" /> Predictions
                 </button>
 
-                {statusInfo.type === "live" && (
-                  <button
-                    onClick={() => router.push(`/admin/matches/${match.id}/results`)}
-                    className="flex-1 h-11 rounded-lg label-sm font-bold text-on-tertiary-container bg-tertiary-container hover:shadow-[0_0_15px_rgba(255,185,85,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <CheckCircle className="w-4 h-4" /> Validate Score
-                  </button>
-                )}
-
-                {statusInfo.type === "resulted" && (
-                  <button
-                    onClick={() => router.push(`/admin/matches/${match.id}/results`)}
-                    className="flex-1 h-11 rounded-lg label-sm font-bold text-on-tertiary-container bg-tertiary-container hover:shadow-[0_0_15px_rgba(255,185,85,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <CheckCircle className="w-4 h-4" /> Edit Result
-                  </button>
-                )}
+                <button
+                  onClick={() => router.push(`/admin/matches/${match.id}/results`)}
+                  className="flex-1 h-11 rounded-lg label-sm font-bold text-on-tertiary-container bg-tertiary-container hover:shadow-[0_0_15px_rgba(255,185,85,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  {statusInfo.type === "resulted" ? "Edit Result" : "Set Result"}
+                </button>
               </div>
             </div>
           );

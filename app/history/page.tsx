@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Award, Trophy, User, Shield, ArrowRight, Clock } from "lucide-react";
+import { Award, Trophy, Shield, ArrowRight, Clock, History } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface HistoryCard {
@@ -66,7 +66,7 @@ export default function PredictionHistory() {
             });
 
             // Map backend data to history cards
-            const mapped = historyData.history.map((m: any) => {
+            const mapped = historyData.history.filter((m: any) => m.status === "resulted").map((m: any) => {
               const kickoff = new Date(m.matchTime);
               const dateText = kickoff.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" });
               const isPending = m.status !== "resulted";
@@ -175,7 +175,7 @@ export default function PredictionHistory() {
           <div className="hidden md:flex items-center gap-6">
             <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/matches">Matches</a>
             <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/leaderboard">Rankings</a>
-            <a className="text-primary font-bold label-md" href="/history">Profile</a>
+            <a className="text-primary font-bold label-md" href="/history">History</a>
           </div>
           <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 select-none">
             <img
@@ -362,8 +362,8 @@ export default function PredictionHistory() {
           <span className="label-sm select-none text-xs">Rankings</span>
         </a>
         <a className="flex flex-col items-center justify-center text-primary font-bold gap-0.5" href="/history">
-          <User className="w-5 h-5 text-primary" />
-          <span className="label-sm select-none text-xs">Profile</span>
+          <History className="w-5 h-5 text-primary" />
+          <span className="label-sm select-none text-xs">History</span>
         </a>
         {user?.role === "admin" && (
           <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-colors" href="/admin">

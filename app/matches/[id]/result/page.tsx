@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { Timer, CheckCircle2, XCircle, Trophy, User, Shield, ArrowLeft } from "lucide-react";
+import { Timer, CheckCircle2, XCircle, Trophy, Shield, ArrowLeft, History } from "lucide-react";
 
 interface ResultPageProps {
   params: Promise<{ id: string }>;
@@ -479,8 +479,8 @@ export default function ResultPage({ params }: ResultPageProps) {
           <span className="label-sm select-none text-xs">Rankings</span>
         </a>
         <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-transform hover:scale-105" href="/history">
-          <User className="w-5 h-5" />
-          <span className="label-sm select-none text-xs">Profile</span>
+          <History className="w-5 h-5" />
+          <span className="label-sm select-none text-xs">History</span>
         </a>
         {user?.role === "admin" && (
           <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-transform hover:scale-105" href="/admin">

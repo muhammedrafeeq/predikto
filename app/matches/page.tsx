@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Timer, CheckCircle2, ChevronRight, Trophy, User,
-  Shield, Zap, Star, Lock, Calendar,
+  Shield, Zap, Star, Lock, Calendar, Download, History,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -361,20 +361,12 @@ const MatchCard = ({
               </div>
             )}
             {match.status === "Predicted" && (
-              <div className="flex gap-2 w-full">
-                <button
-                  onClick={() => onNavigate(`/matches/${match.id}/predict`)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/60 border border-white/10 hover:bg-white/5 transition-all active:scale-95"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => onNavigate(`/matches/${match.id}/result`)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white border border-white/10 hover:bg-white/10 transition-all active:scale-95"
-                >
-                  View Details
-                </button>
-              </div>
+              <button
+                onClick={() => onNavigate(`/matches/${match.id}/predict`)}
+                className="w-full py-2.5 rounded-xl text-sm font-bold text-white/60 border border-white/10 hover:bg-white/5 transition-all active:scale-95"
+              >
+                Edit Prediction
+              </button>
             )}
             {match.status === "Resulted" && (
               <button
@@ -393,11 +385,18 @@ const MatchCard = ({
 };
 
 // ── Page ───────────────────────────────────────────────────────────────────────
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 export default function MatchCenter() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ name: string; points: number; role?: string } | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -501,6 +500,27 @@ export default function MatchCenter() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    setIsStandalone(
+      window.matchMedia("(display-mode: standalone)").matches ||
+      // @ts-ignore
+      window.navigator.standalone === true
+    );
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    await deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") setDeferredPrompt(null);
+  };
+
   // Live countdown (only for unlocked matches within 48h)
   useEffect(() => {
     const timer = setInterval(() => {
@@ -568,6 +588,16 @@ export default function MatchCenter() {
               <span className="text-white/90 text-sm font-semibold">{user?.name || "Competitor"}</span>
               <span className="text-amber-400 font-bold text-xs">{user?.points || 0} pts</span>
             </div>
+            {!isStandalone && deferredPrompt && (
+              <button
+                onClick={handleInstall}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all active:scale-95"
+                title="Install app"
+              >
+                <Download className="w-3.5 h-3.5 text-violet-400" />
+                <span className="hidden sm:inline text-violet-300">Install</span>
+              </button>
+            )}
             <div
               className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm select-none"
               style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)", boxShadow: "0 0 16px #a855f744" }}
@@ -646,8 +676,8 @@ export default function MatchCenter() {
             <span className="text-[10px] font-semibold">Rankings</span>
           </a>
           <a href="/history" className="flex flex-col items-center justify-center text-white/40 hover:text-sky-400 gap-0.5 transition-colors">
-            <User className="w-5 h-5" />
-            <span className="text-[10px] font-semibold">Profile</span>
+            <History className="w-5 h-5" />
+            <span className="text-[10px] font-semibold">History</span>
           </a>
           {user?.role === "admin" && (
             <a href="/admin" className="flex flex-col items-center justify-center text-white/40 hover:text-violet-400 gap-0.5 transition-colors">

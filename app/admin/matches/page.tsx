@@ -27,6 +27,69 @@ interface Match {
   predictionsCount: number;
 }
 
+const COUNTRY_FLAGS: Record<string, string> = {
+  "mexico": "mx", "south africa": "za", "south korea": "kr", "czech republic": "cz",
+  "canada": "ca", "bosnia & herzegovina": "ba", "bosnia and herzegovina": "ba",
+  "qatar": "qa", "switzerland": "ch",
+  "brazil": "br", "morocco": "ma", "haiti": "ht", "scotland": "gb-sct",
+  "usa": "us", "paraguay": "py", "australia": "au", "turkey": "tr",
+  "germany": "de", "curaçao": "cw", "curacao": "cw", "ivory coast": "ci", "ecuador": "ec",
+  "netherlands": "nl", "japan": "jp", "sweden": "se", "tunisia": "tn",
+  "belgium": "be", "egypt": "eg", "iran": "ir", "new zealand": "nz",
+  "spain": "es", "cape verde": "cv", "saudi arabia": "sa", "uruguay": "uy",
+  "france": "fr", "senegal": "sn", "iraq": "iq", "norway": "no",
+  "argentina": "ar", "algeria": "dz", "austria": "at", "jordan": "jo",
+  "portugal": "pt", "dr congo": "cd", "uzbekistan": "uz", "colombia": "co",
+  "england": "gb-eng", "croatia": "hr", "ghana": "gh", "panama": "pa",
+  "korea republic": "kr", "czechia": "cz",
+};
+
+const TEAM_ACCENT: Record<string, string> = {
+  "brazil": "#22c55e", "argentina": "#38bdf8", "france": "#3b82f6",
+  "germany": "#e5e7eb", "spain": "#ef4444", "portugal": "#ef4444",
+  "england": "#ef4444", "netherlands": "#f97316", "italy": "#3b82f6",
+  "mexico": "#22c55e", "usa": "#60a5fa", "japan": "#ef4444",
+  "morocco": "#22c55e", "senegal": "#22c55e", "croatia": "#ef4444",
+  "uruguay": "#38bdf8", "colombia": "#facc15", "belgium": "#ef4444",
+  "canada": "#ef4444", "australia": "#facc15", "switzerland": "#ef4444",
+  "nigeria": "#22c55e", "south africa": "#22c55e", "korea republic": "#ef4444",
+  "ghana": "#f59e0b", "ivory coast": "#f97316", "turkey": "#ef4444",
+  "egypt": "#ef4444", "iran": "#22c55e", "qatar": "#7c3aed",
+  "iraq": "#22c55e", "saudi arabia": "#22c55e", "ecuador": "#facc15",
+  "algeria": "#22c55e", "austria": "#ef4444",
+};
+
+const getFlag = (name: string) => {
+  const code = COUNTRY_FLAGS[name.toLowerCase().trim()];
+  return code ? `https://flagcdn.com/w80/${code}.png` : null;
+};
+
+const getAccent = (name: string) => TEAM_ACCENT[name.toLowerCase().trim()] ?? "#a855f7";
+
+const TeamBadge = ({ name }: { name: string }) => {
+  const flag = getFlag(name);
+  const accent = getAccent(name);
+  return (
+    <div className="flex flex-col items-center gap-2 flex-1">
+      <div
+        className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center shadow-lg"
+        style={{
+          background: `linear-gradient(135deg, ${accent}22, ${accent}44)`,
+          border: `1.5px solid ${accent}55`,
+          boxShadow: `0 0 20px ${accent}22`,
+        }}
+      >
+        {flag ? (
+          <img src={flag} alt={name} className="w-full h-full object-cover opacity-90" />
+        ) : (
+          <span className="text-white font-black text-sm tracking-wider">{name.substring(0, 3).toUpperCase()}</span>
+        )}
+      </div>
+      <span className="text-xs font-semibold text-white/80 text-center max-w-[90px] leading-tight">{name}</span>
+    </div>
+  );
+};
+
 export default function MatchManager() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
@@ -49,7 +112,10 @@ export default function MatchManager() {
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            setMatches(data.matches);
+            const sorted = [...data.matches].sort(
+              (a: Match, b: Match) => new Date(b.matchTime).getTime() - new Date(a.matchTime).getTime()
+            );
+            setMatches(sorted);
           }
         }
       } catch (err) {
@@ -148,10 +214,6 @@ export default function MatchManager() {
     return statusInfo.type === activeFilter;
   });
 
-  const getTeamInitials = (name: string) => {
-    return name.substring(0, 3).toUpperCase();
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -219,8 +281,8 @@ export default function MatchManager() {
             <div key={match.id} className="surface-glass-1 p-5 rounded-2xl flex flex-col gap-4">
               {/* Header inside card */}
               <div className="flex justify-between items-center">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-on-surface-variant">
-                  Premier League
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-on-surface-variant font-mono">
+                  {kickoff.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}
                 </span>
                 <div className={`flex items-center gap-1.5 ${statusInfo.classes} px-2.5 py-0.5 rounded-full`}>
                   <span className={`h-2 w-2 rounded-full ${statusInfo.badgeColor} animate-pulse-slow`} />
@@ -232,33 +294,15 @@ export default function MatchManager() {
 
               {/* Match Score / Time presentation */}
               <div className="flex items-center justify-between py-2 select-none">
-                {/* Home Team */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 mb-2">
-                    <span className="headline-md text-lg text-primary font-bold">
-                      {getTeamInitials(match.teamHome)}
-                    </span>
-                  </div>
-                  <span className="label-sm text-center text-on-surface font-semibold max-w-[100px] truncate">
-                    {match.teamHome}
-                  </span>
-                </div>
+                <TeamBadge name={match.teamHome} />
 
                 {/* Score or Time */}
                 <div className="flex flex-col items-center px-4">
                   {isResulted ? (
-                    <>
-                      <span className="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">
-                        Final Score
-                      </span>
-                      {/* Scoreline could be loaded dynamically or calculated from results. We will link directly to details */}
-                      <span className="text-2xl font-black text-primary tracking-widest">FT</span>
-                    </>
+                    <span className="text-2xl font-black text-primary tracking-widest">FT</span>
                   ) : (
                     <>
-                      <span className="text-[9px] text-on-surface-variant uppercase tracking-widest mb-1 font-mono">
-                        Kickoff
-                      </span>
+                      <span className="text-[9px] text-on-surface-variant uppercase tracking-widest mb-1 font-mono">Kickoff</span>
                       <div className="text-base font-bold text-on-surface font-mono">
                         {kickoff.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" })} IST
                       </div>
@@ -267,17 +311,7 @@ export default function MatchManager() {
                   )}
                 </div>
 
-                {/* Away Team */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center border border-white/10 mb-2">
-                    <span className="headline-md text-lg text-primary font-bold">
-                      {getTeamInitials(match.teamAway)}
-                    </span>
-                  </div>
-                  <span className="label-sm text-center text-on-surface font-semibold max-w-[100px] truncate">
-                    {match.teamAway}
-                  </span>
-                </div>
+                <TeamBadge name={match.teamAway} />
               </div>
 
               {/* Match dates and stats strip */}

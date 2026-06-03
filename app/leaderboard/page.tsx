@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles } from "lucide-react";
+import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface RankingPlayer {
@@ -205,7 +205,7 @@ export default function Leaderboard() {
           <div className="hidden md:flex items-center gap-6">
             <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/matches">Matches</a>
             <a className="text-primary font-bold label-md" href="/leaderboard">Rankings</a>
-            <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/history">Profile</a>
+            <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/history">History</a>
           </div>
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm select-none"
             style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)", boxShadow: "0 0 16px #a855f744" }}
@@ -426,8 +426,8 @@ export default function Leaderboard() {
           <span className="text-[10px] font-semibold">Rankings</span>
         </a>
         <a className="flex flex-col items-center justify-center text-white/40 hover:text-sky-400 gap-0.5 transition-colors" href="/history">
-          <User className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Profile</span>
+          <History className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">History</span>
         </a>
         {currentUser?.role === "admin" && (
           <a className="flex flex-col items-center justify-center text-white/40 hover:text-violet-400 gap-0.5 transition-colors" href="/admin">

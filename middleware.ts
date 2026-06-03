@@ -24,6 +24,13 @@ export function middleware(request: NextRequest) {
   const isTokenExpired = decoded?.exp ? decoded.exp * 1000 < Date.now() : true;
   const isLoggedIn = decoded && !isTokenExpired;
 
+  // 0. Root "/" — redirect to matches if logged in, else to login
+  if (pathname === "/") {
+    return NextResponse.redirect(
+      new URL(isLoggedIn ? "/matches" : "/login", request.url)
+    );
+  }
+
   // 1. If trying to access /login and already logged in, redirect to matches
   if (pathname === "/login") {
     if (isLoggedIn) {
@@ -58,6 +65,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/login",
     "/matches/:path*",
     "/leaderboard/:path*",

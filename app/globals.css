@@ -1,27 +1,188 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Foundations & Brand Palette */
+  --color-base-bg: #0A0A0F;
+  --color-surface: #131318;
+  --color-surface-dim: #131318;
+  --color-surface-bright: #39383e;
+  --color-surface-container-lowest: #0e0e13;
+  --color-surface-container-low: #1b1b20;
+  --color-surface-container: #1f1f25;
+  --color-surface-container-high: #2a292f;
+  --color-surface-container-highest: #35343a;
+  
+  --color-on-surface: #e4e1e9;
+  --color-on-surface-variant: #c8c4d6;
+  --color-inverse-surface: #e4e1e9;
+  --color-inverse-on-surface: #303036;
+  
+  --color-outline: #928fa0;
+  --color-outline-variant: #474554;
+  --color-surface-tint: #c6c0ff;
+  
+  --color-primary: #c6c0ff;
+  --color-on-primary: #2700a1;
+  --color-primary-container: #8b80ff;
+  --color-on-primary-container: #21008e;
+  --color-inverse-primary: #5748d0;
+  
+  --color-secondary: #43df9e;
+  --color-on-secondary: #003823;
+  --color-secondary-container: #00c082;
+  --color-on-secondary-container: #00472e;
+  
+  --color-tertiary: #ffb955;
+  --color-on-tertiary: #452b00;
+  --color-tertiary-container: #c68200;
+  --color-on-tertiary-container: #3c2500;
+  
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  /* Fixed colors */
+  --color-primary-fixed: #e4dfff;
+  --color-primary-fixed-dim: #c6c0ff;
+  --color-on-primary-fixed: #150066;
+  --color-on-primary-fixed-variant: #3f2bb8;
+  --color-secondary-fixed: #66fdb9;
+  --color-secondary-fixed-dim: #43df9e;
+  --color-on-secondary-fixed: #002113;
+  --color-on-secondary-fixed-variant: #005235;
+  --color-tertiary-fixed: #ffddb4;
+  --color-tertiary-fixed-dim: #ffb955;
+  --color-on-tertiary-fixed: #291800;
+  --color-on-tertiary-fixed-variant: #633f00;
+
+  --color-background: #131318;
+  --color-on-background: #e4e1e9;
+  --color-surface-variant: #35343a;
+
+  /* Leaderboard Standings (Podium metallic colors) */
+  --color-gold: #FFD700;
+  --color-silver: #C0C0C0;
+  --color-bronze: #CD7F32;
+
+  /* Custom roundness tokens */
+  --radius-sm: 0.25rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.0rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Custom Transitions */
+  --transition-duration-base: 200ms;
+  --transition-duration-page: 300ms;
+  --transition-timing-page: cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Custom Base Typography Utilities */
+@utility display-lg {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 56px;
+  letter-spacing: -0.04em;
+}
+
+@utility headline-lg {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 40px;
+  letter-spacing: -0.02em;
+}
+
+@utility headline-lg-mobile {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -0.02em;
+}
+
+@utility headline-md {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+@utility body-lg {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+@utility body-md {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+@utility label-md {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  letter-spacing: 0.02em;
+}
+
+@utility label-sm {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+/* Glassmorphism Elevation Levels */
+@utility surface-glass-1 {
+  background-color: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@utility surface-glass-2 {
+  background-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Football Pitch SVG Overlay */
+@utility bg-pitch {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25' viewBox='0 0 800 600' fill='none' stroke='rgba(255, 255, 255, 0.03)' stroke-width='1.5'%3E%3Crect x='10' y='10' width='780' height='580' rx='4'/%3E%3Cline x1='400' y1='10' x2='400' y2='590'/%3E%3Ccircle cx='400' cy='300' r='80'/%3E%3Ccircle cx='400' cy='300' r='3' fill='rgba(255,255,255,0.03)'/%3E%3Crect x='10' y='150' width='120' height='300'/%3E%3Crect x='10' y='220' width='40' height='160'/%3E%3Cpath d='M 130 260 A 40 40 0 0 1 130 340'/%3E%3Crect x='670' y='150' width='120' height='300'/%3E%3Crect x='750' y='220' width='40' height='160'/%3E%3Cpath d='M 670 260 A 40 40 0 0 0 670 340'/%3E%3C/svg%3E");
+  background-size: cover;
+  background-position: center;
+}
+
+:root {
+  --background: var(--color-base-bg);
+  --foreground: var(--color-on-surface);
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Custom premium scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-base-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-outline);
 }

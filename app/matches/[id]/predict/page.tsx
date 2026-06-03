@@ -226,10 +226,16 @@ export default function PredictPage({ params }: PredictPageProps) {
       // Always include exact scoreline
       preds.push({ questionId: scoreQ.id, answer: `${scoreHome}-${scoreAway}` });
 
-      // Include winner only if selected
+      // Include winner only if selected — store actual team name, not "home"/"away"
       if (winner) {
         const winnerQ = questions.find(q => q.type === "winner");
-        if (winnerQ) preds.push({ questionId: winnerQ.id, answer: winner });
+        if (winnerQ) {
+          const winnerAnswer =
+            winner === "home" ? match.teamHome :
+            winner === "away" ? match.teamAway :
+            "Draw";
+          preds.push({ questionId: winnerQ.id, answer: winnerAnswer });
+        }
       }
 
       // Include top scorer only if filled

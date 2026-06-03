@@ -68,6 +68,21 @@ export async function POST(
       [matchId]
     );
 
+    // Fetch match teams for legacy answer resolution
+    const matchRow2 = await query(
+      "SELECT team_home, team_away FROM matches WHERE id = $1",
+      [matchId]
+    );
+    const teamHome = matchRow2.rows[0]?.team_home ?? "";
+    const teamAway = matchRow2.rows[0]?.team_away ?? "";
+
+    const resolveWinner = (answer: string) => {
+      const a = answer.trim().toLowerCase();
+      if (a === "home") return teamHome;
+      if (a === "away") return teamAway;
+      return answer;
+    };
+
     // Group predictions by user ID
     const userPredictions: Record<
       number,
@@ -97,9 +112,10 @@ export async function POST(
         const correctAns = correctAnswers[pred.type];
         // Case insensitive and trim comparison
         const normalize = (s: string) => s.trim().toLowerCase().replace(/\s*-\s*/g, "-");
+        const predAnswer = pred.type === "winner" ? resolveWinner(pred.answer) : pred.answer;
         if (
           correctAns !== undefined &&
-          normalize(pred.answer) === normalize(correctAns)
+          normalize(predAnswer) === normalize(correctAns)
         ) {
           totalPoints += pred.points;
           correctCount++;

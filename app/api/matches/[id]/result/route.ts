@@ -46,6 +46,15 @@ export async function GET(
 
     const match = matchRes.rows[0];
 
+    // Helper: resolve legacy "home"/"away" winner answers to team name
+    const resolveWinner = (answer: string | null) => {
+      if (!answer) return answer;
+      const a = answer.trim().toLowerCase();
+      if (a === "home") return match.teamHome;
+      if (a === "away") return match.teamAway;
+      return answer;
+    };
+
     // 2. Fetch User predictions and correct answers
     const detailsRes = await query(
       `SELECT 
@@ -69,7 +78,8 @@ export async function GET(
 
     for (const row of detailsRes.rows) {
       const type = row.question_type;
-      const uAns = row.user_answer ? row.user_answer.trim() : null;
+      const rawUAns = row.user_answer ? row.user_answer.trim() : null;
+      const uAns = type === "winner" ? resolveWinner(rawUAns) : rawUAns;
       const cAns = row.correct_answer ? row.correct_answer.trim() : null;
 
       const normalize = (s: string) => s.toLowerCase().replace(/\s*-\s*/g, "-");

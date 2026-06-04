@@ -11,7 +11,7 @@ export default function HillTopAdsBanner() {
     if (!enabled || loaded.current) return;
     loaded.current = true;
 
-    const s = document.createElement("script");
+    const s = document.createElement("script") as HTMLScriptElement & { settings: object };
     s.settings = {};
     s.src = "//untimely-hello.com/b/X.Vgs-dMGXlv0KYLWYcn/OebmC9pueZ/UOlCkkP/TScNxwMzDqgywKNVTpcBtfNrzbEXwcOKDxA_2GMwQq";
     s.async = true;

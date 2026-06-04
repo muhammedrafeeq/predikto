@@ -28,8 +28,13 @@ export async function POST() {
         game_type     VARCHAR(50) NOT NULL,
         join_code     VARCHAR(10) UNIQUE NOT NULL,
         creator_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        is_public     BOOLEAN DEFAULT FALSE,
         created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
+    `);
+
+    await query(`
+      ALTER TABLE contests ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE
     `);
 
     // 3. Create Contest Members Table
@@ -64,8 +69,8 @@ export async function POST() {
 
     // Seed default Contest ("WC2026")
     await query(`
-      INSERT INTO contests (id, name, tournament_id, game_type, join_code, creator_id)
-      VALUES (1, 'WC2026', 1, 'match_prediction', '958102', (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1))
+      INSERT INTO contests (id, name, tournament_id, game_type, join_code, creator_id, is_public)
+      VALUES (1, 'WC2026', 1, 'match_prediction', '958102', (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1), false)
       ON CONFLICT (id) DO NOTHING
     `);
 
@@ -74,6 +79,7 @@ export async function POST() {
       UPDATE contests
       SET name = 'WC2026',
           join_code = '958102',
+          is_public = false,
           creator_id = (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1)
       WHERE id = 1 OR name = 'Public Arena'
     `);

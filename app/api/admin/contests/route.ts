@@ -27,6 +27,7 @@ export async function GET() {
         c.game_type       AS "gameType",
         c.join_code       AS "joinCode",
         c.created_at      AS "createdAt",
+        c.is_public       AS "isPublic",
         t.id              AS "tournamentId",
         t.name            AS "tournamentName",
         creator.name      AS "creatorName",
@@ -48,10 +49,11 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, tournamentId, gameType } = body as {
+    const { name, tournamentId, gameType, isPublic } = body as {
       name?: string;
       tournamentId?: number;
       gameType?: string;
+      isPublic?: boolean;
     };
 
     if (!name || !tournamentId || !gameType) {
@@ -75,10 +77,10 @@ export async function POST(request: Request) {
     const joinCode = await generateUniqueJoinCode();
 
     const res = await query(
-      `INSERT INTO contests (name, tournament_id, game_type, join_code)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, game_type AS "gameType", join_code AS "joinCode", created_at AS "createdAt"`,
-      [name.trim(), tournamentId, gameType, joinCode]
+      `INSERT INTO contests (name, tournament_id, game_type, join_code, is_public)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, name, game_type AS "gameType", join_code AS "joinCode", created_at AS "createdAt", is_public AS "isPublic"`,
+      [name.trim(), tournamentId, gameType, joinCode, !!isPublic]
     );
 
     const contest = res.rows[0];

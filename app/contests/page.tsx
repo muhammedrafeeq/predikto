@@ -17,6 +17,7 @@ interface Contest {
   tournamentName: string;
   memberCount: number;
   creatorName: string;
+  isPublic?: boolean;
 }
 
 interface Tournament {
@@ -75,6 +76,7 @@ const GAME_MODES = [
 export default function ContestsDashboard() {
   const router = useRouter();
   const [contests, setContests] = useState<Contest[]>([]);
+  const [globalContests, setGlobalContests] = useState<Contest[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [currentUser, setCurrentUser] = useState<{ name: string; role?: string; phone?: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,7 +116,10 @@ export default function ContestsDashboard() {
 
         if (contestsRes.ok) {
           const cd = await contestsRes.json();
-          if (cd.success) setContests(cd.contests);
+          if (cd.success) {
+            setContests(cd.contests);
+            setGlobalContests(cd.globalContests || []);
+          }
         }
 
         if (tourRes.ok) {
@@ -142,10 +147,7 @@ export default function ContestsDashboard() {
     load();
   }, [router]);
 
-  const handleJoin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!joinCode.trim()) return;
-
+  const handleJoinWithCode = async (code: string) => {
     setJoining(true);
     setJoinError("");
     setJoinSuccess("");
@@ -154,7 +156,7 @@ export default function ContestsDashboard() {
       const res = await fetch("/api/contests/join", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ joinCode }),
+        body: JSON.stringify({ joinCode: code }),
       });
       const data = await res.json();
 
@@ -171,7 +173,10 @@ export default function ContestsDashboard() {
       const updatedRes = await fetch("/api/contests");
       if (updatedRes.ok) {
         const cd = await updatedRes.json();
-        if (cd.success) setContests(cd.contests);
+        if (cd.success) {
+          setContests(cd.contests);
+          setGlobalContests(cd.globalContests || []);
+        }
       }
 
       setTimeout(() => {
@@ -185,6 +190,12 @@ export default function ContestsDashboard() {
     } finally {
       setJoining(false);
     }
+  };
+
+  const handleJoin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!joinCode.trim()) return;
+    await handleJoinWithCode(joinCode);
   };
 
   const handleCreateContest = async (e: React.FormEvent) => {
@@ -310,6 +321,100 @@ export default function ContestsDashboard() {
           <p className="text-white/40 text-sm mt-1.5">Create or join contests, make predictions, and climb the scoreboard.</p>
         </section>
 
+        {/* Global Contests Banner */}
+        {globalContests.length > 0 && (
+          <section className="mb-8 fade-up" style={{ animationDelay: "0.05s" }}>
+            {globalContests.map((globalContest) => {
+              const gameModeCfg = {
+                match_prediction: { label: "Match Predictor", color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20", glow: "rgba(99, 102, 241, 0.15)" },
+                first_goal: { label: "First Goal", color: "text-amber-400 bg-amber-500/10 border-amber-500/20", glow: "rgba(245, 158, 11, 0.15)" },
+                formation: { label: "Formation", color: "text-purple-400 bg-purple-500/10 border-purple-500/20", glow: "rgba(168, 85, 247, 0.15)" },
+                bracket: { label: "Bracket", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", glow: "rgba(16, 185, 129, 0.15)" }
+              }[globalContest.gameType] ?? { label: globalContest.gameType, color: "text-white/40 bg-white/5 border-white/10", glow: "rgba(255,255,255,0.05)" };
+
+              const hasJoined = contests.some((c) => c.id === globalContest.id);
+
+              return (
+                <div
+                  key={globalContest.id}
+                  className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-indigo-950/60 via-slate-900/80 to-emerald-950/40 p-6 sm:p-8 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all duration-300 hover:border-primary/45 group"
+                  style={{
+                    boxShadow: `0 10px 40px -10px ${gameModeCfg.glow}, inset 0 1px 1px rgba(255,255,255,0.1)`
+                  }}
+                >
+                  {/* Subtle decorative soccer ball graphic overlay in background */}
+                  <div className="absolute right-[-20px] bottom-[-20px] opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500 text-white">
+                    <SoccerBallIcon className="w-48 h-48" />
+                  </div>
+
+                  <div className="flex flex-col gap-3 text-left relative z-10 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                        hasJoined 
+                          ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" 
+                          : "bg-primary/25 border border-primary/40 text-primary animate-pulse"
+                      }`}>
+                        {hasJoined ? "✓ Joined Arena" : "🔥 Global Arena"}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${gameModeCfg.color}`}>
+                        {gameModeCfg.label}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-2xl font-black text-white tracking-tight leading-tight group-hover:text-primary transition-colors">
+                        {globalContest.name}
+                      </h3>
+                      <p className="text-white/60 text-sm mt-1 max-w-md">
+                        Join the official global tournament! Compete with everyone, predict matches, and climb to the top of the global leaderboard.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs font-semibold text-white/40 mt-1">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="w-4 h-4 text-secondary" />
+                        <span className="text-white font-bold">{globalContest.memberCount}</span> competitors
+                      </span>
+                      <span>•</span>
+                      <span>Free Entry</span>
+                    </div>
+                  </div>
+
+                  <div className="relative z-10 shrink-0 w-full sm:w-auto">
+                    {hasJoined ? (
+                      <button
+                        onClick={() => router.push(`/contests/${globalContest.id}`)}
+                        className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white active:scale-95 px-8 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        Enter Arena
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleJoinWithCode(globalContest.joinCode)}
+                        disabled={joining}
+                        className="w-full sm:w-auto bg-primary text-on-primary hover:bg-primary/90 active:scale-95 px-8 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        {joining ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-on-primary border-t-transparent rounded-full animate-spin" />
+                            Joining...
+                          </>
+                        ) : (
+                          <>
+                            Join Global Contest
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
+
         {/* Join / Create Contests Panel */}
         <section className={`grid grid-cols-1 ${canCreate ? "sm:grid-cols-2" : ""} gap-4 mb-8 fade-up`} style={{ animationDelay: "0.1s" }}>
           {/* Join Contest Card */}
@@ -404,8 +509,13 @@ export default function ContestsDashboard() {
                         </span>
                       </div>
 
-                      <h4 className="text-lg font-black text-white leading-tight group-hover:text-primary transition-colors">
+                      <h4 className="text-lg font-black text-white leading-tight group-hover:text-primary transition-colors flex items-center gap-2">
                         {contest.name}
+                        {contest.isPublic && (
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 self-center">
+                            Global
+                          </span>
+                        )}
                       </h4>
 
                       <div className="flex items-center gap-3 text-xs text-white/45">

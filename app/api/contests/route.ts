@@ -34,6 +34,7 @@ export async function GET() {
         c.game_type as "gameType", 
         c.join_code as "joinCode", 
         c.created_at as "createdAt",
+        c.is_public as "isPublic",
         t.name as "tournamentName",
         (SELECT COUNT(*)::int FROM contest_members WHERE contest_id = c.id) as "memberCount",
         creator.name as "creatorName"
@@ -46,7 +47,30 @@ export async function GET() {
       [user.userId]
     );
 
-    return NextResponse.json({ success: true, contests: result.rows });
+    // Query for all public contests
+    const globalResult = await query(
+      `SELECT 
+        c.id, 
+        c.name, 
+        c.game_type as "gameType", 
+        c.join_code as "joinCode", 
+        c.created_at as "createdAt",
+        c.is_public as "isPublic",
+        t.name as "tournamentName",
+        (SELECT COUNT(*)::int FROM contest_members WHERE contest_id = c.id) as "memberCount",
+        creator.name as "creatorName"
+       FROM contests c
+       JOIN tournaments t ON c.tournament_id = t.id
+       LEFT JOIN users creator ON c.creator_id = creator.id
+       WHERE c.is_public = true
+       ORDER BY c.created_at DESC`
+    );
+
+    return NextResponse.json({ 
+      success: true, 
+      contests: result.rows,
+      globalContests: globalResult.rows
+    });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });

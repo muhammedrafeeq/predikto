@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS contests (
     game_type VARCHAR(50) NOT NULL, -- 'match_prediction', 'first_goal', 'formation', 'bracket'
     join_code VARCHAR(10) UNIQUE NOT NULL,
     creator_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    is_public BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

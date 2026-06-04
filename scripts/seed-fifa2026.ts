@@ -242,7 +242,7 @@ const SQUADS: Record<string, string[]> = {
 
 // ── Admin credentials ─────────────────────────────────────────────────────────
 const ADMIN_PHONE = "9567983967";
-const ADMIN_PIN   = "3967";
+const ADMIN_PIN   = "983967";
 const ADMIN_NAME  = "Admin";
 
 // ── Seed ─────────────────────────────────────────────────────────────────────

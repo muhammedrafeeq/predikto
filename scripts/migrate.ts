@@ -69,8 +69,8 @@ async function migrate() {
     let userId: number;
 
     if (userCount === 0) {
-      const adminPinHash = bcrypt.hashSync("1234", 10);
-      const userPinHash = bcrypt.hashSync("4321", 10);
+      const adminPinHash = bcrypt.hashSync("123456", 10);
+      const userPinHash = bcrypt.hashSync("654321", 10);
 
       const adminRes = await client.query(
         `INSERT INTO users (name, phone, pin_hash, role) 

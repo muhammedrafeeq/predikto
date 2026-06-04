@@ -30,6 +30,7 @@ interface Contest {
   tournamentName: string;
   creatorName: string | null;
   memberCount: number;
+  isPublic?: boolean;
 }
 
 interface Member {
@@ -72,6 +73,7 @@ export default function AdminContestsPage() {
   const [newName, setNewName] = useState("");
   const [newTournamentId, setNewTournamentId] = useState<number | "">("");
   const [newGameType, setNewGameType] = useState("match_prediction");
+  const [newIsPublic, setNewIsPublic] = useState(false);
   const [createError, setCreateError] = useState("");
   const [creating, setCreating] = useState(false);
 
@@ -115,6 +117,7 @@ export default function AdminContestsPage() {
     setNewName("");
     setNewTournamentId("");
     setNewGameType("match_prediction");
+    setNewIsPublic(false);
     setCreateError("");
     try {
       const res = await fetch("/api/tournaments");
@@ -139,7 +142,12 @@ export default function AdminContestsPage() {
       const res = await fetch("/api/admin/contests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), tournamentId: newTournamentId, gameType: newGameType }),
+        body: JSON.stringify({ 
+          name: newName.trim(), 
+          tournamentId: newTournamentId, 
+          gameType: newGameType,
+          isPublic: newIsPublic
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -379,6 +387,11 @@ export default function AdminContestsPage() {
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${meta.color}`}>
                         {meta.label}
                       </span>
+                      {contest.isPublic && (
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                          Public
+                        </span>
+                      )}
                       <span className="text-[10px] text-on-surface-variant font-mono flex items-center gap-1">
                         <Tag className="w-3 h-3" />
                         {contest.tournamentName}
@@ -537,6 +550,37 @@ export default function AdminContestsPage() {
                       {meta.label}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Contest Type Selection */}
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black uppercase tracking-wider text-white/60">Contest Type</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setNewIsPublic(false)}
+                    className={`p-3 rounded-xl cursor-pointer border flex flex-col gap-1 transition-all duration-300 text-left ${
+                      !newIsPublic
+                        ? "border-secondary bg-secondary/10 shadow-[0_0_15px_rgba(245,166,35,0.05)]"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="text-xs font-bold text-white">Private Contest</span>
+                    <span className="text-[9px] leading-tight text-white/40">Users must enter invite code to join.</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewIsPublic(true)}
+                    className={`p-3 rounded-xl cursor-pointer border flex flex-col gap-1 transition-all duration-300 text-left ${
+                      newIsPublic
+                        ? "border-secondary bg-secondary/10 shadow-[0_0_15px_rgba(245,166,35,0.05)]"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    <span className="text-xs font-bold text-white">Global Contest</span>
+                    <span className="text-[9px] leading-tight text-white/40">Shows as a banner for all users with quick-join button.</span>
+                  </button>
                 </div>
               </div>
 

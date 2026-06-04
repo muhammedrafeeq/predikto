@@ -106,18 +106,40 @@ export default function MatchManager() {
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sharingId, setSharingId] = useState<number | null>(null);
+  const [shareData, setShareData] = useState<Record<number, any>>({});
   const shareCardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const handleShareMatch = useCallback(async (match: Match) => {
-    const el = shareCardRefs.current.get(match.id);
-    if (!el || sharingId) return;
+    if (sharingId) return;
     setSharingId(match.id);
     try {
+      // Fetch entries data first
+      const res = await fetch(`/api/admin/matches/${match.id}/entries`);
+      const data = await res.json();
+      if (!data.success) throw new Error("Failed to fetch entries");
+
+      // Store data so the hidden card can render
+      setShareData((prev) => ({ ...prev, [match.id]: data }));
+
+      // Wait a tick for React to render the card
+      await new Promise((r) => setTimeout(r, 150));
+
+      const el = shareCardRefs.current.get(match.id);
+      if (!el) throw new Error("Share card not found");
+
       const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(el, { backgroundColor: "#0a0a0f", scale: 2, useCORS: true, allowTaint: true, logging: false });
       const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95));
       const file = new File([blob], "predikto-result.png", { type: "image/png" });
-      const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Result is in! Check it out on Predikto FIFA WC 2026 🏆`;
+
+      const entries: any[] = data.entries ?? [];
+      const totalUsers = entries.length;
+      const totalCorrect3 = entries.filter((e: any) => {
+        const preds = Object.values(e.predictions) as any[];
+        return preds.filter((p) => p.isCorrect).length === 3;
+      }).length;
+      const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Results published! ${totalUsers} players predicted, ${totalCorrect3} got all 3 correct 🏆 #PrediktoWC2026`;
+
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text });
       } else {
@@ -125,7 +147,7 @@ export default function MatchManager() {
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
-        const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Result is in on Predikto FIFA WC 2026 🏆`;
+        const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Results are in on Predikto FIFA WC 2026 🏆`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
       }
     } finally {
@@ -355,44 +377,168 @@ export default function MatchManager() {
               </div>
 
               {/* Hidden share card for this match */}
-              {isResulted && (
-                <div
-                  ref={(el) => { if (el) shareCardRefs.current.set(match.id, el); else shareCardRefs.current.delete(match.id); }}
-                  style={{
-                    position: "fixed", left: "-9999px", top: 0,
-                    width: "360px",
-                    background: "linear-gradient(135deg, #0a0a0f 0%, #0d0a1a 100%)",
-                    borderRadius: "20px", padding: "28px 24px",
-                    fontFamily: "sans-serif", color: "#fff",
-                    border: "1.5px solid rgba(168,85,247,0.25)",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-                    <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7" }}>PREDIK<span style={{ color: "#fff" }}>TO</span></div>
-                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.15em" }}>FIFA WC 2026</div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", padding: "20px 16px", background: "rgba(255,255,255,0.04)", borderRadius: "14px", border: "1px solid rgba(255,255,255,0.08)", marginBottom: "16px" }}>
-                    <div style={{ textAlign: "center", flex: 1 }}>
-                      {getFlag(match.teamHome) && <img src={getFlag(match.teamHome)!} alt={match.teamHome} style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover", marginBottom: "8px", display: "block", marginLeft: "auto", marginRight: "auto" }} />}
-                      <div style={{ fontSize: "13px", fontWeight: 700 }}>{match.teamHome}</div>
+              {isResulted && (() => {
+                const sd = shareData[match.id];
+                const entries: any[] = sd?.entries ?? [];
+                const correctAnswers = sd ? (() => {
+                  const ca: Record<string, string> = {};
+                  if (entries.length > 0) {
+                    const first = entries[0];
+                    for (const [type, pred] of Object.entries(first.predictions) as any[]) {
+                      if (pred.correctAnswer) ca[type] = pred.correctAnswer;
+                    }
+                  }
+                  return ca;
+                })() : {};
+
+                // Aggregate stats
+                const totalUsers = entries.length;
+                const correctWinner = entries.filter((e: any) => e.predictions?.winner?.isCorrect).length;
+                const correctScore = entries.filter((e: any) => e.predictions?.score?.isCorrect).length;
+                const correctScorer = entries.filter((e: any) => e.predictions?.scorer?.isCorrect).length;
+                const allThree = entries.filter((e: any) => {
+                  const preds = Object.values(e.predictions) as any[];
+                  return preds.length === 3 && preds.every((p) => p.isCorrect);
+                }).length;
+
+                // Top scorers (sorted by points desc, take top 5)
+                const topUsers = [...entries]
+                  .filter((e: any) => e.pointsEarned !== null)
+                  .sort((a: any, b: any) => (b.pointsEarned ?? 0) - (a.pointsEarned ?? 0))
+                  .slice(0, 6);
+
+                const W = 420;
+                const pad = 22;
+                const inner = W - pad * 2;
+                const rankColor = (i: number) => i === 0 ? "#f59e0b" : i === 1 ? "#94a3b8" : i === 2 ? "#b45309" : "rgba(255,255,255,0.3)";
+                const ansW = Math.floor((inner - 8) / 3);
+                const statW = Math.floor((inner - 9) / 4);
+
+                // table-cell helper — html2canvas renders table layout reliably
+                const TR = ({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) => (
+                  <div style={{ display: "table-row", ...style }}>{children}</div>
+                );
+                const TD = ({ w, children, style = {} }: { w?: number | string; children: React.ReactNode; style?: React.CSSProperties }) => (
+                  <div style={{ display: "table-cell", verticalAlign: "middle", width: w ? (typeof w === "number" ? `${w}px` : w) : undefined, padding: "0", ...style }}>{children}</div>
+                );
+
+                return (
+                  <div
+                    ref={(el) => { if (el) shareCardRefs.current.set(match.id, el); else shareCardRefs.current.delete(match.id); }}
+                    style={{ position: "fixed", left: "-9999px", top: 0, width: `${W}px`, background: "#0e0c1a", borderRadius: "16px", padding: `${pad}px`, fontFamily: "Arial, sans-serif", color: "#fff", border: "1px solid rgba(168,85,247,0.25)", boxSizing: "border-box" }}
+                  >
+                    {/* ── Header ── */}
+                    <div style={{ display: "table", width: "100%", marginBottom: "16px" }}>
+                      <TR>
+                        <TD style={{ fontSize: "16px", fontWeight: 900, color: "#a855f7" }}>
+                          PREDIK<span style={{ color: "#fff" }}>TO</span>
+                        </TD>
+                        <TD style={{ textAlign: "right", fontSize: "9px", fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                          FIFA WC 2026 · Results
+                        </TD>
+                      </TR>
                     </div>
-                    <div style={{ fontSize: "11px", fontWeight: 900, color: "#a855f7", textTransform: "uppercase", letterSpacing: "0.1em" }}>FT</div>
-                    <div style={{ textAlign: "center", flex: 1 }}>
-                      {getFlag(match.teamAway) && <img src={getFlag(match.teamAway)!} alt={match.teamAway} style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover", marginBottom: "8px", display: "block", marginLeft: "auto", marginRight: "auto" }} />}
-                      <div style={{ fontSize: "13px", fontWeight: 700 }}>{match.teamAway}</div>
+
+                    {/* ── Teams + Score ── */}
+                    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", marginBottom: "12px", padding: "14px 0" }}>
+                      <div style={{ display: "table", width: "100%" }}>
+                        <TR>
+                          <TD w={140} style={{ textAlign: "center", paddingLeft: "8px", paddingRight: "8px" }}>
+                            {getFlag(match.teamHome)
+                              ? <img src={getFlag(match.teamHome)!} alt="" width={44} height={44} style={{ borderRadius: "50%", objectFit: "cover", border: "1.5px solid rgba(255,255,255,0.1)", display: "block", margin: "0 auto 6px" }} />
+                              : <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(168,85,247,0.25)", margin: "0 auto 6px", lineHeight: "44px", fontSize: "11px", fontWeight: 800, textAlign: "center" }}>{match.teamHome.substring(0, 3).toUpperCase()}</div>
+                            }
+                            <div style={{ fontSize: "12px", fontWeight: 700, lineHeight: "1.4" }}>{match.teamHome}</div>
+                          </TD>
+                          <TD style={{ textAlign: "center", paddingLeft: "4px", paddingRight: "4px" }}>
+                            <div style={{ fontSize: "9px", fontWeight: 800, color: "#a855f7", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "4px" }}>Full Time</div>
+                            <div style={{ fontSize: "30px", fontWeight: 900, fontFamily: "monospace", color: "#fff", lineHeight: "1" }}>{correctAnswers.score ?? "–"}</div>
+                          </TD>
+                          <TD w={140} style={{ textAlign: "center", paddingLeft: "8px", paddingRight: "8px" }}>
+                            {getFlag(match.teamAway)
+                              ? <img src={getFlag(match.teamAway)!} alt="" width={44} height={44} style={{ borderRadius: "50%", objectFit: "cover", border: "1.5px solid rgba(255,255,255,0.1)", display: "block", margin: "0 auto 6px" }} />
+                              : <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "rgba(168,85,247,0.25)", margin: "0 auto 6px", lineHeight: "44px", fontSize: "11px", fontWeight: 800, textAlign: "center" }}>{match.teamAway.substring(0, 3).toUpperCase()}</div>
+                            }
+                            <div style={{ fontSize: "12px", fontWeight: 700, lineHeight: "1.4" }}>{match.teamAway}</div>
+                          </TD>
+                        </TR>
+                      </div>
+                    </div>
+
+                    {/* ── Correct Answers ── */}
+                    {sd && (
+                      <div style={{ display: "table", width: "100%", borderSpacing: "4px", marginBottom: "12px" }}>
+                        <TR>
+                          {[
+                            { label: "Winner", value: correctAnswers.winner },
+                            { label: "Score", value: correctAnswers.score },
+                            { label: "Man of Match", value: correctAnswers.scorer },
+                          ].map((item) => (
+                            <TD key={item.label} w={ansW} style={{ background: "rgba(67,223,158,0.07)", border: "1px solid rgba(67,223,158,0.15)", borderRadius: "8px", padding: "8px", boxSizing: "border-box" }}>
+                              <div style={{ fontSize: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(67,223,158,0.55)", marginBottom: "3px" }}>{item.label}</div>
+                              <div style={{ fontSize: "11px", fontWeight: 700, color: "#43df9e", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.value ?? "—"}</div>
+                            </TD>
+                          ))}
+                        </TR>
+                      </div>
+                    )}
+
+                    {/* ── Prediction Stats ── */}
+                    {totalUsers > 0 && (
+                      <div style={{ marginBottom: "12px" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)", marginBottom: "7px" }}>{totalUsers} Players Predicted</div>
+                        <div style={{ display: "table", width: "100%", borderSpacing: "3px" }}>
+                          <TR>
+                            {[
+                              { label: "Winner ✓", value: correctWinner, color: "#43df9e" },
+                              { label: "Score ✓", value: correctScore, color: "#43df9e" },
+                              { label: "MOTM ✓", value: correctScorer, color: "#43df9e" },
+                              { label: "All 3 ✓", value: allThree, color: "#f59e0b" },
+                            ].map((stat) => (
+                              <TD key={stat.label} w={statW} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "9px", padding: "9px 4px", textAlign: "center", boxSizing: "border-box" }}>
+                                <div style={{ fontSize: "22px", fontWeight: 900, color: stat.color, lineHeight: "1", fontFamily: "monospace" }}>{stat.value}</div>
+                                <div style={{ fontSize: "8px", fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.07em", marginTop: "4px" }}>{stat.label}</div>
+                              </TD>
+                            ))}
+                          </TR>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Top Scorers ── */}
+                    {topUsers.length > 0 && (
+                      <div style={{ marginBottom: "12px" }}>
+                        <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)", marginBottom: "7px" }}>Top Scores</div>
+                        {topUsers.map((entry: any, idx: number) => {
+                          const preds = Object.values(entry.predictions) as any[];
+                          const correct = preds.filter((p: any) => p.isCorrect).length;
+                          const wrong = preds.filter((p: any) => p.isCorrect === false).length;
+                          return (
+                            <div key={entry.userId} style={{ display: "table", width: "100%", background: idx === 0 ? "rgba(245,158,11,0.07)" : "rgba(255,255,255,0.03)", border: `1px solid ${idx === 0 ? "rgba(245,158,11,0.18)" : "rgba(255,255,255,0.06)"}`, borderRadius: "8px", marginBottom: "4px", boxSizing: "border-box" }}>
+                              <TR>
+                                <TD w={28} style={{ textAlign: "center", paddingLeft: "8px", fontSize: "10px", fontWeight: 900, color: rankColor(idx) }}>#{idx + 1}</TD>
+                                <TD style={{ fontSize: "12px", fontWeight: 600, color: "#fff", paddingLeft: "4px", paddingTop: "8px", paddingBottom: "8px", maxWidth: "160px", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{entry.userName}</TD>
+                                <TD w={44} style={{ textAlign: "center", paddingLeft: "4px", paddingRight: "4px" }}>
+                                  <span style={{ display: "inline-block", fontSize: "9px", color: "#43df9e", background: "rgba(67,223,158,0.12)", padding: "2px 5px", borderRadius: "4px", fontWeight: 700 }}>✓{correct}</span>
+                                </TD>
+                                <TD w={44} style={{ textAlign: "center", paddingLeft: "2px", paddingRight: "4px" }}>
+                                  <span style={{ display: "inline-block", fontSize: "9px", color: "#ff6b6b", background: "rgba(255,107,107,0.12)", padding: "2px 5px", borderRadius: "4px", fontWeight: 700 }}>✗{wrong}</span>
+                                </TD>
+                                <TD w={48} style={{ textAlign: "right", paddingRight: "10px", fontSize: "13px", fontWeight: 900, color: "#a855f7", fontFamily: "monospace" }}>{entry.pointsEarned}</TD>
+                              </TR>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* ── Footer ── */}
+                    <div style={{ textAlign: "center", fontSize: "10px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.04em", paddingTop: "4px" }}>
+                      predikto.app · Predict the FIFA World Cup 🌍
                     </div>
                   </div>
-                  <div style={{ display: "flex", justifyContent: "center", gap: "24px", padding: "12px 0", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                    <div style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "20px", fontWeight: 900, color: "#43df9e" }}>{match.predictionsCount}</div>
-                      <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Predictions</div>
-                    </div>
-                  </div>
-                  <div style={{ marginTop: "14px", textAlign: "center", fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
-                    predikto.app • Join & predict the World Cup 🌍
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Action buttons based on status */}
               <div className="flex gap-3">

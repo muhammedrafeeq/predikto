@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { AdProvider } from "@/lib/AdContext";
-import HillTopAdsBanner from "@/components/ads/HillTopAdsBanner";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -37,7 +36,6 @@ export default function RootLayout({
         <AdProvider>
           {children}
           <PwaInstallPrompt />
-          <HillTopAdsBanner />
         </AdProvider>
       </body>
     </html>

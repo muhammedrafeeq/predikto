@@ -543,13 +543,6 @@ export default function MatchManager() {
               {/* Action buttons based on status */}
               <div className="flex gap-3">
                 <button
-                  onClick={() => router.push(`/admin/matches/${match.id}/entries`)}
-                  className="flex-1 h-11 rounded-lg label-sm font-bold text-on-primary-container bg-primary-container hover:shadow-[0_0_15px_rgba(139,128,255,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Activity className="w-4 h-4" /> Predictions
-                </button>
-
-                <button
                   onClick={() => router.push(`/admin/matches/${match.id}/results`)}
                   className="flex-1 h-11 rounded-lg label-sm font-bold text-on-tertiary-container bg-tertiary-container hover:shadow-[0_0_15px_rgba(255,185,85,0.2)] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >

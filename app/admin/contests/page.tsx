@@ -85,6 +85,8 @@ export default function AdminContestsPage() {
   const [addUserSearch, setAddUserSearch] = useState("");
   const [addingUserId, setAddingUserId] = useState<number | null>(null);
   const [removingUserId, setRemovingUserId] = useState<number | null>(null);
+  const [entriesData, setEntriesData] = useState<any>(null);
+  const [expandedMemberId, setExpandedMemberId] = useState<number | null>(null);
 
   // Delete modal
   const [deleteContest, setDeleteContest] = useState<Contest | null>(null);
@@ -168,10 +170,13 @@ export default function AdminContestsPage() {
     setMembersContest(contest);
     setMembersLoading(true);
     setAddUserSearch("");
+    setEntriesData(null);
+    setExpandedMemberId(null);
     try {
-      const [membersRes, usersRes] = await Promise.all([
+      const [membersRes, usersRes, entriesRes] = await Promise.all([
         fetch(`/api/admin/contests/${contest.id}`),
         fetch("/api/admin/users"),
+        fetch(`/api/admin/contests/${contest.id}/entries`),
       ]);
       if (membersRes.ok) {
         const d = await membersRes.json();
@@ -184,6 +189,12 @@ export default function AdminContestsPage() {
           name: u.name,
           phone: u.phone,
         })));
+      }
+      if (entriesRes.ok) {
+        const d = await entriesRes.json();
+        if (d.success) {
+          setEntriesData(d);
+        }
       }
     } catch {
       setMembers([]);
@@ -662,32 +673,165 @@ export default function AdminContestsPage() {
                   <p className="text-sm text-on-surface-variant text-center py-6">No members yet</p>
                 ) : (
                   members.map((m) => (
-                    <div key={m.id} className="flex items-center justify-between bg-white/5 border border-white/5 rounded-lg px-3 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm">
-                          {m.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-white">{m.name}</p>
-                            {m.role === "admin" && (
-                              <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">Admin</span>
-                            )}
+                    <div
+                      key={m.id}
+                      className="flex flex-col bg-white/5 border border-white/5 rounded-xl px-3 py-3 hover:bg-white/[0.08] transition-all cursor-pointer"
+                      onClick={() => setExpandedMemberId(expandedMemberId === m.id ? null : m.id)}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm select-none">
+                            {m.name.charAt(0).toUpperCase()}
                           </div>
-                          <p className="text-xs text-on-surface-variant font-mono">{m.phone}</p>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold text-white">{m.name}</p>
+                              {m.role === "admin" && (
+                                <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">Admin</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-on-surface-variant font-mono">{m.phone}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          <span className="text-xs text-on-surface-variant font-mono">{m.predictionsCount} picks</span>
+                          <button
+                            onClick={() => handleRemoveMember(m.id)}
+                            disabled={removingUserId === m.id}
+                            className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-all disabled:opacity-50"
+                            title="Remove from contest"
+                          >
+                            {removingUserId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserMinus className="w-3 h-3" />}
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-on-surface-variant font-mono">{m.predictionsCount} picks</span>
-                        <button
-                          onClick={() => handleRemoveMember(m.id)}
-                          disabled={removingUserId === m.id}
-                          className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-all disabled:opacity-50"
-                          title="Remove from contest"
-                        >
-                          {removingUserId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserMinus className="w-3 h-3" />}
-                        </button>
-                      </div>
+
+                      {expandedMemberId === m.id && entriesData && (
+                        <div className="mt-3 pt-3 border-t border-white/5 space-y-2.5 text-xs text-left w-full">
+                          {entriesData.gameType === "match_prediction" && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wide">Match Predictions</p>
+                              {entriesData.matches?.map((match: any) => {
+                                const entry = entriesData.userEntries?.[m.id]?.[match.id];
+                                const preds = entry?.predictions || {};
+                                const hasPreds = Object.keys(preds).length > 0;
+                                return (
+                                  <div key={match.id} className="bg-white/5 rounded-lg p-2.5 border border-white/5">
+                                    <div className="flex justify-between items-center font-bold text-white mb-1 text-[11px]">
+                                      <span>{match.teamHome} vs {match.teamAway}</span>
+                                      {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
+                                        <span className="text-amber-400">+{entry.pointsEarned} pts</span>
+                                      )}
+                                    </div>
+                                    {hasPreds ? (
+                                      <div className="grid grid-cols-3 gap-1.5 text-[10px] text-white/60">
+                                        <div>
+                                          <span className="text-white/30 block">Winner</span>
+                                          <span className={`font-medium ${preds.winner?.isCorrect ? "text-emerald-400" : preds.winner?.isCorrect === false ? "text-red-400" : ""}`}>
+                                            {preds.winner?.answer || "—"}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <span className="text-white/30 block">Score</span>
+                                          <span className={`font-medium ${preds.score?.isCorrect ? "text-emerald-400" : preds.score?.isCorrect === false ? "text-red-400" : ""}`}>
+                                            {preds.score?.answer || "—"}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <span className="text-white/30 block">MOTM</span>
+                                          <span className={`font-medium ${preds.scorer?.isCorrect ? "text-emerald-400" : preds.scorer?.isCorrect === false ? "text-red-400" : ""}`}>
+                                            {preds.scorer?.answer || "—"}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <p className="text-white/20 text-[10px] italic">No predictions submitted</p>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {entriesData.gameType === "first_goal" && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">First Goal Predictions</p>
+                              {entriesData.matches?.map((match: any) => {
+                                const entry = entriesData.userEntries?.[m.id]?.[match.id];
+                                return (
+                                  <div key={match.id} className="flex justify-between items-center bg-white/5 rounded-lg p-2.5 border border-white/5 text-[11px]">
+                                    <span className="text-white/70">{match.teamHome} vs {match.teamAway}</span>
+                                    <div className="text-right">
+                                      <span className="font-mono text-white font-bold block">
+                                        {entry?.predictedMinute ? `${entry.predictedMinute} Min` : "No pick"}
+                                      </span>
+                                      {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
+                                        <span className="text-amber-400 text-[10px] font-bold block">+{entry.pointsEarned} pts</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {entriesData.gameType === "formation" && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wide">Formation Projections</p>
+                              {entriesData.matches?.map((match: any) => {
+                                const entry = entriesData.userEntries?.[m.id]?.[match.id];
+                                return (
+                                  <div key={match.id} className="bg-white/5 rounded-lg p-2.5 border border-white/5 space-y-1">
+                                    <div className="flex justify-between items-center text-white/70 font-semibold text-[11px]">
+                                      <span>{match.teamHome} vs {match.teamAway}</span>
+                                      {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
+                                        <span className="text-amber-400 text-[10px] font-bold">+{entry.pointsEarned} pts</span>
+                                      )}
+                                    </div>
+                                    {entry?.homeFormation || entry?.awayFormation ? (
+                                      <div className="flex justify-between text-[10px] text-white/40">
+                                        <span>Home: <strong className="text-white/70">{entry.homeFormation || "—"}</strong></span>
+                                        <span>Away: <strong className="text-white/70">{entry.awayFormation || "—"}</strong></span>
+                                      </div>
+                                    ) : (
+                                      <p className="text-white/20 text-[10px] italic">No formations projected</p>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {entriesData.gameType === "bracket" && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide">Tournament Bracket Predictions</p>
+                              {(() => {
+                                const entry = entriesData.userEntries?.[m.id];
+                                const preds = entry?.predictions || {};
+                                const keys = Object.keys(preds);
+                                if (keys.length === 0) {
+                                  return <p className="text-white/20 text-[10px] italic p-2.5 bg-white/5 rounded-lg border border-white/5">No bracket picks submitted</p>;
+                                }
+                                return (
+                                  <div className="bg-white/5 rounded-lg p-2.5 border border-white/5 space-y-1.5 max-h-40 overflow-y-auto">
+                                    {keys.map((k) => (
+                                      <div key={k} className="flex justify-between text-[10px] border-b border-white/5 pb-1 last:border-0 last:pb-0">
+                                        <span className="text-white/40 capitalize">{k.replace(/_/g, " ")}</span>
+                                        <span className="text-white font-bold">{preds[k]}</span>
+                                      </div>
+                                    ))}
+                                    {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
+                                      <div className="text-right pt-1.5 text-amber-400 font-bold text-[11px]">
+                                        Total: +{entry.pointsEarned} pts
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

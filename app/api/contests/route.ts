@@ -105,15 +105,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json() as { name?: string; tournamentId?: number; gameType?: string };
     const { name, tournamentId, gameType } = body;
 
-    if (!name || !tournamentId || !gameType) {
+    if (!name || !gameType) {
       return NextResponse.json(
-        { error: "name, tournamentId, and gameType are required fields" },
+        { error: "name and gameType are required fields" },
         { status: 400 }
       );
     }
 
+    const tId = tournamentId || 1;
+
     // Validate tournament exists
-    const tourcheck = await query("SELECT id FROM tournaments WHERE id = $1", [tournamentId]);
+    const tourcheck = await query("SELECT id FROM tournaments WHERE id = $1", [tId]);
     if (tourcheck.rowCount === 0) {
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
@@ -131,7 +133,7 @@ export async function POST(req: NextRequest) {
       `INSERT INTO contests (name, tournament_id, game_type, join_code, creator_id)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, name, game_type as "gameType", join_code as "joinCode"`,
-      [name, tournamentId, gameType, joinCode, user.userId]
+      [name, tId, gameType, joinCode, user.userId]
     );
 
     const contest = contestRes.rows[0];

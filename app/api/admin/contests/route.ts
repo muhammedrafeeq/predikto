@@ -56,12 +56,14 @@ export async function POST(request: Request) {
       isPublic?: boolean;
     };
 
-    if (!name || !tournamentId || !gameType) {
+    if (!name || !gameType) {
       return NextResponse.json(
-        { error: "name, tournamentId, and gameType are required" },
+        { error: "name and gameType are required" },
         { status: 400 }
       );
     }
+
+    const tId = tournamentId || 1;
 
     const validGameTypes = ["match_prediction", "first_goal", "formation", "bracket"];
     if (!validGameTypes.includes(gameType)) {
@@ -69,7 +71,7 @@ export async function POST(request: Request) {
     }
 
     // Validate tournament
-    const tourCheck = await query("SELECT id FROM tournaments WHERE id = $1", [tournamentId]);
+    const tourCheck = await query("SELECT id FROM tournaments WHERE id = $1", [tId]);
     if (tourCheck.rowCount === 0) {
       return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
     }
@@ -80,13 +82,13 @@ export async function POST(request: Request) {
       `INSERT INTO contests (name, tournament_id, game_type, join_code, is_public)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, name, game_type AS "gameType", join_code AS "joinCode", created_at AS "createdAt", is_public AS "isPublic"`,
-      [name.trim(), tournamentId, gameType, joinCode, !!isPublic]
+      [name.trim(), tId, gameType, joinCode, !!isPublic]
     );
 
     const contest = res.rows[0];
 
     // Fetch tournament name for response
-    const tRes = await query("SELECT name FROM tournaments WHERE id = $1", [tournamentId]);
+    const tRes = await query("SELECT name FROM tournaments WHERE id = $1", [tId]);
 
     return NextResponse.json(
       {

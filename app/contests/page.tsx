@@ -200,7 +200,7 @@ export default function ContestsDashboard() {
 
   const handleCreateContest = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!contestName.trim() || !selectedTournament || !selectedGameMode) {
+    if (!contestName.trim() || !selectedGameMode) {
       setCreateError("All fields are required");
       return;
     }
@@ -214,7 +214,7 @@ export default function ContestsDashboard() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: contestName,
-          tournamentId: parseInt(selectedTournament, 10),
+          tournamentId: 1,
           gameType: selectedGameMode,
         }),
       });
@@ -603,21 +603,7 @@ export default function ContestsDashboard() {
                 />
               </div>
 
-              {/* Select Tournament */}
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-black uppercase tracking-wider text-white/60">Tournament / League</label>
-                <select
-                  required
-                  value={selectedTournament}
-                  onChange={(e) => setSelectedTournament(e.target.value)}
-                  className="bg-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-primary transition-colors cursor-pointer"
-                >
-                  <option value="" disabled>Select Tournament</option>
-                  {tournaments.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name} ({t.type === "bracket" ? "Bracket" : "League matches"})</option>
-                  ))}
-                </select>
-              </div>
+
 
               {/* Select Game Type (Visual Grid Selection) */}
               <div className="flex flex-col gap-2">

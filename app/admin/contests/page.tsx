@@ -133,8 +133,8 @@ export default function AdminContestsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setCreateError("");
-    if (!newName.trim() || !newTournamentId) {
-      setCreateError("Please fill in all fields");
+    if (!newName.trim()) {
+      setCreateError("Contest name is required");
       return;
     }
     setCreating(true);
@@ -144,7 +144,7 @@ export default function AdminContestsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name: newName.trim(), 
-          tournamentId: newTournamentId, 
+          tournamentId: 1, 
           gameType: newGameType,
           isPublic: newIsPublic
         }),
@@ -518,20 +518,7 @@ export default function AdminContestsPage() {
                 />
               </div>
 
-              <div>
-                <label className="block label-md text-on-surface-variant mb-1.5">Tournament</label>
-                <select
-                  required
-                  value={newTournamentId}
-                  onChange={(e) => setNewTournamentId(Number(e.target.value))}
-                  className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-on-surface focus:border-secondary focus:outline-none cursor-pointer"
-                >
-                  <option value="">Select a tournament...</option>
-                  {tournaments.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
+
 
               <div>
                 <label className="block label-md text-on-surface-variant mb-1.5">Game Type</label>

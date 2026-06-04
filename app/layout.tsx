@@ -3,8 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { AdProvider } from "@/lib/AdContext";
-import MonetagVignette from "@/components/ads/MonetagVignette";
-import MonetagInPagePush from "@/components/ads/MonetagInPagePush";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -38,8 +36,6 @@ export default function RootLayout({
         <AdProvider>
           {children}
           <PwaInstallPrompt />
-          <MonetagVignette />
-          <MonetagInPagePush />
         </AdProvider>
       </body>
     </html>

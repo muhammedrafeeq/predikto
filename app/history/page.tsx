@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Award, Trophy, Shield, ArrowRight, Clock, History } from "lucide-react";
+import { Award, Trophy, Shield, ArrowRight, Clock, History, Gamepad2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface HistoryCard {
@@ -360,6 +360,10 @@ export default function PredictionHistory() {
         <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-colors" href="/leaderboard">
           <Trophy className="w-5 h-5" />
           <span className="label-sm select-none text-xs">Rankings</span>
+        </a>
+        <a className="flex flex-col items-center justify-center text-white/40 hover:text-violet-400 gap-0.5 transition-colors" href="/games">
+          <Gamepad2 className="w-5 h-5" />
+          <span className="label-sm select-none text-xs">Games</span>
         </a>
         <a className="flex flex-col items-center justify-center text-primary font-bold gap-0.5" href="/history">
           <History className="w-5 h-5 text-primary" />

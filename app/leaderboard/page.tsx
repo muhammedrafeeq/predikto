@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History } from "lucide-react";
+import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History, Gamepad2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ShareCard from "@/components/ShareCard";
 
@@ -497,6 +497,10 @@ export default function Leaderboard() {
         <a className="flex flex-col items-center justify-center text-primary font-bold gap-0.5" href="/leaderboard">
           <Trophy className="w-5 h-5 text-primary" />
           <span className="text-[10px] font-semibold">Rankings</span>
+        </a>
+        <a className="flex flex-col items-center justify-center text-white/40 hover:text-violet-400 gap-0.5 transition-colors" href="/games">
+          <Gamepad2 className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">Games</span>
         </a>
         <a className="flex flex-col items-center justify-center text-white/40 hover:text-sky-400 gap-0.5 transition-colors" href="/history">
           <History className="w-5 h-5" />

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Timer, CheckCircle2, ChevronRight, Trophy, User,
-  Shield, Zap, Star, Lock, Calendar, Download, History,
+  Shield, Zap, Star, Lock, Calendar, Download, History, Gamepad2,
 } from "lucide-react";
 import NotificationBar from "@/components/NotificationBar";
 
@@ -676,6 +676,10 @@ export default function MatchCenter() {
           <a href="/leaderboard" className="flex flex-col items-center justify-center text-white/40 hover:text-amber-400 gap-0.5 transition-colors">
             <Trophy className="w-5 h-5" />
             <span className="text-[10px] font-semibold">Rankings</span>
+          </a>
+          <a href="/games" className="flex flex-col items-center justify-center text-white/40 hover:text-violet-400 gap-0.5 transition-colors">
+            <Gamepad2 className="w-5 h-5" />
+            <span className="text-[10px] font-semibold">Games</span>
           </a>
           <a href="/history" className="flex flex-col items-center justify-center text-white/40 hover:text-sky-400 gap-0.5 transition-colors">
             <History className="w-5 h-5" />

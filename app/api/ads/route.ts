@@ -12,6 +12,7 @@ const AD_KEYS = [
   "ad_wide_skyscraper",
   "ad_half_page",
   "ad_interstitial",
+  "ad_hilltop_banner",
 ];
 
 export async function GET() {

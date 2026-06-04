@@ -24,6 +24,7 @@ const AD_UNITS: AdUnit[] = [
   { key: "ad_wide_skyscraper", label: "Wide Skyscraper", size: "160×600", type: "Desktop only", placement: "Desktop sidebar", icon: SidebarOpen, color: "text-cyan-400" },
   { key: "ad_half_page", label: "Half Page", size: "160×300", type: "Desktop only", placement: "Desktop sidebar", icon: Maximize2, color: "text-orange-400" },
   { key: "ad_interstitial", label: "Interstitial", size: "300×250", type: "Overlay", placement: "After prediction submission", icon: Zap, color: "text-yellow-400" },
+  { key: "ad_hilltop_banner", label: "HillTopAds Banner", size: "Responsive", type: "Global", placement: "All pages — injected by HillTopAds", icon: Monitor, color: "text-lime-400" },
 ];
 
 export default function AdsManagerPage() {

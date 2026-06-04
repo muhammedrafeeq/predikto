@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "npx tsx scripts/migrate.ts",
+    "migrate:contests": "npx tsx scripts/contests-migrate.ts",
     "seed": "npx tsx scripts/seed-fifa2026.ts"
   },
   "dependencies": {

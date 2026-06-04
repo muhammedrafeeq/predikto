@@ -24,23 +24,29 @@ export function middleware(request: NextRequest) {
   const isTokenExpired = decoded?.exp ? decoded.exp * 1000 < Date.now() : true;
   const isLoggedIn = decoded && !isTokenExpired;
 
-  // 0. Root "/" — redirect to matches if logged in, else to login
+  // 0. Root "/" — redirect to contests if logged in, else to login
   if (pathname === "/") {
     return NextResponse.redirect(
-      new URL(isLoggedIn ? "/matches" : "/login", request.url)
+      new URL(isLoggedIn ? "/contests" : "/login", request.url)
     );
   }
 
-  // 1. If trying to access /login and already logged in, redirect to matches
+  // 1. If trying to access /login and already logged in, redirect to contests
   if (pathname === "/login") {
     if (isLoggedIn) {
-      return NextResponse.redirect(new URL("/matches", request.url));
+      return NextResponse.redirect(new URL("/contests", request.url));
     }
     return NextResponse.next();
   }
 
+  // Redirect legacy pages directly to contests if logged in
+  if (isLoggedIn && (pathname === "/matches" || pathname === "/leaderboard" || pathname === "/games")) {
+    return NextResponse.redirect(new URL("/contests", request.url));
+  }
+
   // 2. If trying to access protected user routes but not logged in, redirect to login
   const isUserRoute =
+    pathname.startsWith("/contests") ||
     pathname.startsWith("/matches") ||
     pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/history") ||
@@ -56,8 +62,8 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
     if (decoded.role !== "admin") {
-      // Redirect unauthorized users back to matches
-      return NextResponse.redirect(new URL("/matches", request.url));
+      // Redirect unauthorized users back to contests
+      return NextResponse.redirect(new URL("/contests", request.url));
     }
   }
 
@@ -68,6 +74,7 @@ export const config = {
   matcher: [
     "/",
     "/login",
+    "/contests/:path*",
     "/matches/:path*",
     "/leaderboard/:path*",
     "/history/:path*",

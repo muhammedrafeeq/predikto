@@ -95,6 +95,30 @@ async function migrate() {
       console.log("Users already exist in database.");
     }
 
+    // Seed default Tournament and Contest (Public Arena)
+    console.log("Seeding default tournament and contest...");
+    await client.query(`
+      INSERT INTO tournaments (id, name, description, type, status)
+      VALUES (1, 'Global Tournament', 'Default Tournament for all games', 'league', 'active')
+      ON CONFLICT (id) DO NOTHING
+    `);
+    await client.query(`SELECT setval(pg_get_serial_sequence('tournaments', 'id'), COALESCE(MAX(id), 1)) FROM tournaments`);
+
+    await client.query(`
+      INSERT INTO contests (id, name, tournament_id, game_type, join_code, creator_id)
+      VALUES (1, 'Public Arena', 1, 'match_prediction', 'PUBLIC', NULL)
+      ON CONFLICT (id) DO NOTHING
+    `);
+    await client.query(`SELECT setval(pg_get_serial_sequence('contests', 'id'), COALESCE(MAX(id), 1)) FROM contests`);
+
+    // Add users to default contest
+    if (adminId) {
+      await client.query(`INSERT INTO contest_members (contest_id, user_id) VALUES (1, $1) ON CONFLICT DO NOTHING`, [adminId]);
+    }
+    if (userId) {
+      await client.query(`INSERT INTO contest_members (contest_id, user_id) VALUES (1, $1) ON CONFLICT DO NOTHING`, [userId]);
+    }
+
     // Seed Matches
     console.log("Checking and seeding matches...");
     const matchCheck = await client.query("SELECT COUNT(*) FROM matches");
@@ -107,9 +131,9 @@ async function migrate() {
       const match1Time = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
       const match1Deadline = new Date(now.getTime() + 30 * 60 * 1000); // 30 mins from now
       const m1Res = await client.query(
-        `INSERT INTO matches (team_home, team_away, match_time, deadline, status)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        ["Man United", "Man City", match1Time, match1Deadline, "upcoming"]
+        `INSERT INTO matches (tournament_id, team_home, team_away, match_time, deadline, status)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [1, "Man United", "Man City", match1Time, match1Deadline, "upcoming"]
       );
       const m1Id = m1Res.rows[0].id;
 
@@ -117,9 +141,9 @@ async function migrate() {
       const match2Time = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
       const match2Deadline = new Date(now.getTime() + 23 * 60 * 60 * 1000); // 23 hours from now
       const m2Res = await client.query(
-        `INSERT INTO matches (team_home, team_away, match_time, deadline, status)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        ["Real Madrid", "Barcelona", match2Time, match2Deadline, "upcoming"]
+        `INSERT INTO matches (tournament_id, team_home, team_away, match_time, deadline, status)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [1, "Real Madrid", "Barcelona", match2Time, match2Deadline, "upcoming"]
       );
       const m2Id = m2Res.rows[0].id;
 
@@ -127,9 +151,9 @@ async function migrate() {
       const match3Time = new Date(now.getTime() - 2 * 60 * 60 * 1000); // 2 hours ago
       const match3Deadline = new Date(now.getTime() - 3 * 60 * 60 * 1000); // 3 hours ago
       const m3Res = await client.query(
-        `INSERT INTO matches (team_home, team_away, match_time, deadline, status)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        ["Liverpool", "Arsenal", match3Time, match3Deadline, "upcoming"] // status upcoming in DB but past deadline
+        `INSERT INTO matches (tournament_id, team_home, team_away, match_time, deadline, status)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [1, "Liverpool", "Arsenal", match3Time, match3Deadline, "upcoming"] // status upcoming in DB but past deadline
       );
       const m3Id = m3Res.rows[0].id;
 
@@ -137,9 +161,9 @@ async function migrate() {
       const match4Time = new Date(now.getTime() - 5 * 60 * 60 * 1000); // 5 hours ago
       const match4Deadline = new Date(now.getTime() - 6 * 60 * 60 * 1000); // 6 hours ago
       const m4Res = await client.query(
-        `INSERT INTO matches (team_home, team_away, match_time, deadline, status)
-         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-        ["Chelsea", "Tottenham", match4Time, match4Deadline, "resulted"]
+        `INSERT INTO matches (tournament_id, team_home, team_away, match_time, deadline, status)
+         VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+        [1, "Chelsea", "Tottenham", match4Time, match4Deadline, "resulted"]
       );
       const m4Id = m4Res.rows[0].id;
 
@@ -196,44 +220,44 @@ async function migrate() {
           if (userId) {
             // Seed a prediction for standard user: Winner = Tottenham, Score = 0 - 2, Scorer = Harry Kane (wrong scorer)
             await client.query(
-              `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-              [userId, m4Id, qWinnerId, "Tottenham"]
+              `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+              [userId, 1, m4Id, qWinnerId, "Tottenham"]
             );
             await client.query(
-              `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-              [userId, m4Id, qScoreId, "0 - 2"]
+              `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+              [userId, 1, m4Id, qScoreId, "0 - 2"]
             );
             await client.query(
-              `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-              [userId, m4Id, qScorerId, "Harry Kane"]
+              `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+              [userId, 1, m4Id, qScorerId, "Harry Kane"]
             );
 
             // Compute score: Winner correct (2) + Score correct (4) + Scorer wrong (0) = 6 points
             await client.query(
-              `INSERT INTO scores (user_id, match_id, points) VALUES ($1, $2, $3)`,
-              [userId, m4Id, 6]
+              `INSERT INTO scores (user_id, contest_id, match_id, points) VALUES ($1, $2, $3, $4)`,
+              [userId, 1, m4Id, 6]
             );
           }
 
           if (adminId) {
             // Seed perfect predictions for admin: Winner = Tottenham, Score = 0 - 2, Scorer = Heung-min Son
             await client.query(
-              `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-              [adminId, m4Id, qWinnerId, "Tottenham"]
+              `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+              [adminId, 1, m4Id, qWinnerId, "Tottenham"]
             );
             await client.query(
-              `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-              [adminId, m4Id, qScoreId, "0 - 2"]
+              `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+              [adminId, 1, m4Id, qScoreId, "0 - 2"]
             );
             await client.query(
-              `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-              [adminId, m4Id, qScorerId, "Heung-min Son"]
+              `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+              [adminId, 1, m4Id, qScorerId, "Heung-min Son"]
             );
 
             // Compute score: Winner correct (2) + Score correct (4) + Scorer correct (2) + Bonus (3) = 11 points
             await client.query(
-              `INSERT INTO scores (user_id, match_id, points) VALUES ($1, $2, $3)`,
-              [adminId, m4Id, 11]
+              `INSERT INTO scores (user_id, contest_id, match_id, points) VALUES ($1, $2, $3, $4)`,
+              [adminId, 1, m4Id, 11]
             );
           }
         }
@@ -241,16 +265,16 @@ async function migrate() {
         // Seed a prediction for user for Match 3 (Liverpool vs Arsenal - closed, but not resulted)
         if (match.id === m3Id && userId) {
           await client.query(
-            `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-            [userId, m3Id, qWinnerId, "Liverpool"]
+            `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+            [userId, 1, m3Id, qWinnerId, "Liverpool"]
           );
           await client.query(
-            `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-            [userId, m3Id, qScoreId, "2 - 1"]
+            `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+            [userId, 1, m3Id, qScoreId, "2 - 1"]
           );
           await client.query(
-            `INSERT INTO predictions (user_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4)`,
-            [userId, m3Id, qScorerId, "Mohamed Salah"]
+            `INSERT INTO predictions (user_id, contest_id, match_id, question_id, answer) VALUES ($1, $2, $3, $4, $5)`,
+            [userId, 1, m3Id, qScorerId, "Mohamed Salah"]
           );
         }
       }

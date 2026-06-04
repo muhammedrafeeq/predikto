@@ -307,6 +307,27 @@ async function seed() {
       console.log(`ℹ️   Admin updated (id: ${adminId})`);
     }
 
+    // Seed default Tournament and Contest
+    console.log("🏆  Seeding default tournament and contest...");
+    await client.query(`
+      INSERT INTO tournaments (id, name, description, type, status)
+      VALUES (1, 'FIFA World Cup 2026', 'Official FIFA World Cup 2026 Tournament', 'league', 'active')
+      ON CONFLICT (id) DO NOTHING
+    `);
+    await client.query(`SELECT setval(pg_get_serial_sequence('tournaments', 'id'), COALESCE(MAX(id), 1)) FROM tournaments`);
+
+    await client.query(`
+      INSERT INTO contests (id, name, tournament_id, game_type, join_code, creator_id)
+      VALUES (1, 'Public Arena', 1, 'match_prediction', 'PUBLIC', NULL)
+      ON CONFLICT (id) DO NOTHING
+    `);
+    await client.query(`SELECT setval(pg_get_serial_sequence('contests', 'id'), COALESCE(MAX(id), 1)) FROM contests`);
+
+    // Add admin to Public Arena
+    if (adminId) {
+      await client.query(`INSERT INTO contest_members (contest_id, user_id) VALUES (1, $1) ON CONFLICT DO NOTHING`, [adminId]);
+    }
+
     // 4. Insert matches
     console.log(`\n📅  Inserting ${MATCHES.length} matches…\n`);
     let inserted = 0;
@@ -319,9 +340,9 @@ async function seed() {
       const status = matchTime < now ? "resulted" : "upcoming";
 
       const mRes = await client.query(
-        `INSERT INTO matches (team_home, team_away, match_time, deadline, status)
-         VALUES ($1,$2,$3,$4,$5) RETURNING id`,
-        [m.home, m.away, matchTime, deadline, status]
+        `INSERT INTO matches (tournament_id, team_home, team_away, match_time, deadline, status)
+         VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
+        [1, m.home, m.away, matchTime, deadline, status]
       );
       const matchId: number = mRes.rows[0].id;
 

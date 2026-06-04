@@ -17,6 +17,7 @@ import {
   CheckCircle,
   Trash2,
   AlertTriangle,
+  Database,
 } from "lucide-react";
 
 interface Stats {
@@ -55,6 +56,8 @@ export default function AdminDashboard() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [resetMsg, setResetMsg] = useState("");
+  const [migrating, setMigrating] = useState(false);
+  const [migrationMsg, setMigrationMsg] = useState("");
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -102,6 +105,25 @@ export default function AdminDashboard() {
       setResetMsg("Reset failed.");
     } finally {
       setResetting(false);
+    }
+  };
+
+  const handleMigrate = async () => {
+    setMigrating(true);
+    setMigrationMsg("Starting database migration...");
+    try {
+      const res = await fetch("/api/admin/contests-migrate", { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMigrationMsg("Contest migration completed successfully!");
+      } else {
+        setMigrationMsg(`Migration failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (err) {
+      setMigrationMsg("Failed to connect to migration endpoint.");
+    } finally {
+      setMigrating(false);
+      setTimeout(() => setMigrationMsg(""), 6000);
     }
   };
 
@@ -254,6 +276,18 @@ export default function AdminDashboard() {
             </button>
 
             <button
+              onClick={handleMigrate}
+              disabled={migrating}
+              className="w-full h-16 rounded-xl bg-surface-container-highest border border-white/10 hover:bg-white/5 active:scale-98 flex items-center justify-between px-6 text-on-surface label-md font-bold transition-all disabled:opacity-50"
+            >
+              <span className="flex items-center gap-3">
+                <Database className="w-5 h-5 text-primary" />
+                {migrating ? "Migrating Database..." : "Run Contest Migration"}
+              </span>
+              <ChevronRight className="w-5 h-5 text-on-surface-variant" />
+            </button>
+
+            <button
               onClick={() => setShowResetConfirm(true)}
               className="w-full h-16 rounded-xl bg-error/5 border border-error/20 hover:bg-error/10 active:scale-98 flex items-center justify-between px-6 text-error label-md font-bold transition-all"
             >
@@ -266,6 +300,10 @@ export default function AdminDashboard() {
 
             {resetMsg && (
               <p className="text-xs text-secondary text-center font-semibold">{resetMsg}</p>
+            )}
+
+            {migrationMsg && (
+              <p className="text-xs text-primary text-center font-semibold">{migrationMsg}</p>
             )}
           </div>
 

@@ -6,7 +6,7 @@ import {
   Timer, CheckCircle2, ChevronRight, Trophy, User,
   Shield, Zap, Star, Lock, Calendar, Download, History, Gamepad2,
 } from "lucide-react";
-import NotificationBar from "@/components/NotificationBar";
+import TopBar from "@/components/TopBar";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Match {
@@ -573,46 +573,31 @@ export default function MatchCenter() {
             style={{ background: "radial-gradient(circle, #38bdf8, transparent)" }} />
         </div>
 
-        {/* Header */}
-        <header
-          className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-3 h-16"
-          style={{ background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <div className="flex items-center gap-2">
-            <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-lg" />
-            <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-              SKO<span className="text-white">RIO</span>
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex flex-col items-end">
-              <span className="text-white/90 text-sm font-semibold">{user?.name || "Competitor"}</span>
-              <span className="text-amber-400 font-bold text-xs">{user?.points || 0} pts</span>
-            </div>
-            <NotificationBar />
-            {!isStandalone && deferredPrompt && (
-              <button
-                onClick={handleInstall}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all active:scale-95"
-                title="Install app"
-              >
-                <Download className="w-3.5 h-3.5 text-violet-400" />
-                <span className="hidden sm:inline text-violet-300">Install</span>
-              </button>
-            )}
-            <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm select-none"
-              style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)", boxShadow: "0 0 16px #a855f744" }}
-            >
-              {(user?.name ?? "U")[0].toUpperCase()}
-            </div>
-          </div>
-        </header>
+        <TopBar
+          userName={user?.name}
+          userPoints={user?.points}
+          userRole={user?.role}
+          activeTab="matches"
+        />
 
         {/* Main */}
         <main className="relative z-10 container mx-auto px-4 md:px-6 pt-24 pb-8 max-w-2xl">
           {/* Page header */}
           <div className="mb-8 text-left">
+            {!isStandalone && deferredPrompt && (
+              <div className="mb-4 flex justify-between items-center p-3 rounded-xl border border-violet-500/25 bg-violet-500/5 backdrop-blur-md">
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4 text-violet-400" />
+                  <span className="text-xs text-violet-300 font-bold">Install Skorio App for offline access</span>
+                </div>
+                <button
+                  onClick={handleInstall}
+                  className="px-3 py-1 bg-violet-500 hover:bg-violet-600 text-white rounded-lg text-xs font-bold transition-all active:scale-95"
+                >
+                  Install
+                </button>
+              </div>
+            )}
             <p className="text-[10px] font-bold tracking-[0.2em] text-violet-400 uppercase mb-1">
               FIFA World Cup 2026
             </p>

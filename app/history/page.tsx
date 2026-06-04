@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Award, Trophy, Shield, ArrowRight, Clock, History, LayoutGrid, Gamepad2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import TopBar from "@/components/TopBar";
 
 interface HistoryCard {
   id: string;
@@ -162,30 +163,12 @@ export default function PredictionHistory() {
         }
       `}</style>
 
-      {/* TopAppBar Fixed Navigation */}
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-3 bg-surface/80 backdrop-blur-xl border-b border-white/10 h-16">
-        <div className="flex items-center gap-2">
-          <SoccerBallIcon className="w-7 h-7 text-primary" />
-          <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-            SKORIO
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-6">
-            <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/matches">Matches</a>
-            <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/leaderboard">Rankings</a>
-            <a className="text-primary font-bold label-md" href="/history">History</a>
-          </div>
-          <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 select-none">
-            <img
-              alt="Profile Avatar"
-              className="w-full h-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP8lJw8ALFixkH-EjSGFL0Zrn3B2sXjjhJiBFS_BdIvH1HvPsQ0bv-alUicuh1Js8juYlaHRyx57lRKt2qsDLFaRqWm6pewsS4E9aA7CrnRYK9XDk2pXSLm3cwzcKHkqyOuF8mm8xAt_16nTFwqx-GdH_utatVkr-UZcOjiOgppF4EawItJdkmlFg4NLfrrVG0peAg0HyFbqoNHtp_jgRFteFFBoz8UNizq79qJShPjRpjBL0Srk9FKg-5qvn-v45TBIMn4O5HTCAX"
-            />
-          </div>
-        </div>
-      </header>
+      <TopBar
+        userName={user?.name}
+        userPoints={user?.points}
+        userRole={user?.role}
+        activeTab="history"
+      />
 
       {/* Main fixtures lists */}
       <main className="container mx-auto px-6 pt-24 pb-8 max-w-3xl">

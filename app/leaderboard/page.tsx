@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History, Gamepad2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ShareCard from "@/components/ShareCard";
+import TopBar from "@/components/TopBar";
 
 interface RankingPlayer {
   rank: number;
@@ -191,31 +192,12 @@ export default function Leaderboard() {
         }
       `}</style>
 
-      {/* TopAppBar Fixed Navigation */}
-      <header
-        className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-3 h-16"
-        style={{ background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
-        <div className="flex items-center gap-2">
-          <SoccerBallIcon className="w-7 h-7 text-primary" />
-          <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-            SKO<span className="text-white">RIO</span>
-          </h1>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-6">
-            <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/matches">Matches</a>
-            <a className="text-primary font-bold label-md" href="/leaderboard">Rankings</a>
-            <a className="text-on-surface-variant hover:text-primary transition-colors label-md" href="/history">History</a>
-          </div>
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-sm select-none"
-            style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)", boxShadow: "0 0 16px #a855f744" }}
-          >
-            {(currentUser?.name ?? "U")[0].toUpperCase()}
-          </div>
-        </div>
-      </header>
+      <TopBar
+        userName={currentUser?.name}
+        userPoints={currentUser?.points}
+        userRole={currentUser?.role}
+        activeTab="rankings"
+      />
 
       {/* Main Container */}
       <main className="max-w-3xl mx-auto px-4 md:px-6 pt-24 pb-8">

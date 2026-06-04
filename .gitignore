@@ -37,3 +37,9 @@ next-env.d.ts
 
 .vercel
 .env*.local
+
+# scratch
+/scratch
+
+# vercel env files
+.env.vercel*

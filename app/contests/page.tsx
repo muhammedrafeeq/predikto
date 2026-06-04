@@ -7,6 +7,7 @@ import {
   ArrowRight, Sparkles, Copy, Check, LogOut,
   Gamepad2, Calendar, LayoutGrid
 } from "lucide-react";
+import TopBar from "@/components/TopBar";
 
 interface Contest {
   id: number;
@@ -78,7 +79,7 @@ export default function ContestsDashboard() {
   const [contests, setContests] = useState<Contest[]>([]);
   const [globalContests, setGlobalContests] = useState<Contest[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [currentUser, setCurrentUser] = useState<{ name: string; role?: string; phone?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id?: number; name: string; role?: string; phone?: string; points?: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [joinCode, setJoinCode] = useState("");
   const [allowContestCreation, setAllowContestCreation] = useState(true);
@@ -253,12 +254,6 @@ export default function ContestsDashboard() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-    } catch {}
-  };
 
   const canCreate = currentUser?.role === "admin" || (allowContestCreation && currentUser?.phone === "7994028594");
 
@@ -289,24 +284,12 @@ export default function ContestsDashboard() {
           style={{ background: "radial-gradient(circle, #43df9e, transparent)" }} />
       </div>
 
-      {/* Top Header */}
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-3 h-16"
-        style={{ background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center gap-2">
-          <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-lg" />
-          <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-            SKO<span className="text-white">RIO</span>
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="hidden sm:inline text-xs font-bold text-white/50 bg-white/5 px-2.5 py-1 rounded-md">
-            Hello, {currentUser?.name}
-          </span>
-          <button onClick={handleLogout} className="p-2 rounded-lg text-white/60 hover:text-red-400 hover:bg-red-500/10 transition-colors" title="Log Out">
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
+      <TopBar
+        userName={currentUser?.name}
+        userPoints={currentUser?.points}
+        userRole={currentUser?.role}
+        activeTab="contests"
+      />
 
       {/* Main Content View */}
       <main className="relative z-10 max-w-2xl mx-auto px-4 pt-24">

@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { AdProvider } from "@/lib/AdContext";
+import Script from "next/script";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -30,6 +31,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <Script src="//www.ezojs.com/ezoic/sa.min.js" strategy="afterInteractive" />
+        <Script id="ezoic-init" strategy="afterInteractive">{`
+          window.ezstandalone = window.ezstandalone || {};
+          ezstandalone.cmd = ezstandalone.cmd || [];
+        `}</Script>
+        <Script src="//ezoicanalytics.com/analytics.js" strategy="afterInteractive" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

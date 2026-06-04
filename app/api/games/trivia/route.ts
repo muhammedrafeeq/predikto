@@ -90,26 +90,8 @@ function getTodayQuestions(): TriviaQuestion[] {
 
 export async function GET(_req: NextRequest) {
   try {
-    const user = await requireAuth();
-    const refId = getTodayRef();
-
-    const res = await query(
-      `SELECT points, metadata FROM game_scores
-       WHERE user_id = $1 AND game_type = 'trivia' AND reference_id = $2`,
-      [user.userId, refId]
-    );
-
+    await requireAuth();
     const questions = getTodayQuestions().map(({ id, question, options }) => ({ id, question, options }));
-
-    if (res.rows.length > 0) {
-      return NextResponse.json({
-        played: true,
-        points: res.rows[0].points,
-        score: (res.rows[0].metadata as { correct: number }).correct,
-        questions,
-      });
-    }
-
     return NextResponse.json({ played: false, questions });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
@@ -155,18 +137,11 @@ export async function POST(req: NextRequest) {
       return { correct: isCorrect, correctIndex: q.correctIndex, points: pts };
     });
 
-    const refId = getTodayRef();
-    const insertRes = await query(
+    await query(
       `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
-       VALUES ($1, 'trivia', $2, $3, $4, NOW())
-       ON CONFLICT (user_id, game_type, reference_id) DO NOTHING
-       RETURNING id`,
-      [user.userId, refId, totalPoints, JSON.stringify({ correct, answers })]
+       VALUES ($1, 'trivia', $2, $3, $4, NOW())`,
+      [user.userId, Date.now(), totalPoints, JSON.stringify({ correct, answers })]
     );
-
-    if (insertRes.rowCount === 0) {
-      return NextResponse.json({ alreadyPlayed: true }, { status: 409 });
-    }
 
     return NextResponse.json({ results, totalPoints, correct });
   } catch (err: unknown) {

@@ -4,6 +4,41 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trophy, RefreshCw } from "lucide-react";
 
+const Icon3dPenalty = () => (
+  <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+    <defs>
+      <radialGradient id="ball-top" cx="38%" cy="32%" r="60%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+        <stop offset="100%" stopColor="#86efac" stopOpacity="0" />
+      </radialGradient>
+      <radialGradient id="ball-body" cx="50%" cy="45%" r="55%">
+        <stop offset="0%" stopColor="#4ade80" />
+        <stop offset="100%" stopColor="#15803d" />
+      </radialGradient>
+      <filter id="ball-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#4ade80" floodOpacity="0.5" />
+      </filter>
+    </defs>
+    {/* Shadow ellipse */}
+    <ellipse cx="40" cy="72" rx="16" ry="4" fill="#4ade80" opacity="0.18" />
+    {/* Ball body */}
+    <circle cx="40" cy="36" r="26" fill="url(#ball-body)" filter="url(#ball-shadow)" />
+    {/* Pentagon patches */}
+    <path d="M40 14 l5 4 -2 6 -6 0 -2-6z" fill="#166534" opacity="0.8" />
+    <path d="M56 25 l2 6 -5 3 -4-4 2-6z" fill="#166534" opacity="0.8" />
+    <path d="M51 47 l-3 5 -6-1 -1-6 5-3z" fill="#166534" opacity="0.8" />
+    <path d="M29 47 l-5-3 -1 6 -6 1 -3-5z" fill="#166534" opacity="0.8" />
+    <path d="M24 25 l-2 6 4 4 -5-3z" fill="#166534" opacity="0.7" />
+    {/* Shine */}
+    <circle cx="33" cy="27" r="7" fill="url(#ball-top)" />
+    {/* Goal post - bottom */}
+    <rect x="14" y="60" width="52" height="4" rx="2" fill="#d1d5db" />
+    <rect x="14" y="56" width="4" height="8" rx="1.5" fill="#9ca3af" />
+    <rect x="62" y="56" width="4" height="8" rx="1.5" fill="#9ca3af" />
+    <rect x="14" y="56" width="52" height="2" rx="1" fill="#f9fafb" opacity="0.5" />
+  </svg>
+);
+
 type Direction = "left" | "center" | "right";
 type KickPhase = "idle" | "animating" | "result";
 
@@ -320,6 +355,7 @@ function GoalSVG({
 export default function PenaltyPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<"menu" | "solo" | "challenge">("menu");
 
   const [currentKick, setCurrentKick] = useState(0); // 0-4
   const [kicks, setKicks] = useState<Direction[]>([]);
@@ -429,6 +465,12 @@ export default function PenaltyPage() {
     setCreatingChallenge(false);
   }, [kicks, serverGoalieKicks, finalGoals, finalPoints]);
 
+  useEffect(() => {
+    if (gameOver && mode === "challenge" && !challengeCreated && !creatingChallenge && serverGoalieKicks.length === 5) {
+      createChallenge();
+    }
+  }, [gameOver, mode, challengeCreated, creatingChallenge, serverGoalieKicks, createChallenge]);
+
   const copyLink = useCallback(() => {
     if (!challengeCreated) return;
     navigator.clipboard.writeText(challengeCreated.link).then(() => {
@@ -441,6 +483,80 @@ export default function PenaltyPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0f" }}>
         <div className="w-8 h-8 rounded-full border-2 border-green-400 border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  // ── Lobby / Menu Selection screen ───────────────────────────────────────
+  if (mode === "menu") {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ background: "#0a0a0f" }}>
+        <style>{`
+          @keyframes iconFloat {
+            0%,100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            50%      { transform: translateY(-6px) rotate(3deg) scale(1.05); }
+          }
+          .icon-float { animation: iconFloat 4s ease-in-out infinite; }
+        `}</style>
+        
+        <header className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <button onClick={() => router.push("/games")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back
+          </button>
+          <h1 className="text-white font-black text-base">Penalty Shootout</h1>
+          <div className="w-6" /> {/* Spacer */}
+        </header>
+
+        <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-sm mx-auto w-full">
+          <div className="w-24 h-24 mb-6 relative icon-float">
+            <Icon3dPenalty />
+          </div>
+
+          <h2 className="text-2xl font-black text-white text-center mb-1">Select Game Mode</h2>
+          <p className="text-xs text-white/40 text-center mb-8">Test your skills or battle against your friends.</p>
+
+          <div className="flex flex-col gap-4 w-full">
+            {/* Solo Mode Button */}
+            <button
+              onClick={() => {
+                setMode("solo");
+                setCurrentKick(0);
+                setKicks([]);
+                setResults([]);
+                setGameOver(false);
+                setChallengeCreated(null);
+              }}
+              className="flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-green-400/20 bg-green-400/5 hover:bg-green-400/10 hover:border-green-400/45 transition-all duration-300 text-left w-full group cursor-pointer"
+            >
+              <span className="text-base font-black text-green-400 flex items-center gap-2">
+                ⚽ Play Solo
+              </span>
+              <span className="text-xs text-white/60">
+                Practice penalties against AI goalkeeper. Earn points for the global leaderboard.
+              </span>
+            </button>
+
+            {/* Multiplayer/Challenge Mode Button */}
+            <button
+              onClick={() => {
+                setMode("challenge");
+                setCurrentKick(0);
+                setKicks([]);
+                setResults([]);
+                setGameOver(false);
+                setChallengeCreated(null);
+              }}
+              className="flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/45 transition-all duration-300 text-left w-full group cursor-pointer"
+            >
+              <span className="text-base font-black text-purple-400 flex items-center gap-2">
+                ⚔️ Challenge a Friend
+              </span>
+              <span className="text-xs text-white/60">
+                Play a round and generate a battle link. Send it to a friend to see if they can beat your score.
+              </span>
+            </button>
+          </div>
+        </main>
       </div>
     );
   }
@@ -482,8 +598,8 @@ export default function PenaltyPage() {
         ))}
 
         <div className="w-full max-w-sm fade-slide">
-          <button onClick={() => router.push("/games")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm mb-8 transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back to Games
+          <button onClick={() => setMode("menu")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm mb-8 transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Back to Menu
           </button>
 
           <div className="text-center mb-6">
@@ -584,7 +700,7 @@ export default function PenaltyPage() {
 
       {/* Header */}
       <header className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-        <button onClick={() => router.push("/games")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors">
+        <button onClick={() => setMode("menu")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <h1 className="text-white font-black text-base">Penalty Shootout</h1>

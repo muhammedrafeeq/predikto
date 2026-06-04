@@ -10,6 +10,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { searchParams } = new URL(request.url);
+    const contestIdParam = searchParams.get("contestId");
+    const contestId = contestIdParam ? parseInt(contestIdParam, 10) : 1;
+
     const { id } = await params;
     const matchId = parseInt(id, 10);
 
@@ -65,11 +69,11 @@ export async function GET(
         p.answer as user_answer,
         r.correct_answer
       FROM questions q
-      LEFT JOIN predictions p ON q.id = p.question_id AND p.user_id = $1
+      LEFT JOIN predictions p ON q.id = p.question_id AND p.user_id = $1 AND p.contest_id = $3
       LEFT JOIN results r ON q.id = r.question_id
       WHERE q.match_id = $2
       ORDER BY q.id ASC`,
-      [userId, matchId]
+      [userId, matchId, contestId]
     );
 
     const questionsBreakdown: Record<string, any> = {};

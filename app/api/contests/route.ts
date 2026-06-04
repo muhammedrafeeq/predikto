@@ -57,6 +57,27 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const user = await requireAuth();
+
+    // 1. Fetch allow_contest_creation setting
+    const settingsRes = await query("SELECT value FROM system_settings WHERE key = 'allow_contest_creation'");
+    const allowContestCreation = settingsRes.rows[0]?.value !== "false";
+
+    // 2. Fetch user details
+    const userCheck = await query("SELECT phone, role FROM users WHERE id = $1", [user.userId]);
+    const dbUser = userCheck.rows[0];
+
+    const canCreate = dbUser && (
+      dbUser.role === "admin" ||
+      (allowContestCreation && dbUser.phone === "7994028954")
+    );
+
+    if (!canCreate) {
+      return NextResponse.json(
+        { error: "Contest creation is not allowed for your account." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json() as { name?: string; tournamentId?: number; gameType?: string };
     const { name, tournamentId, gameType } = body;
 

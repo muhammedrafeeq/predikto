@@ -40,7 +40,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Redirect legacy pages directly to contests if logged in
-  if (isLoggedIn && (pathname === "/matches" || pathname === "/leaderboard" || pathname === "/games")) {
+  if (isLoggedIn && (pathname === "/matches" || pathname === "/leaderboard")) {
     return NextResponse.redirect(new URL("/contests", request.url));
   }
 

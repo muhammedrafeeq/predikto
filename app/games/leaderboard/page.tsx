@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Crown, Star, Award, History, Shield, Gamepad2, ChevronLeft } from "lucide-react";
+import { Trophy, Crown, Star, Award, History, Shield, Gamepad2, ChevronLeft, LayoutGrid } from "lucide-react";
 
 const SoccerBallIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -308,13 +308,9 @@ export default function GamesLeaderboard() {
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 md:hidden"
         style={{ background: "rgba(10,10,15,0.9)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <a href="/matches" className="flex flex-col items-center justify-center text-white/40 hover:text-primary gap-0.5 transition-colors">
-          <SoccerBallIcon className="w-5 h-5 text-white/40" />
-          <span className="text-[10px] font-semibold">Matches</span>
-        </a>
-        <a href="/leaderboard" className="flex flex-col items-center justify-center text-white/40 hover:text-primary gap-0.5 transition-colors">
-          <Trophy className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Rankings</span>
+        <a href="/contests" className="flex flex-col items-center justify-center text-white/40 hover:text-primary gap-0.5 transition-colors">
+          <LayoutGrid className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">My Contests</span>
         </a>
         <a href="/games" className="flex flex-col items-center justify-center text-violet-400 font-bold gap-0.5">
           <Gamepad2 className="w-5 h-5 text-violet-400" />

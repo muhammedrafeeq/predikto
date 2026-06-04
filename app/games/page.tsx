@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Shield, History, Gamepad2, ChevronRight, Sparkles } from "lucide-react";
+import { Trophy, Shield, History, Gamepad2, ChevronRight, Sparkles, LayoutGrid } from "lucide-react";
 
 const SoccerBallIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -429,24 +429,20 @@ export default function GamesHub() {
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 md:hidden"
         style={{ background: "rgba(10,10,15,0.92)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <a href="/matches" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity">
-          <SoccerBallIcon className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Matches</span>
-        </a>
-        <a href="/leaderboard" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity">
-          <Trophy className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Rankings</span>
+        <a href="/contests" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
+          <LayoutGrid className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">My Contests</span>
         </a>
         <a href="/games" className="flex flex-col items-center gap-0.5" style={{ color: "#a78bfa" }}>
           <Gamepad2 className="w-5 h-5" />
           <span className="text-[10px] font-semibold">Games</span>
         </a>
-        <a href="/history" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity">
+        <a href="/history" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
           <History className="w-5 h-5" />
           <span className="text-[10px] font-semibold">History</span>
         </a>
         {currentUser?.role === "admin" && (
-          <a href="/admin" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity">
+          <a href="/admin" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
             <Shield className="w-5 h-5" />
             <span className="text-[10px] font-semibold">Admin</span>
           </a>

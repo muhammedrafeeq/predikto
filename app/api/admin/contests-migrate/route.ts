@@ -62,11 +62,20 @@ export async function POST() {
       UPDATE matches SET tournament_id = 1 WHERE tournament_id IS NULL
     `);
 
-    // Seed default Contest ("Public Arena")
+    // Seed default Contest ("WC2026")
     await query(`
       INSERT INTO contests (id, name, tournament_id, game_type, join_code, creator_id)
-      VALUES (1, 'Public Arena', 1, 'match_prediction', 'PUBLIC', NULL)
+      VALUES (1, 'WC2026', 1, 'match_prediction', '958102', (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1))
       ON CONFLICT (id) DO NOTHING
+    `);
+
+    // If it already exists, rename and update it
+    await query(`
+      UPDATE contests
+      SET name = 'WC2026',
+          join_code = '958102',
+          creator_id = (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1)
+      WHERE id = 1 OR name = 'Public Arena'
     `);
 
     // Reset sequence for contests
@@ -151,6 +160,23 @@ export async function POST() {
     await query(`CREATE INDEX IF NOT EXISTS idx_predictions_contest ON predictions(contest_id)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_scores_contest ON scores(contest_id)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_game_scores_contest ON game_scores(contest_id)`);
+
+    // Create System Settings Table
+    await query(`
+      CREATE TABLE IF NOT EXISTS system_settings (
+        key         VARCHAR(100) PRIMARY KEY,
+        value       VARCHAR(255) NOT NULL,
+        created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Seed default setting
+    await query(`
+      INSERT INTO system_settings (key, value)
+      VALUES ('allow_contest_creation', 'true')
+      ON CONFLICT (key) DO NOTHING
+    `);
 
     return NextResponse.json({
       success: true,

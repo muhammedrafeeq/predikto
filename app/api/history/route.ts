@@ -56,6 +56,7 @@ export async function GET() {
     const historyRes = await query(
       `SELECT 
         m.id as match_id,
+        p.contest_id as contest_id,
         m.team_home as team_home,
         m.team_away as team_away,
         m.match_time as match_time,
@@ -68,7 +69,7 @@ export async function GET() {
       JOIN matches m ON p.match_id = m.id
       JOIN questions q ON p.question_id = q.id
       LEFT JOIN results r ON p.question_id = r.question_id AND p.match_id = r.match_id
-      LEFT JOIN scores s ON m.id = s.match_id AND s.user_id = $1
+      LEFT JOIN scores s ON m.id = s.match_id AND s.user_id = $1 AND s.contest_id = p.contest_id
       WHERE p.user_id = $1
       ORDER BY m.match_time DESC`,
       [userId]
@@ -77,10 +78,11 @@ export async function GET() {
     const historyMap = new Map();
 
     for (const row of historyRes.rows) {
-      const mId = row.match_id;
-      if (!historyMap.has(mId)) {
-        historyMap.set(mId, {
-          matchId: mId,
+      const key = `${row.match_id}_${row.contest_id}`;
+      if (!historyMap.has(key)) {
+        historyMap.set(key, {
+          matchId: row.match_id,
+          contestId: row.contest_id,
           teamHome: row.team_home,
           teamAway: row.team_away,
           matchTime: row.match_time,
@@ -90,7 +92,7 @@ export async function GET() {
         });
       }
 
-      const matchEntry = historyMap.get(mId);
+      const matchEntry = historyMap.get(key);
       matchEntry.predictions[row.question_type] = {
         answer: row.user_answer,
         correctAnswer: row.correct_answer,

@@ -76,9 +76,10 @@ export default function ContestsDashboard() {
   const router = useRouter();
   const [contests, setContests] = useState<Contest[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [currentUser, setCurrentUser] = useState<{ name: string; role?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; role?: string; phone?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [joinCode, setJoinCode] = useState("");
+  const [allowContestCreation, setAllowContestCreation] = useState(true);
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
   const [joinSuccess, setJoinSuccess] = useState("");
@@ -96,10 +97,11 @@ export default function ContestsDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const [userRes, contestsRes, tourRes] = await Promise.all([
+        const [userRes, contestsRes, tourRes, settingsRes] = await Promise.all([
           fetch("/api/auth/me"),
           fetch("/api/contests"),
-          fetch("/api/tournaments")
+          fetch("/api/tournaments"),
+          fetch("/api/settings")
         ]);
 
         if (userRes.ok) {
@@ -122,6 +124,13 @@ export default function ContestsDashboard() {
             if (td.tournaments.length > 0) {
               setSelectedTournament(td.tournaments[0].id.toString());
             }
+          }
+        }
+
+        if (settingsRes.ok) {
+          const sData = await settingsRes.json();
+          if (sData.success) {
+            setAllowContestCreation(sData.settings.allow_contest_creation);
           }
         }
       } catch (err) {
@@ -240,6 +249,8 @@ export default function ContestsDashboard() {
     } catch {}
   };
 
+  const canCreate = currentUser?.role === "admin" || (allowContestCreation && currentUser?.phone === "7994028954");
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-base-bg text-on-surface">
@@ -300,7 +311,7 @@ export default function ContestsDashboard() {
         </section>
 
         {/* Join / Create Contests Panel */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 fade-up" style={{ animationDelay: "0.1s" }}>
+        <section className={`grid grid-cols-1 ${canCreate ? "sm:grid-cols-2" : ""} gap-4 mb-8 fade-up`} style={{ animationDelay: "0.1s" }}>
           {/* Join Contest Card */}
           <div className="surface-glass-1 p-5 rounded-2xl flex flex-col gap-4 border border-white/5">
             <div>
@@ -332,20 +343,22 @@ export default function ContestsDashboard() {
           </div>
 
           {/* Create Contest Card */}
-          <div className="surface-glass-1 p-5 rounded-2xl flex flex-col justify-between gap-4 border border-white/5">
-            <div>
-              <h3 className="label-md font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Plus className="w-4 h-4 text-primary" /> Create Contest
-              </h3>
-              <p className="text-xs text-white/40 mt-1">Start a custom scoreboard with friends playing any prediction mode.</p>
+          {canCreate && (
+            <div className="surface-glass-1 p-5 rounded-2xl flex flex-col justify-between gap-4 border border-white/5">
+              <div>
+                <h3 className="label-md font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+                  <Plus className="w-4 h-4 text-primary" /> Create Contest
+                </h3>
+                <p className="text-xs text-white/40 mt-1">Start a custom scoreboard with friends playing any prediction mode.</p>
+              </div>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="w-full bg-gradient-to-r from-primary-container to-primary text-on-primary-container py-3 rounded-xl text-xs font-black uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Start A Contest
+              </button>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="w-full bg-gradient-to-r from-primary-container to-primary text-on-primary-container py-3 rounded-xl text-xs font-black uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> Start A Contest
-            </button>
-          </div>
+          )}
         </section>
 
         {/* Contests List */}
@@ -440,6 +453,10 @@ export default function ContestsDashboard() {
         <a href="/contests" className="flex flex-col items-center gap-0.5 text-primary">
           <LayoutGrid className="w-5 h-5" />
           <span className="text-[10px] font-bold">My Contests</span>
+        </a>
+        <a href="/games" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
+          <Gamepad2 className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">Games</span>
         </a>
         <a href="/history" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
           <History className="w-5 h-5" />

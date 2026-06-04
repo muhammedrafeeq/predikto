@@ -318,8 +318,17 @@ async function seed() {
 
     await client.query(`
       INSERT INTO contests (id, name, tournament_id, game_type, join_code, creator_id)
-      VALUES (1, 'Public Arena', 1, 'match_prediction', 'PUBLIC', NULL)
+      VALUES (1, 'WC2026', 1, 'match_prediction', '958102', (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1))
       ON CONFLICT (id) DO NOTHING
+    `);
+
+    // If it already exists, rename and update it
+    await client.query(`
+      UPDATE contests
+      SET name = 'WC2026',
+          join_code = '958102',
+          creator_id = (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1)
+      WHERE id = 1 OR name = 'Public Arena'
     `);
     await client.query(`SELECT setval(pg_get_serial_sequence('contests', 'id'), COALESCE(MAX(id), 1)) FROM contests`);
 

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, use, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { Timer, CheckCircle2, XCircle, Trophy, Shield, ArrowLeft, History } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Timer, CheckCircle2, XCircle, Trophy, Shield, ArrowLeft, History, LayoutGrid, Gamepad2 } from "lucide-react";
 import ShareCard from "@/components/ShareCard";
 
 interface ResultPageProps {
@@ -84,6 +84,8 @@ const getTeamStyle = (name: string) => {
 
 export default function ResultPage({ params }: ResultPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const contestId = searchParams.get("contestId") || "1";
   const { id } = use(params);
   
   // Loaded states
@@ -113,7 +115,7 @@ export default function ResultPage({ params }: ResultPageProps) {
           }
         }
 
-        const res = await fetch(`/api/matches/${id}/result`);
+        const res = await fetch(`/api/matches/${id}/result?contestId=${contestId}`);
         if (!res.ok) {
           throw new Error("Failed to fetch result details");
         }
@@ -129,7 +131,7 @@ export default function ResultPage({ params }: ResultPageProps) {
       }
     }
     loadData();
-  }, [id]);
+  }, [id, contestId]);
 
   // Trigger staggered reveal of cards
   useEffect(() => {
@@ -462,7 +464,7 @@ export default function ResultPage({ params }: ResultPageProps) {
 
             <div className="mt-8 w-full max-w-md flex flex-col gap-3">
               <button
-                onClick={() => router.push("/leaderboard")}
+                onClick={() => router.push(`/contests/${contestId}`)}
                 className="w-full py-3.5 rounded-md bg-gradient-to-r from-primary-container to-primary text-on-primary-container font-label-md label-md uppercase tracking-widest shadow-lg shadow-primary/10 hover:brightness-105 active:scale-[0.98] transition-all cursor-pointer text-xs font-bold"
               >
                 View Leaderboard
@@ -524,14 +526,14 @@ export default function ResultPage({ params }: ResultPageProps) {
       </main>
 
       {/* Responsive Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 pb-safe bg-surface/80 backdrop-blur-xl border-t border-white/10 md:hidden">
-        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary gap-0.5" href="/matches">
-          <SoccerBallIcon className="w-5 h-5 text-on-surface-variant" />
-          <span className="label-sm select-none text-xs">Matches</span>
+      <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 pb-safe bg-[#0a0a0f]/90 backdrop-blur-xl border-t border-white/10 md:hidden">
+        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary gap-0.5" href="/contests">
+          <LayoutGrid className="w-5 h-5 text-on-surface-variant" />
+          <span className="label-sm select-none text-xs">My Contests</span>
         </a>
-        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-transform hover:scale-105" href="/leaderboard">
-          <Trophy className="w-5 h-5 animate-pulse" />
-          <span className="label-sm select-none text-xs">Rankings</span>
+        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-violet-400 gap-0.5 transition-colors" href="/games">
+          <Gamepad2 className="w-5 h-5 text-on-surface-variant" />
+          <span className="label-sm select-none text-xs">Games</span>
         </a>
         <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-transform hover:scale-105" href="/history">
           <History className="w-5 h-5" />

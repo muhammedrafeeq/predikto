@@ -58,27 +58,61 @@ export default function AdminDashboard() {
   const [resetMsg, setResetMsg] = useState("");
   const [migrating, setMigrating] = useState(false);
   const [migrationMsg, setMigrationMsg] = useState("");
+  const [allowContestCreation, setAllowContestCreation] = useState(true);
+  const [savingSetting, setSavingSetting] = useState(false);
 
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        const response = await fetch("/api/admin/dashboard");
-        if (response.ok) {
-          const data = await response.json();
+        const [dashResponse, settingsResponse] = await Promise.all([
+          fetch("/api/admin/dashboard"),
+          fetch("/api/settings"),
+        ]);
+
+        if (dashResponse.ok) {
+          const data = await dashResponse.json();
           if (data.success) {
             setStats(data.stats);
             setActiveMarkets(data.activeMarkets);
             setRecentActivity(data.recentActivity);
           }
         }
+
+        if (settingsResponse.ok) {
+          const sData = await settingsResponse.json();
+          if (sData.success) {
+            setAllowContestCreation(sData.settings.allow_contest_creation);
+          }
+        }
       } catch (err) {
-        console.error("Failed to load dashboard data:", err);
+        console.error("Failed to load dashboard data/settings:", err);
       } finally {
         setLoading(false);
       }
     }
     fetchDashboardData();
   }, []);
+
+  const handleToggleContestCreation = async (newValue: boolean) => {
+    setAllowContestCreation(newValue);
+    setSavingSetting(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "allow_contest_creation", value: newValue ? "true" : "false" }),
+      });
+      if (!res.ok) {
+        // Rollback
+        setAllowContestCreation(!newValue);
+      }
+    } catch {
+      // Rollback
+      setAllowContestCreation(!newValue);
+    } finally {
+      setSavingSetting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -305,6 +339,34 @@ export default function AdminDashboard() {
             {migrationMsg && (
               <p className="text-xs text-primary text-center font-semibold">{migrationMsg}</p>
             )}
+          </div>
+
+          {/* System Settings Panel */}
+          <div className="surface-glass-1 p-6 rounded-xl flex flex-col gap-4">
+            <h3 className="label-md font-extrabold uppercase tracking-widest text-on-surface-variant border-b border-white/5 pb-2">
+              System Settings
+            </h3>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="body-md font-semibold text-on-surface">Allow Contest Creation</p>
+                <p className="text-[10px] text-on-surface-variant mt-0.5">
+                  If disabled, standard users cannot create contests.
+                </p>
+              </div>
+              <button
+                onClick={() => handleToggleContestCreation(!allowContestCreation)}
+                disabled={savingSetting}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  allowContestCreation ? "bg-primary" : "bg-white/10"
+                } ${savingSetting ? "opacity-50 cursor-wait" : ""}`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    allowContestCreation ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Active Markets Panel */}

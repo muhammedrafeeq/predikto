@@ -394,9 +394,13 @@ export default function MatchPredictionContestView({
                     )}
 
                     {match.status === "Resulted" && (
-                      <span className="text-amber-400/70 text-[10px] uppercase font-black tracking-widest py-1">
-                        Match Graded
-                      </span>
+                      <button
+                        onClick={() => onNavigate(`/matches/${match.id}/result?contestId=${contestId}`)}
+                        className="flex items-center gap-1.5 px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider text-amber-400 border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 transition-all active:scale-95 shadow-md"
+                      >
+                        <Trophy className="w-3.5 h-3.5" />
+                        View Result & Share
+                      </button>
                     )}
                   </div>
                 </div>

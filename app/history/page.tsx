@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Award, Trophy, Shield, ArrowRight, Clock, History, Gamepad2 } from "lucide-react";
+import { Award, Trophy, Shield, ArrowRight, Clock, History, LayoutGrid, Gamepad2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface HistoryCard {
@@ -90,7 +90,7 @@ export default function PredictionHistory() {
                 totalPoints: 11,
                 isPending,
                 questions,
-                resultRoute: `/matches/${m.matchId}/result`,
+                resultRoute: `/matches/${m.matchId}/result?contestId=${m.contestId}`,
               };
             });
             setHistory(mapped);
@@ -352,17 +352,13 @@ export default function PredictionHistory() {
       </main>
 
       {/* Responsive Mobile Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 pb-safe bg-surface/80 backdrop-blur-xl border-t border-white/10 md:hidden">
-        <a className="flex flex-col items-center justify-center text-on-surface-variant gap-0.5 transition-colors" href="/matches">
-          <SoccerBallIcon className="w-5 h-5 text-on-surface-variant" />
-          <span className="label-sm select-none text-xs">Matches</span>
+      <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 pb-safe bg-[#0a0a0f]/90 backdrop-blur-xl border-t border-white/10 md:hidden">
+        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary gap-0.5" href="/contests">
+          <LayoutGrid className="w-5 h-5 text-on-surface-variant" />
+          <span className="label-sm select-none text-xs">My Contests</span>
         </a>
-        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-colors" href="/leaderboard">
-          <Trophy className="w-5 h-5" />
-          <span className="label-sm select-none text-xs">Rankings</span>
-        </a>
-        <a className="flex flex-col items-center justify-center text-white/40 hover:text-violet-400 gap-0.5 transition-colors" href="/games">
-          <Gamepad2 className="w-5 h-5" />
+        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-violet-400 gap-0.5 transition-colors" href="/games">
+          <Gamepad2 className="w-5 h-5 text-on-surface-variant" />
           <span className="label-sm select-none text-xs">Games</span>
         </a>
         <a className="flex flex-col items-center justify-center text-primary font-bold gap-0.5" href="/history">

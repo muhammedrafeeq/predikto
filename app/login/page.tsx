@@ -222,15 +222,7 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2">
-              <svg className="w-10 h-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="m12 2-2 3h4Z" /><path d="M12 22v-3" />
-                <path d="M10 5 6 8.5" /><path d="M14 5 18 8.5" />
-                <path d="M6 8.5 7.5 13" /><path d="M18 8.5 16.5 13" />
-                <path d="M7.5 13 12 15" /><path d="M16.5 13 12 15" />
-                <path d="M12 15v4" /><path d="M12 22 8.5 19.5" /><path d="M12 22l3.5-2.5" />
-                <path d="M7.5 13H4" /><path d="M16.5 13H20" />
-              </svg>
+              <img src="/skorio-logo.png" alt="Skorio Logo" className="w-10 h-10 object-contain rounded-lg" />
               <h1 className="headline-md font-extrabold tracking-tighter text-on-surface select-none">
                 SKO<span className="text-primary">RIO</span>
               </h1>

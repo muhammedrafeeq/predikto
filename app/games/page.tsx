@@ -305,7 +305,7 @@ export default function GamesHub() {
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-5 py-3 h-16"
         style={{ background: "rgba(10,10,15,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-2">
-          <span className="text-purple-500"><SoccerBallIcon className="w-6 h-6" /></span>
+          <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-lg" />
           <span className="text-lg font-black tracking-tighter" style={{ color: "#a855f7" }}>
             SKO<span style={{ color: "#fff" }}>RIO</span>
           </span>

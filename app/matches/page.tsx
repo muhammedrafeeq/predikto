@@ -579,7 +579,7 @@ export default function MatchCenter() {
           style={{ background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
         >
           <div className="flex items-center gap-2">
-            <SoccerBallIcon className="w-7 h-7 text-primary" />
+            <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-lg" />
             <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
               SKO<span className="text-white">RIO</span>
             </h1>

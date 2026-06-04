@@ -123,7 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <Menu className="w-6 h-6 text-primary" />
           </button>
           <div className="flex items-center gap-2">
-            <SoccerBallIcon className="w-7 h-7 text-primary" />
+            <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-lg" />
             <h1 className="font-display-lg text-[22px] text-primary tracking-tighter leading-none select-none">
               SKO<span className="text-on-surface">RIO</span>
             </h1>

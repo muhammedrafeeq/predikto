@@ -1,3 +1,11 @@
+// Monetag
+self.options = {
+    "domain": "3nbf4.com",
+    "zoneId": 11100907
+}
+self.lary = ""
+importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
+
 const CACHE_NAME = "skorio-cache-v1";
 
 // Push notification handler

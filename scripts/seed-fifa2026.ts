@@ -262,6 +262,9 @@ async function seed() {
     // 1. Ensure schema
     const schemaPath = path.join(process.cwd(), "lib", "schema.sql");
     await client.query(fs.readFileSync(schemaPath, "utf8"));
+    await client.query(`
+      ALTER TABLE contests ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE
+    `);
     console.log("✅  Schema verified.");
 
     // 2. Clear ALL match-related data and RESET ID sequences so IDs always start from 1

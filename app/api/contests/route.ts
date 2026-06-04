@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
 
     const canCreate = dbUser && (
       dbUser.role === "admin" ||
-      (allowContestCreation && dbUser.phone === "7994028954")
+      (allowContestCreation && dbUser.phone === "7994028594")
     );
 
     if (!canCreate) {

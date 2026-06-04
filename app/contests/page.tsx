@@ -260,7 +260,7 @@ export default function ContestsDashboard() {
     } catch {}
   };
 
-  const canCreate = currentUser?.role === "admin" || (allowContestCreation && currentUser?.phone === "7994028954");
+  const canCreate = currentUser?.role === "admin" || (allowContestCreation && currentUser?.phone === "7994028594");
 
   if (loading) {
     return (

@@ -322,74 +322,62 @@ export default function ContestsDashboard() {
         </section>
 
         {/* Global Contests Banner */}
-        {globalContests.length > 0 && (
-          <section className="mb-8 fade-up" style={{ animationDelay: "0.05s" }}>
-            {globalContests.map((globalContest) => {
-              const gameModeCfg = {
-                match_prediction: { label: "Match Predictor", color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20", glow: "rgba(99, 102, 241, 0.15)" },
-                first_goal: { label: "First Goal", color: "text-amber-400 bg-amber-500/10 border-amber-500/20", glow: "rgba(245, 158, 11, 0.15)" },
-                formation: { label: "Formation", color: "text-purple-400 bg-purple-500/10 border-purple-500/20", glow: "rgba(168, 85, 247, 0.15)" },
-                bracket: { label: "Bracket", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", glow: "rgba(16, 185, 129, 0.15)" }
-              }[globalContest.gameType] ?? { label: globalContest.gameType, color: "text-white/40 bg-white/5 border-white/10", glow: "rgba(255,255,255,0.05)" };
+        {(() => {
+          const unjoinedGlobalContests = globalContests.filter((gc) => !contests.some((c) => c.id === gc.id));
+          if (unjoinedGlobalContests.length === 0) return null;
+          return (
+            <section className="mb-8 fade-up" style={{ animationDelay: "0.05s" }}>
+              {unjoinedGlobalContests.map((globalContest) => {
+                const gameModeCfg = {
+                  match_prediction: { label: "Match Predictor", color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20", glow: "rgba(99, 102, 241, 0.15)" },
+                  first_goal: { label: "First Goal", color: "text-amber-400 bg-amber-500/10 border-amber-500/20", glow: "rgba(245, 158, 11, 0.15)" },
+                  formation: { label: "Formation", color: "text-purple-400 bg-purple-500/10 border-purple-500/20", glow: "rgba(168, 85, 247, 0.15)" },
+                  bracket: { label: "Bracket", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", glow: "rgba(16, 185, 129, 0.15)" }
+                }[globalContest.gameType] ?? { label: globalContest.gameType, color: "text-white/40 bg-white/5 border-white/10", glow: "rgba(255,255,255,0.05)" };
 
-              const hasJoined = contests.some((c) => c.id === globalContest.id);
-
-              return (
-                <div
-                  key={globalContest.id}
-                  className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-indigo-950/60 via-slate-900/80 to-emerald-950/40 p-6 sm:p-8 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all duration-300 hover:border-primary/45 group"
-                  style={{
-                    boxShadow: `0 10px 40px -10px ${gameModeCfg.glow}, inset 0 1px 1px rgba(255,255,255,0.1)`
-                  }}
-                >
-                  {/* Subtle decorative soccer ball graphic overlay in background */}
-                  <div className="absolute right-[-20px] bottom-[-20px] opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500 text-white">
-                    <SoccerBallIcon className="w-48 h-48" />
-                  </div>
-
-                  <div className="flex flex-col gap-3 text-left relative z-10 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
-                        hasJoined 
-                          ? "bg-emerald-500/20 border border-emerald-500/40 text-emerald-400" 
-                          : "bg-primary/25 border border-primary/40 text-primary animate-pulse"
-                      }`}>
-                        {hasJoined ? "✓ Joined Arena" : "🔥 Global Arena"}
-                      </span>
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${gameModeCfg.color}`}>
-                        {gameModeCfg.label}
-                      </span>
+                return (
+                  <div
+                    key={globalContest.id}
+                    className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-indigo-950/60 via-slate-900/80 to-emerald-950/40 p-6 sm:p-8 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 transition-all duration-300 hover:border-primary/45 group"
+                    style={{
+                      boxShadow: `0 10px 40px -10px ${gameModeCfg.glow}, inset 0 1px 1px rgba(255,255,255,0.1)`
+                    }}
+                  >
+                    {/* Subtle decorative soccer ball graphic overlay in background */}
+                    <div className="absolute right-[-20px] bottom-[-20px] opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500 text-white">
+                      <SoccerBallIcon className="w-48 h-48" />
                     </div>
 
-                    <div>
-                      <h3 className="text-2xl font-black text-white tracking-tight leading-tight group-hover:text-primary transition-colors">
-                        {globalContest.name}
-                      </h3>
-                      <p className="text-white/60 text-sm mt-1 max-w-md">
-                        Join the official global tournament! Compete with everyone, predict matches, and climb to the top of the global leaderboard.
-                      </p>
+                    <div className="flex flex-col gap-3 text-left relative z-10 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="bg-primary/25 border border-primary/40 text-primary animate-pulse inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
+                          🔥 Global Arena
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${gameModeCfg.color}`}>
+                          {gameModeCfg.label}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h3 className="text-2xl font-black text-white tracking-tight leading-tight group-hover:text-primary transition-colors">
+                          {globalContest.name}
+                        </h3>
+                        <p className="text-white/60 text-sm mt-1 max-w-md">
+                          Join the official global tournament! Compete with everyone, predict matches, and climb to the top of the global leaderboard.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs font-semibold text-white/40 mt-1">
+                        <span className="flex items-center gap-1.5">
+                          <Users className="w-4 h-4 text-secondary" />
+                          <span className="text-white font-bold">{globalContest.memberCount}</span> competitors
+                        </span>
+                        <span>•</span>
+                        <span>Free Entry</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-4 text-xs font-semibold text-white/40 mt-1">
-                      <span className="flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-secondary" />
-                        <span className="text-white font-bold">{globalContest.memberCount}</span> competitors
-                      </span>
-                      <span>•</span>
-                      <span>Free Entry</span>
-                    </div>
-                  </div>
-
-                  <div className="relative z-10 shrink-0 w-full sm:w-auto">
-                    {hasJoined ? (
-                      <button
-                        onClick={() => router.push(`/contests/${globalContest.id}`)}
-                        className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white active:scale-95 px-8 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        Enter Arena
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    ) : (
+                    <div className="relative z-10 shrink-0 w-full sm:w-auto">
                       <button
                         onClick={() => handleJoinWithCode(globalContest.joinCode)}
                         disabled={joining}
@@ -407,13 +395,13 @@ export default function ContestsDashboard() {
                           </>
                         )}
                       </button>
-                    )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </section>
-        )}
+                );
+              })}
+            </section>
+          );
+        })()}
 
         {/* Join / Create Contests Panel */}
         <section className={`grid grid-cols-1 ${canCreate ? "sm:grid-cols-2" : ""} gap-4 mb-8 fade-up`} style={{ animationDelay: "0.1s" }}>
@@ -504,9 +492,7 @@ export default function ContestsDashboard() {
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${gameModeCfg.color}`}>
                           {gameModeCfg.label}
                         </span>
-                        <span className="text-[10px] text-white/35 font-medium flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> {contest.tournamentName}
-                        </span>
+
                       </div>
 
                       <h4 className="text-lg font-black text-white leading-tight group-hover:text-primary transition-colors flex items-center gap-2">
@@ -528,19 +514,7 @@ export default function ContestsDashboard() {
                     </div>
 
                     <div className="flex flex-col items-end gap-2.5 shrink-0">
-                      {/* Join code display */}
-                      <button
-                        onClick={(e) => handleCopyCode(e, contest.id, contest.joinCode)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-white/5 hover:bg-white/10 border border-white/8 text-white transition-colors"
-                        title="Copy Join Code"
-                      >
-                        <span className="tracking-wide">{contest.joinCode}</span>
-                        {isCopied ? (
-                          <Check className="w-3.5 h-3.5 text-secondary" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5 text-white/40 group-hover:text-white transition-colors" />
-                        )}
-                      </button>
+
 
                       <div className="p-2 rounded-xl bg-white/5 border border-white/8 text-white/50 group-hover:text-primary group-hover:bg-primary/10 group-hover:border-primary/20 transition-all duration-300">
                         <ArrowRight className="w-4 h-4" />

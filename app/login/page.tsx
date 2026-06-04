@@ -221,9 +221,9 @@ export default function LoginPage() {
 
           {/* Logo */}
           <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2">
-              <img src="/skorio-logo.png" alt="Skorio Logo" className="w-10 h-10 object-contain rounded-lg" />
-              <h1 className="headline-md font-extrabold tracking-tighter text-on-surface select-none">
+            <div className="flex items-center gap-3">
+              <img src="/skorio-logo.png" alt="Skorio Logo" className="w-14 h-14 object-contain rounded-xl" />
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-on-surface select-none">
                 SKO<span className="text-primary">RIO</span>
               </h1>
             </div>
@@ -409,7 +409,7 @@ export default function LoginPage() {
                       id="register-submit"
                       type="submit"
                       disabled={isLoading}
-                      className={`w-full py-4 rounded-md label-md text-white shadow-lg bg-gradient-to-r from-secondary-container to-secondary transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2 select-none ${
+                      className={`w-full py-4 rounded-md label-md text-white shadow-lg bg-gradient-to-r from-primary-container to-primary transition-all active:scale-[0.98] mt-2 flex items-center justify-center gap-2 select-none ${
                         isLoading ? "opacity-80 cursor-not-allowed" : "hover:brightness-105 cursor-pointer"
                       }`}
                     >

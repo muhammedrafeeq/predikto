@@ -37,7 +37,17 @@ export default function AdsManagerPage() {
     fetch("/api/admin/ads")
       .then((r) => r.json())
       .then((data) => {
-        if (data.success) setSettings(data.settings);
+        if (data.success) {
+          // ensure all AD_UNITS keys are present, defaulting to true
+          const merged: Record<string, boolean> = {};
+          for (const u of AD_UNITS) merged[u.key] = true;
+          setSettings({ ...merged, ...data.settings });
+        }
+      })
+      .catch(() => {
+        const fallback: Record<string, boolean> = {};
+        for (const u of AD_UNITS) fallback[u.key] = true;
+        setSettings(fallback);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -63,7 +73,7 @@ export default function AdsManagerPage() {
     }
   };
 
-  const enabledCount = Object.values(settings).filter(Boolean).length;
+  const enabledCount = AD_UNITS.filter((u) => settings[u.key] !== false).length;
 
   return (
     <div className="max-w-4xl mx-auto">

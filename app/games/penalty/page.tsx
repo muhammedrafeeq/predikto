@@ -536,25 +536,23 @@ export default function PenaltyPage() {
               </span>
             </button>
 
-            {/* Multiplayer/Challenge Mode Button */}
-            <button
-              onClick={() => {
-                setMode("challenge");
-                setCurrentKick(0);
-                setKicks([]);
-                setResults([]);
-                setGameOver(false);
-                setChallengeCreated(null);
-              }}
-              className="flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-purple-500/20 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/45 transition-all duration-300 text-left w-full group cursor-pointer"
-            >
-              <span className="text-base font-black text-purple-400 flex items-center gap-2">
+            {/* Multiplayer/Challenge Mode — Coming Soon */}
+            <div className="relative flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-white/8 bg-white/[0.02] text-left w-full cursor-not-allowed overflow-hidden">
+              {/* Coming Soon badge */}
+              <span className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
+                Coming Soon
+              </span>
+              <span className="text-base font-black text-white/30 flex items-center gap-2">
                 ⚔️ Challenge a Friend
               </span>
-              <span className="text-xs text-white/60">
+              <span className="text-xs text-white/25">
                 Play a round and generate a battle link. Send it to a friend to see if they can beat your score.
               </span>
-            </button>
+              {/* Subtle shimmer overlay */}
+              <div className="absolute inset-0 rounded-2xl pointer-events-none"
+                style={{ background: "linear-gradient(135deg, transparent 60%, rgba(168,85,247,0.04))" }} />
+            </div>
           </div>
         </main>
       </div>

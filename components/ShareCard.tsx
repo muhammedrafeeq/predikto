@@ -29,7 +29,7 @@ export default function ShareCard({ cardRef, whatsappText, label, className }: S
       const blob = await new Promise<Blob>((resolve) =>
         canvas.toBlob((b) => resolve(b!), "image/png", 0.95)
       );
-      const file = new File([blob], "predikto-share.png", { type: "image/png" });
+      const file = new File([blob], "skorio-share.png", { type: "image/png" });
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text: whatsappText });

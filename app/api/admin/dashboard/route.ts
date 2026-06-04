@@ -18,6 +18,9 @@ export async function GET() {
     );
     const resultedMatches = parseInt(resultedMatchesRes.rows[0].count, 10);
 
+    const contestsCountRes = await query("SELECT COUNT(*) FROM contests");
+    const totalContests = parseInt(contestsCountRes.rows[0].count, 10);
+
     // 2. Get active markets / capacity
     // We group predictions by match to see active participation
     const activeMarketsRes = await query(
@@ -78,6 +81,7 @@ export async function GET() {
         totalMatches,
         totalPredictions,
         resultedMatches,
+        totalContests,
       },
       activeMarkets,
       recentActivity,

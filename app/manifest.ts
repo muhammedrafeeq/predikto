@@ -2,8 +2,8 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Predikto - FIFA World Cup 2026 Prediction App",
-    short_name: "Predikto",
+    name: "Skorio - FIFA World Cup 2026 Prediction App",
+    short_name: "Skorio",
     description: "Predict FIFA World Cup 2026 match outcomes, top scorers, and compete in the leaderboards.",
     start_url: "/matches",
     display: "standalone",

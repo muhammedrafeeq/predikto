@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Menu,
   Shield,
-  Activity,
+  Layers,
+  GitBranch,
 } from "lucide-react";
 
 interface AdminUser {
@@ -94,6 +95,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navLinks = [
     { label: "Overview", href: "/admin", icon: LayoutDashboard },
     { label: "Match Manager", href: "/admin/matches", icon: SoccerBallIcon },
+    { label: "Contests", href: "/admin/contests", icon: Layers },
+    { label: "Bracket Manager", href: "/admin/bracket", icon: GitBranch },
     { label: "User Registry", href: "/admin/users", icon: Users },
     { label: "Standings", href: "/admin/leaderboard", icon: Trophy },
   ];

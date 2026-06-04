@@ -142,8 +142,8 @@ export default function UserRegistry() {
     } else if (editMode === "phone") {
       if (!editValue.trim()) { setEditError("Phone cannot be empty"); return; }
     } else if (editMode === "pin") {
-      if (!/^\d{4}$/.test(editValue)) { setEditError("PIN must be exactly 4 digits"); return; }
-      if (editValue !== editValue2) { setEditError("PINs do not match"); return; }
+      if (!/^\d{6}$/.test(editValue)) { setEditError("Password must be exactly 6 digits"); return; }
+      if (editValue !== editValue2) { setEditError("Passwords do not match"); return; }
     }
 
     setEditSubmitting(true);
@@ -208,8 +208,8 @@ export default function UserRegistry() {
       setSubmitting(false);
       return;
     }
-    if (!/^\d{4}$/.test(newUserPin.trim())) {
-      setErrorMsg("PIN must be exactly 4 digits");
+    if (!/^\d{6}$/.test(newUserPin.trim())) {
+      setErrorMsg("Password must be exactly 6 digits");
       setSubmitting(false);
       return;
     }
@@ -325,7 +325,7 @@ export default function UserRegistry() {
                       onClick={() => openEdit(user, "pin")}
                       className="flex items-center gap-3 w-full px-4 py-2 text-left text-sm hover:bg-white/5 text-on-surface transition-colors"
                     >
-                      <KeyRound className="w-4 h-4 text-secondary" /> Change PIN
+                      <KeyRound className="w-4 h-4 text-secondary" /> Change Password
                     </button>
                     <div className="h-px bg-white/5 my-1" />
                     <button
@@ -480,24 +480,24 @@ export default function UserRegistry() {
               {editMode === "pin" && (
                 <>
                   <div>
-                    <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">New 4-Digit PIN</label>
+                    <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">New 6-Digit Password</label>
                     <input
                       autoFocus
-                      maxLength={4}
+                      maxLength={6}
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value.replace(/\D/g, ""))}
-                      placeholder="••••"
+                      placeholder="••••••"
                       className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none font-mono text-center tracking-[0.5em] text-xl"
                       type="password"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Confirm PIN</label>
+                    <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Confirm Password</label>
                     <input
-                      maxLength={4}
+                      maxLength={6}
                       value={editValue2}
                       onChange={(e) => setEditValue2(e.target.value.replace(/\D/g, ""))}
-                      placeholder="••••"
+                      placeholder="••••••"
                       className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none font-mono text-center tracking-[0.5em] text-xl"
                       type="password"
                     />
@@ -629,13 +629,13 @@ export default function UserRegistry() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block label-md text-on-surface-variant mb-1">4-Digit PIN</label>
+                  <label className="block label-md text-on-surface-variant mb-1">6-Digit Password</label>
                   <input
                     required
-                    maxLength={4}
+                    maxLength={6}
                     value={newUserPin}
                     onChange={(e) => setNewUserPin(e.target.value.replace(/\D/g, ""))}
-                    placeholder="e.g. 1234"
+                    placeholder="e.g. 123456"
                     className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none font-mono text-center tracking-widest"
                     type="password"
                   />

@@ -1,4 +1,4 @@
-const CACHE_NAME = "predikto-cache-v2";
+const CACHE_NAME = "skorio-cache-v1";
 
 // Push notification handler
 self.addEventListener("push", (event) => {

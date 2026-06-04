@@ -15,7 +15,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Predikto - FIFA World Cup 2026 Prediction App",
+  title: "Skorio - FIFA World Cup 2026 Prediction App",
   description: "Predict FIFA World Cup 2026 match outcomes, top scorers, and compete in the leaderboards.",
 };
 

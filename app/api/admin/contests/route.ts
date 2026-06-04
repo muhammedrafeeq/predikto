@@ -1,0 +1,106 @@
+import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
+
+// Helper to generate a unique random 6-character join code
+async function generateUniqueJoinCode(): Promise<string> {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  let isUnique = false;
+  while (!isUnique) {
+    code = "";
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const check = await query("SELECT id FROM contests WHERE join_code = $1", [code]);
+    if (check.rowCount === 0) isUnique = true;
+  }
+  return code;
+}
+
+// GET /api/admin/contests — list all contests with members + tournament info
+export async function GET() {
+  try {
+    const result = await query(
+      `SELECT
+        c.id,
+        c.name,
+        c.game_type       AS "gameType",
+        c.join_code       AS "joinCode",
+        c.created_at      AS "createdAt",
+        t.id              AS "tournamentId",
+        t.name            AS "tournamentName",
+        creator.name      AS "creatorName",
+        (SELECT COUNT(*)::int FROM contest_members WHERE contest_id = c.id) AS "memberCount"
+       FROM contests c
+       JOIN tournaments t ON c.tournament_id = t.id
+       LEFT JOIN users creator ON c.creator_id = creator.id
+       ORDER BY c.created_at DESC`
+    );
+
+    return NextResponse.json({ success: true, contests: result.rows });
+  } catch (error) {
+    console.error("GET Admin Contests Error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// POST /api/admin/contests — create a new contest (admin bypass)
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const { name, tournamentId, gameType } = body as {
+      name?: string;
+      tournamentId?: number;
+      gameType?: string;
+    };
+
+    if (!name || !tournamentId || !gameType) {
+      return NextResponse.json(
+        { error: "name, tournamentId, and gameType are required" },
+        { status: 400 }
+      );
+    }
+
+    const validGameTypes = ["match_prediction", "first_goal", "formation", "bracket"];
+    if (!validGameTypes.includes(gameType)) {
+      return NextResponse.json({ error: "Invalid gameType" }, { status: 400 });
+    }
+
+    // Validate tournament
+    const tourCheck = await query("SELECT id FROM tournaments WHERE id = $1", [tournamentId]);
+    if (tourCheck.rowCount === 0) {
+      return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+    }
+
+    const joinCode = await generateUniqueJoinCode();
+
+    const res = await query(
+      `INSERT INTO contests (name, tournament_id, game_type, join_code)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, game_type AS "gameType", join_code AS "joinCode", created_at AS "createdAt"`,
+      [name.trim(), tournamentId, gameType, joinCode]
+    );
+
+    const contest = res.rows[0];
+
+    // Fetch tournament name for response
+    const tRes = await query("SELECT name FROM tournaments WHERE id = $1", [tournamentId]);
+
+    return NextResponse.json(
+      {
+        success: true,
+        contest: {
+          ...contest,
+          tournamentId,
+          tournamentName: tRes.rows[0]?.name ?? "",
+          creatorName: "Admin",
+          memberCount: 0,
+        },
+      },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("POST Admin Contests Error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}

@@ -80,11 +80,24 @@ export async function GET(
       [match.teamHome, match.teamAway]
     );
 
+    // 4. Fetch existing game results (first goal minute, formations)
+    const firstGoalRes = await query(
+      "SELECT first_goal_minute FROM first_goal_results WHERE match_id = $1",
+      [matchId]
+    );
+    const formationRes = await query(
+      "SELECT home_formation, away_formation FROM formation_results WHERE match_id = $1",
+      [matchId]
+    );
+
     return NextResponse.json({
       success: true,
       match,
       entries,
       players: playersRes.rows,
+      firstGoalMinute: firstGoalRes.rows[0]?.first_goal_minute ?? null,
+      homeFormation: formationRes.rows[0]?.home_formation ?? null,
+      awayFormation: formationRes.rows[0]?.away_formation ?? null,
     });
   } catch (error) {
     console.error("GET Admin Match Entries Error:", error);

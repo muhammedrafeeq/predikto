@@ -315,7 +315,7 @@ export default function PredictPage({ params }: PredictPageProps) {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <span className="font-headline-md font-extrabold tracking-tighter text-primary select-none">
-            PREDIKTO
+            SKORIO
           </span>
         </div>
         

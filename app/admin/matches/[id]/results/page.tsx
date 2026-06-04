@@ -15,6 +15,7 @@ import {
   Check,
   ChevronRight,
   ShieldAlert,
+  Clock,
 } from "lucide-react";
 
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -85,6 +86,11 @@ export default function ResultEntry({
   const [squadPlayers, setSquadPlayers] = useState<{ name: string; teamName: string }[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // First goal minute & formation states
+  const [firstGoalMinute, setFirstGoalMinute] = useState<number | "">("");
+  const [homeFormation, setHomeFormation] = useState("");
+  const [awayFormation, setAwayFormation] = useState("");
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -95,6 +101,32 @@ export default function ResultEntry({
           if (data.success) {
             setMatch(data.match);
             setSquadPlayers(data.players || []);
+            if (data.firstGoalMinute !== null) setFirstGoalMinute(data.firstGoalMinute);
+            if (data.homeFormation) setHomeFormation(data.homeFormation);
+            if (data.awayFormation) setAwayFormation(data.awayFormation);
+            
+            // Prefill standard prediction answers if resulted
+            if (data.entries && data.entries.length > 0) {
+              const firstEntry = data.entries[0];
+              const correctWinner = firstEntry.predictions?.winner?.correctAnswer;
+              const correctScore = firstEntry.predictions?.score?.correctAnswer;
+              const correctScorer = firstEntry.predictions?.scorer?.correctAnswer;
+              if (correctWinner) {
+                if (correctWinner === data.match.teamHome) setWinnerChoice("home");
+                else if (correctWinner === data.match.teamAway) setWinnerChoice("away");
+                else setWinnerChoice("draw");
+              }
+              if (correctScore) {
+                const parts = correctScore.split("-");
+                if (parts.length === 2) {
+                  setHomeScore(parseInt(parts[0], 10) || 0);
+                  setAwayScore(parseInt(parts[1], 10) || 0);
+                }
+              }
+              if (correctScorer) {
+                setScorerName(correctScorer);
+              }
+            }
           }
         }
 
@@ -159,6 +191,18 @@ export default function ResultEntry({
       return;
     }
 
+    if (firstGoalMinute !== "" && (isNaN(Number(firstGoalMinute)) || Number(firstGoalMinute) < 1 || Number(firstGoalMinute) > 120)) {
+      setErrorMsg("First goal minute must be between 1 and 120");
+      setShowProgress(false);
+      return;
+    }
+
+    if ((homeFormation && !awayFormation) || (!homeFormation && awayFormation)) {
+      setErrorMsg("Please select both Home and Away formations, or leave both empty.");
+      setShowProgress(false);
+      return;
+    }
+
     // Determine winner value (team name or Draw)
     let winnerValue = "Draw";
     if (winnerChoice === "home") {
@@ -173,6 +217,7 @@ export default function ResultEntry({
       // Simulate computing animation for 1.2s
       await new Promise((resolve) => setTimeout(resolve, 1200));
 
+      // 1. Publish standard match results
       const res = await fetch(`/api/admin/matches/${matchId}/results`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -184,15 +229,53 @@ export default function ResultEntry({
       });
 
       const data = await res.json();
-      if (res.ok && data.success) {
-        setSuccessMsg("RESULTS PUBLISHED SUCCESSFULLY");
-        setTimeout(() => {
-          router.push("/admin/matches");
-        }, 1500);
-      } else {
-        setErrorMsg(data.error || "Failed to publish results");
+      if (!res.ok || !data.success) {
+        setErrorMsg(data.error || "Failed to publish match results");
         setShowProgress(false);
+        return;
       }
+
+      // 2. Publish first goal minute results if specified
+      if (firstGoalMinute !== "") {
+        const fgRes = await fetch("/api/admin/games/first-goal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            matchId,
+            firstGoalMinute: Number(firstGoalMinute),
+          }),
+        });
+        if (!fgRes.ok) {
+          const fgData = await fgRes.json();
+          setErrorMsg(`Match results published, but failed to save first goal timer: ${fgData.error || "Error"}`);
+          setShowProgress(false);
+          return;
+        }
+      }
+
+      // 3. Publish formation results if specified
+      if (homeFormation && awayFormation) {
+        const formRes = await fetch("/api/admin/games/formation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            matchId,
+            homeFormation,
+            awayFormation,
+          }),
+        });
+        if (!formRes.ok) {
+          const formData = await formRes.json();
+          setErrorMsg(`Match results published, but failed to save formations: ${formData.error || "Error"}`);
+          setShowProgress(false);
+          return;
+        }
+      }
+
+      setSuccessMsg("RESULTS PUBLISHED SUCCESSFULLY");
+      setTimeout(() => {
+        router.push("/admin/matches");
+      }, 1500);
     } catch (err) {
       console.error("Publish results error:", err);
       setErrorMsg("Internal server error");
@@ -492,6 +575,81 @@ export default function ResultEntry({
                     )}
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Advanced Contest Results (First Goal & Formations) */}
+            <div className="border-t border-white/5 pt-6 space-y-6">
+              <h3 className="label-md font-extrabold uppercase tracking-widest text-on-surface-variant select-none">
+                Advanced Contest Results (Optional)
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* First Goal Timer */}
+                <div className="space-y-3">
+                  <label className="label-md text-on-surface-variant flex items-center gap-2 select-none uppercase tracking-wider">
+                    <Clock className="w-4 h-4 text-secondary" />
+                    First Goal Minute
+                  </label>
+                  <div className="relative group">
+                    <input
+                      value={firstGoalMinute}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") setFirstGoalMinute("");
+                        else {
+                          const num = parseInt(val, 10);
+                          if (!isNaN(num)) setFirstGoalMinute(num);
+                        }
+                      }}
+                      placeholder="e.g. 17"
+                      min={1}
+                      max={120}
+                      className="w-full h-[68px] bg-[#050507] border border-white/10 rounded-xl px-4 pt-4 text-on-surface focus:border-secondary focus:ring-0 focus:outline-none transition-all placeholder:text-on-surface-variant/30 text-sm font-semibold font-mono"
+                      type="number"
+                    />
+                    <span className="absolute left-4 bottom-2 text-[9px] text-on-surface-variant uppercase tracking-tighter select-none font-bold">
+                      Enter minute (1 - 120)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Formations */}
+                <div className="space-y-3">
+                  <label className="label-md text-on-surface-variant flex items-center gap-2 select-none uppercase tracking-wider">
+                    <Sparkles className="w-4 h-4 text-secondary" />
+                    Match Formations
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] text-on-surface-variant font-bold uppercase select-none">Home</span>
+                      <select
+                        value={homeFormation}
+                        onChange={(e) => setHomeFormation(e.target.value)}
+                        className="w-full bg-[#050507] border border-white/10 rounded-xl px-3 py-3 text-on-surface focus:border-secondary focus:outline-none cursor-pointer text-sm font-semibold"
+                      >
+                        <option value="">Select...</option>
+                        {["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "5-3-2", "3-4-3", "4-5-1", "4-1-4-1"].map((f) => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] text-on-surface-variant font-bold uppercase select-none">Away</span>
+                      <select
+                        value={awayFormation}
+                        onChange={(e) => setAwayFormation(e.target.value)}
+                        className="w-full bg-[#050507] border border-white/10 rounded-xl px-3 py-3 text-on-surface focus:border-secondary focus:outline-none cursor-pointer text-sm font-semibold"
+                      >
+                        <option value="">Select...</option>
+                        {["4-3-3", "4-4-2", "4-2-3-1", "3-5-2", "5-3-2", "3-4-3", "4-5-1", "4-1-4-1"].map((f) => (
+                          <option key={f} value={f}>{f}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

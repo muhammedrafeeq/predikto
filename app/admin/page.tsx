@@ -6,10 +6,8 @@ import {
   Users,
   Trophy,
   Calendar,
-  Sparkles,
   ChevronRight,
   TrendingUp,
-  Activity,
   ArrowRight,
   User,
   PlusCircle,
@@ -18,6 +16,7 @@ import {
   Trash2,
   AlertTriangle,
   Database,
+  Layers,
 } from "lucide-react";
 
 interface Stats {
@@ -25,6 +24,7 @@ interface Stats {
   totalMatches: number;
   totalPredictions: number;
   resultedMatches: number;
+  totalContests: number;
 }
 
 interface ActiveMarket {
@@ -50,6 +50,7 @@ export default function AdminDashboard() {
     totalMatches: 0,
     totalPredictions: 0,
     resultedMatches: 0,
+    totalContests: 0,
   });
   const [activeMarkets, setActiveMarkets] = useState<ActiveMarket[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
@@ -161,7 +162,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Helper to trigger hover transition effects on card icons
   const statCards = [
     {
       title: "Total Users",
@@ -171,10 +171,10 @@ export default function AdminDashboard() {
       colorClass: "text-primary",
     },
     {
-      title: "Matches Created",
-      value: stats.totalMatches.toLocaleString(),
-      trend: "+5",
-      icon: Calendar,
+      title: "Total Contests",
+      value: stats.totalContests.toLocaleString(),
+      trend: "Active",
+      icon: Layers,
       colorClass: "text-secondary",
     },
     {
@@ -201,7 +201,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-2 mt-1">
           <div className="h-1 w-6 bg-primary rounded-full" />
           <p className="text-on-surface-variant label-sm uppercase tracking-widest">
-            Predikto Admin Terminal
+            Skorio Admin Terminal
           </p>
         </div>
       </div>
@@ -296,6 +296,17 @@ export default function AdminDashboard() {
                 Schedule New Match
               </span>
               <ChevronRight className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={() => router.push("/admin/contests")}
+              className="w-full h-16 rounded-xl bg-gradient-to-r from-secondary-container/40 to-secondary/20 border border-secondary/20 hover:shadow-[0_0_20px_rgba(67,223,158,0.2)] active:scale-98 flex items-center justify-between px-6 text-on-surface label-md font-bold transition-all"
+            >
+              <span className="flex items-center gap-3">
+                <Layers className="w-5 h-5 text-secondary" />
+                Manage Contests
+              </span>
+              <ChevronRight className="w-5 h-5 text-secondary/60" />
             </button>
 
             <button

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Trophy, Activity, ArrowRight, ShieldCheck, Flame, ChevronRight } from "lucide-react";
 
 export default function Home() {
@@ -10,11 +11,9 @@ export default function Home() {
       {/* Header Nav */}
       <header className="relative z-10 w-full max-w-container-max mx-auto flex justify-between items-center py-4 border-b border-white/5 mb-12">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-md bg-primary-container/20 text-primary">
-            <Flame className="w-5 h-5" />
-          </div>
-          <span className="label-md uppercase tracking-wider text-on-surface select-none">
-            Elite Predictive Sports
+          <Image src="/skorio-logo.png" alt="Skorio Logo" width={40} height={40} className="rounded-lg" />
+          <span className="label-md uppercase tracking-wider text-on-surface select-none font-extrabold text-primary">
+            SKORIO
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-6">
@@ -196,7 +195,7 @@ export default function Home() {
             <span>•</span>
             <span>PostgreSQL</span>
           </p>
-          <span className="text-white/20">© 2026 Elite Predictive Sports</span>
+          <span className="text-white/20">© 2026 Skorio</span>
         </div>
       </footer>
     </div>

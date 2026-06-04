@@ -188,20 +188,21 @@ export default function PwaInstallPrompt() {
           <div className="flex gap-4 items-start pr-6">
             {/* Logo container */}
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0"
+              className="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center shrink-0"
               style={{
                 background: "linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(99, 102, 241, 0.15))",
                 border: "1px solid rgba(168, 85, 247, 0.25)",
                 boxShadow: "0 0 20px rgba(168, 85, 247, 0.15)"
               }}
             >
-              <SoccerIcon className="w-7 h-7 text-primary animate-spin-slow" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/skorio-logo.png" alt="Skorio" className="w-full h-full object-cover" />
             </div>
 
             {/* Content text */}
             <div className="flex flex-col text-left">
               <h4 className="text-white font-black tracking-tight text-base flex items-center gap-1.5">
-                Install Predikto
+                Install Skorio
                 <span className="text-[10px] font-bold uppercase tracking-wider text-secondary px-1.5 py-0.5 rounded bg-secondary/10 border border-secondary/20">
                   PWA
                 </span>

@@ -130,7 +130,7 @@ export default function MatchManager() {
       const html2canvas = (await import("html2canvas")).default;
       const canvas = await html2canvas(el, { backgroundColor: "#0a0a0f", scale: 2, useCORS: true, allowTaint: true, logging: false });
       const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95));
-      const file = new File([blob], "predikto-result.png", { type: "image/png" });
+      const file = new File([blob], "skorio-result.png", { type: "image/png" });
 
       const entries: any[] = data.entries ?? [];
       const totalUsers = entries.length;
@@ -138,7 +138,7 @@ export default function MatchManager() {
         const preds = Object.values(e.predictions) as any[];
         return preds.filter((p) => p.isCorrect).length === 3;
       }).length;
-      const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Results published! ${totalUsers} players predicted, ${totalCorrect3} got all 3 correct 🏆 #PrediktoWC2026`;
+      const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Results published! ${totalUsers} players predicted, ${totalCorrect3} got all 3 correct 🏆 #SkorioWC2026`;
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text });
@@ -147,7 +147,7 @@ export default function MatchManager() {
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
-        const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Results are in on Predikto FIFA WC 2026 🏆`;
+        const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Results are in on Skorio FIFA WC 2026 🏆`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
       }
     } finally {
@@ -431,7 +431,7 @@ export default function MatchManager() {
                     <div style={{ display: "table", width: "100%", marginBottom: "16px" }}>
                       <TR>
                         <TD style={{ fontSize: "16px", fontWeight: 900, color: "#a855f7" }}>
-                          PREDIK<span style={{ color: "#fff" }}>TO</span>
+                          SKO<span style={{ color: "#fff" }}>RIO</span>
                         </TD>
                         <TD style={{ textAlign: "right", fontSize: "9px", fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
                           FIFA WC 2026 · Results
@@ -534,7 +534,7 @@ export default function MatchManager() {
 
                     {/* ── Footer ── */}
                     <div style={{ textAlign: "center", fontSize: "10px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.04em", paddingTop: "4px" }}>
-                      predikto.app · Predict the FIFA World Cup 🌍
+                      skorio.app · Predict the FIFA World Cup 🌍
                     </div>
                   </div>
                 );

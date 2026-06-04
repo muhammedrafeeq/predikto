@@ -302,7 +302,7 @@ export default function ResultPage({ params }: ResultPageProps) {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-            PREDIKTO
+            SKORIO
           </h1>
         </div>
 
@@ -472,7 +472,7 @@ export default function ResultPage({ params }: ResultPageProps) {
               {breakdown && match && (
                 <ShareCard
                   cardRef={shareCardRef}
-                  whatsappText={`⚽ ${match.teamHome} ${displayScoreHome}-${displayScoreAway} ${match.teamAway} | I scored ${breakdown.totalPoints}/11 pts on Predikto FIFA WC 2026! 🏆`}
+                  whatsappText={`⚽ ${match.teamHome} ${displayScoreHome}-${displayScoreAway} ${match.teamAway} | I scored ${breakdown.totalPoints}/11 pts on Skorio FIFA WC 2026! 🏆`}
                   label="Share Result"
                   className="w-full flex items-center justify-center gap-1.5 px-4 py-3 rounded-md text-xs font-bold text-white bg-[#25D366]/15 border border-[#25D366]/30 hover:bg-[#25D366]/25 transition-all active:scale-95"
                 />
@@ -493,7 +493,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-                  <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7", letterSpacing: "-0.5px" }}>PREDIK<span style={{ color: "#fff" }}>TO</span></div>
+                  <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7", letterSpacing: "-0.5px" }}>SKO<span style={{ color: "#fff" }}>RIO</span></div>
                   <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.15em" }}>FIFA WC 2026</div>
                 </div>
                 {/* Score */}
@@ -517,7 +517,7 @@ export default function ResultPage({ params }: ResultPageProps) {
                   <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "4px" }}>Points Earned</div>
                 </div>
                 <div style={{ marginTop: "16px", textAlign: "center", fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
-                  predikto.app • Join & predict the World Cup 🌍
+                  skorio.app • Join & predict the World Cup 🌍
                 </div>
               </div>
             )}

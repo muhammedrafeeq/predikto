@@ -199,7 +199,7 @@ export default function Leaderboard() {
         <div className="flex items-center gap-2">
           <SoccerBallIcon className="w-7 h-7 text-primary" />
           <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-            PREDIK<span className="text-white">TO</span>
+            SKO<span className="text-white">RIO</span>
           </h1>
         </div>
 
@@ -255,7 +255,7 @@ export default function Leaderboard() {
         {currentUser && (() => {
           const myRank = rankings.find(p => p.id === currentUser.id);
           if (!myRank) return null;
-          const whatsappText = `🏆 I'm ranked #${myRank.rank} with ${myRank.points} pts on Predikto FIFA WC 2026! Can you beat me? 🔥`;
+          const whatsappText = `🏆 I'm ranked #${myRank.rank} with ${myRank.points} pts on Skorio FIFA WC 2026! Can you beat me? 🔥`;
           return (
             <div className="mb-10">
               {/* Hidden share card — captured by html2canvas */}
@@ -275,7 +275,7 @@ export default function Leaderboard() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "20px" }}>
-                  <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7", letterSpacing: "-0.5px" }}>PREDIK<span style={{ color: "#fff" }}>TO</span></div>
+                  <div style={{ fontSize: "18px", fontWeight: 900, color: "#a855f7", letterSpacing: "-0.5px" }}>SKO<span style={{ color: "#fff" }}>RIO</span></div>
                   <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginLeft: "auto", textTransform: "uppercase", letterSpacing: "0.15em" }}>FIFA WC 2026</div>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
@@ -307,7 +307,7 @@ export default function Leaderboard() {
                   </div>
                 </div>
                 <div style={{ marginTop: "16px", textAlign: "center", fontSize: "11px", color: "rgba(255,255,255,0.25)" }}>
-                  predikto.app • Join & predict the World Cup 🌍
+                  skorio.app • Join & predict the World Cup 🌍
                 </div>
               </div>
 

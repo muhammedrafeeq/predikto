@@ -167,7 +167,7 @@ export default function PredictionHistory() {
         <div className="flex items-center gap-2">
           <SoccerBallIcon className="w-7 h-7 text-primary" />
           <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-            PREDIKTO
+            SKORIO
           </h1>
         </div>
 

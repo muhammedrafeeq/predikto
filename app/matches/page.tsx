@@ -7,10 +7,6 @@ import {
   Shield, Zap, Star, Lock, Calendar, Download, History, Gamepad2,
 } from "lucide-react";
 import TopBar from "@/components/TopBar";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
-import AdsterraMediumRectangle from "@/components/ads/AdsterraMediumRectangle";
-import AdsterraLeaderboard from "@/components/ads/AdsterraLeaderboard";
-import AdsterraMobileBanner from "@/components/ads/AdsterraMobileBanner";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Match {
@@ -642,20 +638,15 @@ export default function MatchCenter() {
           ) : (
             <div className="flex flex-col gap-4">
               {matches.map((match, idx) => (
-                <React.Fragment key={match.id}>
-                  <MatchCard
-                    match={match}
-                    index={idx}
-                    onNavigate={(path) => router.push(path)}
-                  />
-                  {idx === 2 && <AdsterraMediumRectangle />}
-                  {idx === 5 && <AdsterraNativeBanner />}
-                </React.Fragment>
+                <MatchCard
+                  key={match.id}
+                  match={match}
+                  index={idx}
+                  onNavigate={(path) => router.push(path)}
+                />
               ))}
             </div>
           )}
-          <AdsterraMobileBanner />
-          <AdsterraLeaderboard />
         </main>
 
         {/* Bottom nav */}

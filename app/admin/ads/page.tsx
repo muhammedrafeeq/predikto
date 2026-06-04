@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Monitor, Smartphone, LayoutGrid, Layers, Maximize2, SidebarOpen, Zap, MousePointerClick, Image, ToggleLeft, ToggleRight, RefreshCw } from "lucide-react";
+import { Monitor, ToggleLeft, ToggleRight, RefreshCw, Layers } from "lucide-react";
 
 interface AdUnit {
   key: string;
@@ -14,16 +14,6 @@ interface AdUnit {
 }
 
 const AD_UNITS: AdUnit[] = [
-  { key: "ad_social_bar", label: "Social Bar", size: "Responsive", type: "Global", placement: "Sticky bottom — all pages", icon: Layers, color: "text-violet-400" },
-  { key: "ad_popunder", label: "Popunder", size: "Full screen", type: "Global", placement: "Triggers on first click — all pages", icon: MousePointerClick, color: "text-rose-400" },
-  { key: "ad_native_banner", label: "Native Banner", size: "Auto", type: "In-feed", placement: "Between match/contest cards", icon: LayoutGrid, color: "text-sky-400" },
-  { key: "ad_medium_rectangle", label: "Medium Rectangle", size: "300×250", type: "In-feed", placement: "Matches page — after 3rd card", icon: Image, color: "text-emerald-400" },
-  { key: "ad_leaderboard", label: "Leaderboard", size: "728×90", type: "Desktop only", placement: "Matches + Leaderboard — below header", icon: Monitor, color: "text-amber-400" },
-  { key: "ad_full_banner", label: "Full Banner", size: "468×60", type: "All screens", placement: "Contests page — below header", icon: LayoutGrid, color: "text-indigo-400" },
-  { key: "ad_mobile_banner", label: "Mobile Banner", size: "320×50", type: "Mobile only", placement: "Matches page — bottom strip", icon: Smartphone, color: "text-pink-400" },
-  { key: "ad_wide_skyscraper", label: "Wide Skyscraper", size: "160×600", type: "Desktop only", placement: "Desktop sidebar", icon: SidebarOpen, color: "text-cyan-400" },
-  { key: "ad_half_page", label: "Half Page", size: "160×300", type: "Desktop only", placement: "Desktop sidebar", icon: Maximize2, color: "text-orange-400" },
-  { key: "ad_interstitial", label: "Interstitial", size: "300×250", type: "Overlay", placement: "After prediction submission", icon: Zap, color: "text-yellow-400" },
   { key: "ad_hilltop_banner", label: "HillTopAds Banner", size: "Responsive", type: "Global", placement: "All pages — injected by HillTopAds", icon: Monitor, color: "text-lime-400" },
 ];
 
@@ -37,12 +27,10 @@ export default function AdsManagerPage() {
     fetch("/api/admin/ads")
       .then((r) => r.json())
       .then((data) => {
-        if (data.success) {
-          // ensure all AD_UNITS keys are present, defaulting to true
-          const merged: Record<string, boolean> = {};
-          for (const u of AD_UNITS) merged[u.key] = true;
-          setSettings({ ...merged, ...data.settings });
-        }
+        const merged: Record<string, boolean> = {};
+        for (const u of AD_UNITS) merged[u.key] = true;
+        if (data.success) setSettings({ ...merged, ...data.settings });
+        else setSettings(merged);
       })
       .catch(() => {
         const fallback: Record<string, boolean> = {};
@@ -66,7 +54,6 @@ export default function AdsManagerPage() {
       setToast({ key, enabled: newVal });
       setTimeout(() => setToast(null), 2500);
     } catch {
-      // revert on error
       setSettings((prev) => ({ ...prev, [key]: !newVal }));
     } finally {
       setSaving(null);
@@ -137,37 +124,27 @@ export default function AdsManagerPage() {
                 }`}
               >
                 <div className="flex items-center gap-4 p-4">
-                  {/* Icon */}
                   <div className={`w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0 ${unit.color}`}>
                     <Icon className="w-5 h-5" />
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-sm font-bold text-white">{unit.label}</span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-white/40 uppercase tracking-wider">
                         {unit.size}
                       </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                        unit.type === "Global" ? "bg-violet-500/10 border border-violet-500/20 text-violet-400" :
-                        unit.type === "Mobile only" ? "bg-sky-500/10 border border-sky-500/20 text-sky-400" :
-                        unit.type === "Desktop only" ? "bg-amber-500/10 border border-amber-500/20 text-amber-400" :
-                        unit.type === "Overlay" ? "bg-rose-500/10 border border-rose-500/20 text-rose-400" :
-                        "bg-white/5 border border-white/10 text-white/40"
-                      }`}>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 uppercase tracking-wider">
                         {unit.type}
                       </span>
                     </div>
-                    <p className="text-xs text-white/35 mt-0.5 truncate">{unit.placement}</p>
+                    <p className="text-xs text-white/35 mt-0.5">{unit.placement}</p>
                   </div>
 
-                  {/* Toggle */}
                   <button
                     onClick={() => toggle(unit.key)}
                     disabled={isSaving}
                     className="shrink-0 cursor-pointer transition-transform active:scale-90"
-                    aria-label={`Toggle ${unit.label}`}
                   >
                     {isSaving ? (
                       <RefreshCw className="w-7 h-7 text-white/30 animate-spin" />
@@ -179,7 +156,6 @@ export default function AdsManagerPage() {
                   </button>
                 </div>
 
-                {/* Enabled status bar */}
                 {enabled && (
                   <div className="mx-4 mb-3 h-0.5 rounded-full bg-gradient-to-r from-emerald-500/30 via-emerald-400/20 to-transparent" />
                 )}

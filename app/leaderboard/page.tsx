@@ -5,9 +5,6 @@ import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown,
 import { useRouter } from "next/navigation";
 import ShareCard from "@/components/ShareCard";
 import TopBar from "@/components/TopBar";
-import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
-import AdsterraMediumRectangle from "@/components/ads/AdsterraMediumRectangle";
-import AdsterraLeaderboard from "@/components/ads/AdsterraLeaderboard";
 
 interface RankingPlayer {
   rank: number;
@@ -205,8 +202,6 @@ export default function Leaderboard() {
       {/* Main Container */}
       <main className="max-w-3xl mx-auto px-4 md:px-6 pt-24 pb-8">
         
-        <AdsterraLeaderboard />
-
         {/* Header Section */}
         <section className="flex flex-col items-center mb-8 text-center">
           <p className="text-[10px] font-bold tracking-[0.2em] text-violet-400 uppercase mb-1">
@@ -471,7 +466,6 @@ export default function Leaderboard() {
           )}
         </section>
 
-        <AdsterraNativeBanner />
       </main>
 
       {/* Responsive Mobile Bottom Navigation Bar */}

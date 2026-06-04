@@ -2,16 +2,6 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
 const AD_KEYS = [
-  "ad_social_bar",
-  "ad_popunder",
-  "ad_native_banner",
-  "ad_medium_rectangle",
-  "ad_leaderboard",
-  "ad_full_banner",
-  "ad_mobile_banner",
-  "ad_wide_skyscraper",
-  "ad_half_page",
-  "ad_interstitial",
   "ad_hilltop_banner",
 ];
 
@@ -30,7 +20,6 @@ export async function GET() {
 
     return NextResponse.json({ success: true, settings });
   } catch {
-    // fail open — show ads if DB is unreachable
     const fallback: Record<string, boolean> = {};
     for (const k of AD_KEYS) fallback[k] = true;
     return NextResponse.json({ success: true, settings: fallback });

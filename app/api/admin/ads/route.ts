@@ -3,16 +3,6 @@ import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 export const AD_KEYS = [
-  "ad_social_bar",
-  "ad_popunder",
-  "ad_native_banner",
-  "ad_medium_rectangle",
-  "ad_leaderboard",
-  "ad_full_banner",
-  "ad_mobile_banner",
-  "ad_wide_skyscraper",
-  "ad_half_page",
-  "ad_interstitial",
   "ad_hilltop_banner",
 ];
 
@@ -26,7 +16,6 @@ export async function GET() {
     );
 
     const settings: Record<string, boolean> = {};
-    // default all to true
     for (const k of AD_KEYS) settings[k] = true;
     for (const row of res.rows) {
       settings[row.key] = row.value !== "false";

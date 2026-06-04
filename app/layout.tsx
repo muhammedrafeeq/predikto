@@ -38,6 +38,12 @@ export default function RootLayout({
           ezstandalone.cmd = ezstandalone.cmd || [];
         `}</Script>
         <Script src="//ezoicanalytics.com/analytics.js" strategy="afterInteractive" />
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3775560788605769"
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

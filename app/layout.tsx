@@ -33,12 +33,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <Script src="//www.ezojs.com/ezoic/sa.min.js" strategy="afterInteractive" />
-        <Script id="ezoic-init" strategy="afterInteractive">{`
-          window.ezstandalone = window.ezstandalone || {};
-          ezstandalone.cmd = ezstandalone.cmd || [];
-        `}</Script>
-        <Script src="//ezoicanalytics.com/analytics.js" strategy="afterInteractive" />
         <Script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3775560788605769"

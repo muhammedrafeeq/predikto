@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
+import AdsterraSocialBar from "@/components/ads/AdsterraSocialBar";
+import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,6 +36,8 @@ export default function RootLayout({
       >
         {children}
         <PwaInstallPrompt />
+        <AdsterraSocialBar />
+        <AdsterraPopunder />
       </body>
     </html>
   );

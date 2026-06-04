@@ -3,6 +3,7 @@
 import React, { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Timer, CheckCircle2, Search, Plus, Minus, Send, Check, User, Trophy } from "lucide-react";
+import AdsterraInterstitial from "@/components/ads/AdsterraInterstitial";
 
 interface PredictPageProps {
   params: Promise<{ id: string }>;
@@ -111,6 +112,7 @@ export default function PredictPage({ params }: PredictPageProps) {
   // Submit animation states
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitting" | "success">("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showInterstitial, setShowInterstitial] = useState(false);
 
   // Countdown timer state
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -259,8 +261,8 @@ export default function PredictPage({ params }: PredictPageProps) {
 
       setSubmitStatus("success");
       setTimeout(() => {
-        router.push("/matches");
-      }, 1500);
+        setShowInterstitial(true);
+      }, 800);
     } catch (err: any) {
       console.error("Prediction submission error:", err);
       setErrorMessage(err.message || "Something went wrong. Please try again.");
@@ -303,6 +305,9 @@ export default function PredictPage({ params }: PredictPageProps) {
 
   return (
     <div className="relative min-h-screen bg-base-bg text-on-surface pb-32 bg-pitch overflow-x-hidden">
+      {showInterstitial && (
+        <AdsterraInterstitial onClose={() => router.push("/matches")} />
+      )}
       
       {/* Fixed Navigation App Bar */}
       <header className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-b border-white/10 flex justify-between items-center px-6 py-3 h-16">

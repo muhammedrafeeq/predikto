@@ -8,6 +8,8 @@ import {
   Gamepad2, Calendar, LayoutGrid
 } from "lucide-react";
 import TopBar from "@/components/TopBar";
+import AdsterraNativeBanner from "@/components/ads/AdsterraNativeBanner";
+import AdsterraFullBanner from "@/components/ads/AdsterraFullBanner";
 
 interface Contest {
   id: number;
@@ -304,6 +306,8 @@ export default function ContestsDashboard() {
           <p className="text-white/40 text-sm mt-1.5">Create or join contests, make predictions, and climb the scoreboard.</p>
         </section>
 
+        <AdsterraFullBanner />
+
         {/* Global Contests Banner */}
         {(() => {
           const unjoinedGlobalContests = globalContests.filter((gc) => !contests.some((c) => c.id === gc.id));
@@ -512,6 +516,8 @@ export default function ContestsDashboard() {
             </div>
           )}
         </section>
+
+        <AdsterraNativeBanner />
       </main>
 
       {/* Bottom Nav */}

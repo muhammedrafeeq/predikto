@@ -4,6 +4,7 @@ import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import AdsterraSocialBar from "@/components/ads/AdsterraSocialBar";
 import AdsterraPopunder from "@/components/ads/AdsterraPopunder";
+import { AdProvider } from "@/lib/AdContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -34,10 +35,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <PwaInstallPrompt />
-        <AdsterraSocialBar />
-        <AdsterraPopunder />
+        <AdProvider>
+          {children}
+          <PwaInstallPrompt />
+          <AdsterraSocialBar />
+          <AdsterraPopunder />
+        </AdProvider>
       </body>
     </html>
   );

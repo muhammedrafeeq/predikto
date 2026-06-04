@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useAdEnabled } from "@/lib/AdContext";
 
 export default function AdsterraFullBanner() {
+  const enabled = useAdEnabled("ad_full_banner");
   const containerRef = useRef<HTMLDivElement>(null);
   const loaded = useRef(false);
 
   useEffect(() => {
-    if (loaded.current || !containerRef.current) return;
+    if (!enabled || loaded.current || !containerRef.current) return;
     loaded.current = true;
 
     const optionsScript = document.createElement("script");
@@ -25,8 +27,9 @@ export default function AdsterraFullBanner() {
     const invokeScript = document.createElement("script");
     invokeScript.src = "https://www.highperformanceformat.com/36cddb46254d8d5aeb4a5bf6fe81747e/invoke.js";
     containerRef.current.appendChild(invokeScript);
-  }, []);
+  }, [enabled]);
 
+  if (!enabled) return null;
   return (
     <div className="flex justify-center my-4">
       <div ref={containerRef} style={{ width: 468, height: 60 }} />

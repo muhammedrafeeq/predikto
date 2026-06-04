@@ -34,8 +34,8 @@ async function run() {
     const usersRes = await pool.query("SELECT id, name, phone, role FROM users");
     console.log("Users:", usersRes.rows);
 
-    const contestsRes = await pool.query("SELECT id, name, join_code, creator_id FROM contests");
-    console.log("Contests:", contestsRes.rows);
+    const columnsRes = await pool.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'contests'");
+    console.log("Contests Columns:", columnsRes.rows);
 
   } catch (err) {
     console.error("Error:", err);

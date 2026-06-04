@@ -1,0 +1,62 @@
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
+import { query } from "@/lib/db";
+
+export const AD_KEYS = [
+  "ad_social_bar",
+  "ad_popunder",
+  "ad_native_banner",
+  "ad_medium_rectangle",
+  "ad_leaderboard",
+  "ad_full_banner",
+  "ad_mobile_banner",
+  "ad_wide_skyscraper",
+  "ad_half_page",
+  "ad_interstitial",
+];
+
+export async function GET() {
+  try {
+    await requireAdmin();
+
+    const res = await query(
+      `SELECT key, value FROM system_settings WHERE key = ANY($1)`,
+      [AD_KEYS]
+    );
+
+    const settings: Record<string, boolean> = {};
+    // default all to true
+    for (const k of AD_KEYS) settings[k] = true;
+    for (const row of res.rows) {
+      settings[row.key] = row.value !== "false";
+    }
+
+    return NextResponse.json({ success: true, settings });
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    await requireAdmin();
+    const { key, enabled } = await req.json() as { key: string; enabled: boolean };
+
+    if (!AD_KEYS.includes(key)) {
+      return NextResponse.json({ error: "Invalid ad key" }, { status: 400 });
+    }
+
+    await query(
+      `INSERT INTO system_settings (key, value, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
+      [key, String(enabled)]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (err: unknown) {
+    const e = err as { status?: number; message?: string };
+    return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });
+  }
+}

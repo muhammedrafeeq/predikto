@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useAdEnabled } from "@/lib/AdContext";
 
 export default function AdsterraMobileBanner() {
+  const enabled = useAdEnabled("ad_mobile_banner");
   const containerRef = useRef<HTMLDivElement>(null);
   const loaded = useRef(false);
 
   useEffect(() => {
-    if (loaded.current || !containerRef.current) return;
+    if (!enabled || loaded.current || !containerRef.current) return;
     loaded.current = true;
 
     const optionsScript = document.createElement("script");
@@ -25,8 +27,9 @@ export default function AdsterraMobileBanner() {
     const invokeScript = document.createElement("script");
     invokeScript.src = "https://www.highperformanceformat.com/753405b7f38e29d2a92c4475af5f639c/invoke.js";
     containerRef.current.appendChild(invokeScript);
-  }, []);
+  }, [enabled]);
 
+  if (!enabled) return null;
   return (
     <div className="flex lg:hidden justify-center my-4">
       <div ref={containerRef} style={{ width: 320, height: 50 }} />

@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useAdEnabled } from "@/lib/AdContext";
 
 interface Props {
   onClose: () => void;
 }
 
 export default function AdsterraInterstitial({ onClose }: Props) {
+  const enabled = useAdEnabled("ad_interstitial");
   const containerRef = useRef<HTMLDivElement>(null);
   const loaded = useRef(false);
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    if (loaded.current || !containerRef.current) return;
+    if (!enabled || loaded.current || !containerRef.current) return;
     loaded.current = true;
 
     const optionsScript = document.createElement("script");
@@ -30,13 +32,20 @@ export default function AdsterraInterstitial({ onClose }: Props) {
     const invokeScript = document.createElement("script");
     invokeScript.src = "https://www.highperformanceformat.com/70c7ee89310beba32f1c1ee13a530480/invoke.js";
     containerRef.current.appendChild(invokeScript);
-  }, []);
+  }, [enabled]);
 
   useEffect(() => {
     if (countdown <= 0) return;
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [countdown]);
+
+  // If interstitial is disabled, skip straight to close
+  useEffect(() => {
+    if (!enabled) onClose();
+  }, [enabled, onClose]);
+
+  if (!enabled) return null;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">

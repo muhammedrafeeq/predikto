@@ -284,7 +284,7 @@ export default function ContestsDashboard() {
         <div className="flex items-center gap-2">
           <SoccerBallIcon className="w-7 h-7 text-primary" />
           <h1 className="headline-md font-extrabold tracking-tighter text-primary select-none">
-            PREDIK<span className="text-white">TO</span>
+            SKO<span className="text-white">RIO</span>
           </h1>
         </div>
         <div className="flex items-center gap-3">

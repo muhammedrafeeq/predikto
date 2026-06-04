@@ -232,7 +232,7 @@ export default function LoginPage() {
                 <path d="M7.5 13H4" /><path d="M16.5 13H20" />
               </svg>
               <h1 className="headline-md font-extrabold tracking-tighter text-on-surface select-none">
-                PREDIK<span className="text-primary">TO</span>
+                SKO<span className="text-primary">RIO</span>
               </h1>
             </div>
           </div>

@@ -307,7 +307,7 @@ export default function GamesHub() {
         <div className="flex items-center gap-2">
           <span className="text-purple-500"><SoccerBallIcon className="w-6 h-6" /></span>
           <span className="text-lg font-black tracking-tighter" style={{ color: "#a855f7" }}>
-            PREDIK<span style={{ color: "#fff" }}>TO</span>
+            SKO<span style={{ color: "#fff" }}>RIO</span>
           </span>
         </div>
         <div className="flex items-center gap-3">

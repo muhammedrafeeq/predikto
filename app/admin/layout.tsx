@@ -125,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-2">
             <SoccerBallIcon className="w-7 h-7 text-primary" />
             <h1 className="font-display-lg text-[22px] text-primary tracking-tighter leading-none select-none">
-              PREDIK<span className="text-on-surface">TO</span>
+              SKO<span className="text-on-surface">RIO</span>
             </h1>
           </div>
         </div>

@@ -32,12 +32,14 @@ export async function GET(_req: NextRequest) {
       [user.userId]
     );
 
-    const sevenDayBest = careerRes.rows.length > 0
-      ? Math.max(...careerRes.rows.map((r: { best_pts: number }) => r.best_pts))
+    const rows = careerRes.rows as any[];
+
+    const sevenDayBest = rows.length > 0
+      ? Math.max(...rows.map((r) => r.best_pts))
       : 0;
 
-    const totalGames = careerRes.rows.reduce((s: number, r: { games: number }) => s + r.games, 0);
-    const totalGoals = careerRes.rows.reduce((s: number, r: { total_goals: number }) => s + (r.total_goals ?? 0), 0);
+    const totalGames = rows.reduce((s: number, r) => s + r.games, 0);
+    const totalGoals = rows.reduce((s: number, r) => s + (r.total_goals ?? 0), 0);
 
     return NextResponse.json({
       played: false,
@@ -46,7 +48,7 @@ export async function GET(_req: NextRequest) {
         sevenDayBest,
         totalGames,
         totalGoals,
-        days: careerRes.rows,
+        days: rows,
       },
     });
   } catch (err: unknown) {

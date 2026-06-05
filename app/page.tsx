@@ -1,9 +1,16 @@
 import Image from "next/image";
 import { Trophy, Activity, ArrowRight, ShieldCheck, Flame, ChevronRight } from "lucide-react";
+import FaqJsonLd from "@/components/seo/FaqJsonLd";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "https://www.skorio.in" },
+};
 
 export default function Home() {
   return (
     <div className="relative min-h-screen bg-base-bg text-on-surface flex flex-col p-6 md:p-8 overflow-hidden bg-pitch">
+      <FaqJsonLd />
       {/* Decorative Brand Neon Glows */}
       <div className="absolute top-[-10%] left-[-15%] w-[60%] h-[50%] rounded-full bg-primary/10 blur-[130px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-15%] w-[60%] h-[50%] rounded-full bg-secondary/10 blur-[130px] pointer-events-none" />

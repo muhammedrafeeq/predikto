@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "man of the match predictor", "sports prediction game", "soccer match predictor",
     "world cup 2026 fixtures", "predict football scores"
   ],
+  alternates: { canonical: "https://www.skorio.in/matches" },
   openGraph: {
     title: "FIFA World Cup 2026 Matches | Skorio",
     description: "Predict FIFA World Cup 2026 match scores, winners and first goal scorers. Earn points and climb the leaderboard.",

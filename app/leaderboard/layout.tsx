@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     "prediction game rankings", "sports quiz leaderboard", "top predictors",
     "world cup prediction rankings", "football quiz rankings", "sports contest leaderboard"
   ],
+  alternates: { canonical: "https://www.skorio.in/leaderboard" },
   openGraph: {
     title: "Global Sports Leaderboard | Skorio",
     description: "See the top FIFA World Cup 2026 predictors. Earn points and compete globally.",

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     "sports prediction games", "who am i football quiz", "world cup trivia",
     "football mini games", "free sports games", "cricket prediction game"
   ],
+  alternates: { canonical: "https://www.skorio.in/games" },
   openGraph: {
     title: "Free Sports Games | Skorio",
     description: "Play FIFA World Cup 2026 games — formation predictor, first goal timer, bracket builder, sports trivia and more.",

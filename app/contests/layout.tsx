@@ -9,6 +9,7 @@ export const metadata: Metadata = {
     "prediction challenge", "football fantasy contest", "sports game contest",
     "world cup fantasy league", "prediction league"
   ],
+  alternates: { canonical: "https://www.skorio.in/contests" },
   openGraph: {
     title: "Sports Prediction Contests | Skorio",
     description: "Create or join FIFA World Cup 2026 prediction contests. Compete in private leagues and sports challenges.",

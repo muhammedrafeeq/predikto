@@ -4,6 +4,7 @@ import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Timer, CheckCircle2, XCircle, Trophy, Shield, ArrowLeft, History, LayoutGrid, Gamepad2 } from "lucide-react";
 import ShareCard from "@/components/ShareCard";
+import SportsEventJsonLd from "@/components/seo/SportsEventJsonLd";
 
 interface ResultPageProps {
   params: Promise<{ id: string }>;
@@ -258,6 +259,14 @@ export default function ResultPage({ params }: ResultPageProps) {
 
   return (
     <div className="relative min-h-screen bg-base-bg text-on-surface pb-24 md:pb-8 bg-pitch overflow-x-hidden">
+      {match && (
+        <SportsEventJsonLd
+          homeTeam={match.teamHome}
+          awayTeam={match.teamAway}
+          matchTime={match.matchTime}
+          matchId={id}
+        />
+      )}
       
       {/* CSS Confetti keyframes styling injection */}
       <style>{`

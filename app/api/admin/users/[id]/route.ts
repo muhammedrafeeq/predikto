@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
@@ -7,6 +8,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin();
     const { id } = await params;
     const body = await request.json();
     const { isActive, name, phone, role, pin } = body;
@@ -70,6 +72,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin();
     const { id } = await params;
 
     // Delete cascading data then the user

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
 // GET /api/admin/users
 export async function GET() {
   try {
+    await requireAdmin();
     const usersRes = await query(
       `SELECT 
         u.id, 
@@ -51,6 +53,7 @@ export async function GET() {
 // POST /api/admin/users
 export async function POST(request: Request) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { name, phone, pin, role } = body;
 

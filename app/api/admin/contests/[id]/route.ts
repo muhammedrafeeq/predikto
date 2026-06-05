@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 // GET /api/admin/contests/[id] — get contest details + member list
@@ -7,6 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin();
     const { id } = await params;
 
     const contestRes = await query(
@@ -64,6 +66,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin();
     const { id } = await params;
 
     // Cascade delete in order
@@ -91,6 +94,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin();
     const { id } = await params;
     const body = await request.json() as { action: "add" | "remove"; userId: number };
     const { action, userId } = body;

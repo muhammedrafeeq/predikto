@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 export async function POST() {
   try {
+    await requireAdmin();
     await query(`
       CREATE TABLE IF NOT EXISTS penalty_challenges (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

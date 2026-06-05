@@ -75,13 +75,20 @@ export async function POST(req: NextRequest) {
     const goalieKicks: Direction[] = kicks.map(() => DIRECTIONS[Math.floor(Math.random() * 3)]);
     const goals = kicks.filter((k, i) => k !== goalieKicks[i]).length;
     const points = POINTS_MAP[goals] ?? 0;
-    const refId = Date.now();
+    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const refId = parseInt(`${today}${user.userId}`, 10) % 2147483647;
 
-    await query(
+    const insert = await query(
       `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
-       VALUES ($1, 'penalty', $2, $3, $4, NOW())`,
+       VALUES ($1, 'penalty', $2, $3, $4, NOW())
+       ON CONFLICT (user_id, game_type, reference_id) DO NOTHING
+       RETURNING id`,
       [user.userId, refId, points, JSON.stringify({ goals, goalieKicks })]
     );
+
+    if (insert.rowCount === 0) {
+      return NextResponse.json({ error: "Already played today" }, { status: 409 });
+    }
 
     return NextResponse.json({ goals, goalieKicks, points, alreadyPlayed: false });
   } catch (err: unknown) {

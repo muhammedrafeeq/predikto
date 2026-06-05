@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 import webpush from "web-push";
 
@@ -7,6 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireAdmin();
     const { id } = await params;
     const matchId = parseInt(id, 10);
 

@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 // GET /api/admin/matches
 export async function GET() {
   try {
+    await requireAdmin();
     const matchesRes = await query(
       `SELECT 
         m.id, 
@@ -42,6 +44,7 @@ export async function GET() {
 // POST /api/admin/matches
 export async function POST(request: Request) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { teamHome, teamAway, matchTime, deadline } = body;
 

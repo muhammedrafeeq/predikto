@@ -4,7 +4,8 @@ import { query } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "predikto-secret-jwt-key-2026-secure";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is not set");
 
 export async function POST(request: Request) {
   try {
@@ -49,7 +50,6 @@ export async function POST(request: Request) {
       {
         userId: user.id,
         name: user.name,
-        phone: user.phone,
         role: user.role,
       },
       JWT_SECRET,

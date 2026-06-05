@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { userId, matchId, points } = body;
 

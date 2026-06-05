@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 export async function GET() {
   try {
+    await requireAdmin();
     // 1. Get counts
     const usersCountRes = await query("SELECT COUNT(*) FROM users");
     const totalUsers = parseInt(usersCountRes.rows[0].count, 10);

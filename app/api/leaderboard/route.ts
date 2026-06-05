@@ -4,15 +4,13 @@ import { query } from "@/lib/db";
 export async function GET() {
   try {
     const leaderboardRes = await query(
-      `SELECT 
-        u.id, 
-        u.name, 
-        u.phone,
-        u.role,
+      `SELECT
+        u.id,
+        u.name,
         COALESCE(SUM(s.points), 0) as "totalPoints"
       FROM users u
       LEFT JOIN scores s ON u.id = s.user_id
-      GROUP BY u.id, u.name, u.phone, u.role
+      GROUP BY u.id, u.name
       ORDER BY "totalPoints" DESC, u.name ASC`
     );
 
@@ -20,8 +18,6 @@ export async function GET() {
       rank: idx + 1,
       id: row.id,
       name: row.name,
-      phone: row.phone,
-      role: row.role,
       points: parseInt(row.totalPoints, 10),
     }));
 

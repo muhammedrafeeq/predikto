@@ -1,35 +1,18 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { requireAuth } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "predikto-secret-jwt-key-2026-secure";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { userId } = await requireAuth();
     const { id } = await params;
     const matchId = parseInt(id, 10);
 
     if (isNaN(matchId)) {
       return NextResponse.json({ error: "Invalid match ID" }, { status: 400 });
-    }
-
-    const cookieStore = await cookies();
-    const token = cookieStore.get("token")?.value;
-
-    if (!token) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
-    let userId: number;
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
-      userId = decoded.userId;
-    } catch (err) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
     const body = await request.json();

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 // Helper to generate a unique random 6-character join code
@@ -20,6 +21,7 @@ async function generateUniqueJoinCode(): Promise<string> {
 // GET /api/admin/contests — list all contests with members + tournament info
 export async function GET() {
   try {
+    await requireAdmin();
     const result = await query(
       `SELECT
         c.id,
@@ -48,6 +50,7 @@ export async function GET() {
 // POST /api/admin/contests — create a new contest (admin bypass)
 export async function POST(request: Request) {
   try {
+    await requireAdmin();
     const body = await request.json();
     const { name, tournamentId, gameType, isPublic } = body as {
       name?: string;

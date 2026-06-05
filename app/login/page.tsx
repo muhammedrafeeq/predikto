@@ -157,7 +157,7 @@ export default function LoginPage() {
       if (data.user?.role === "admin") {
         window.location.href = "/admin";
       } else {
-        window.location.href = "/matches";
+        window.location.href = "/contests";
       }
     } catch {
       setError("Network error. Please try again.");

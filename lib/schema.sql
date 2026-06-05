@@ -134,6 +134,23 @@ CREATE INDEX IF NOT EXISTS idx_game_scores_contest ON game_scores(contest_id);
 CREATE INDEX IF NOT EXISTS idx_game_scores_user ON game_scores(user_id);
 CREATE INDEX IF NOT EXISTS idx_game_scores_game_type ON game_scores(game_type);
 
+-- Trivia Questions Table
+CREATE TABLE IF NOT EXISTS trivia_questions (
+    id            SERIAL PRIMARY KEY,
+    question      TEXT NOT NULL,
+    question_ml   TEXT DEFAULT '',
+    options       JSONB NOT NULL,
+    options_ml    JSONB DEFAULT '[]',
+    correct_index SMALLINT NOT NULL CHECK (correct_index BETWEEN 0 AND 3),
+    difficulty    VARCHAR(10) NOT NULL DEFAULT 'medium' CHECK (difficulty IN ('easy','medium','hard')),
+    explanation   TEXT DEFAULT '',
+    explanation_ml TEXT DEFAULT '',
+    active        BOOLEAN DEFAULT TRUE,
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_trivia_difficulty_active ON trivia_questions(difficulty, active);
+
 -- System Settings Table
 CREATE TABLE IF NOT EXISTS system_settings (
     key VARCHAR(100) PRIMARY KEY,

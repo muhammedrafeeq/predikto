@@ -2,7 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trophy, RefreshCw } from "lucide-react";
+import { ArrowLeft, Trophy, RefreshCw, Star, Target, Flame } from "lucide-react";
+
+interface CareerStats {
+  sevenDayBest: number;
+  totalGames: number;
+  totalGoals: number;
+}
 
 const Icon3dPenalty = () => (
   <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
@@ -377,9 +383,14 @@ export default function PenaltyPage() {
   const [creatingChallenge, setCreatingChallenge] = useState(false);
   const [challengeError, setChallengeError] = useState("");
   const [copiedLink, setCopiedLink] = useState(false);
+  const [career, setCareer] = useState<CareerStats | null>(null);
 
   useEffect(() => {
-    setLoading(false);
+    fetch("/api/games/penalty")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.career) setCareer(d.career); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const submitKicks = useCallback(async (allKicks: Direction[]) => {
@@ -513,7 +524,31 @@ export default function PenaltyPage() {
           </div>
 
           <h2 className="text-2xl font-black text-white text-center mb-1">Select Game Mode</h2>
-          <p className="text-xs text-white/40 text-center mb-8">Test your skills or battle against your friends.</p>
+          <p className="text-xs text-white/40 text-center mb-5">Test your skills or battle against your friends.</p>
+
+          {/* Career Stats Card */}
+          {career && (career.totalGames > 0) && (
+            <div className="w-full rounded-2xl border border-green-400/15 p-4 mb-5" style={{ background: "rgba(74,222,128,0.04)" }}>
+              <p className="text-[10px] font-black uppercase tracking-widest text-green-400/60 mb-3 text-center">7-Day Career Stats</p>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="flex flex-col items-center">
+                  <Star className="w-4 h-4 text-green-400 mb-1" />
+                  <span className="text-xl font-black text-green-400">{career.sevenDayBest}</span>
+                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider mt-0.5">Best Pts</span>
+                </div>
+                <div className="flex flex-col items-center border-x border-white/8">
+                  <Target className="w-4 h-4 text-amber-400 mb-1" />
+                  <span className="text-xl font-black text-amber-400">{career.totalGoals}</span>
+                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider mt-0.5">Goals</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <Flame className="w-4 h-4 text-orange-400 mb-1" />
+                  <span className="text-xl font-black text-orange-400">{career.totalGames}</span>
+                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider mt-0.5">Games</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex flex-col gap-4 w-full">
             {/* Solo Mode Button */}
@@ -611,18 +646,38 @@ export default function PenaltyPage() {
             <span className="text-green-400 font-black text-xl">{finalPoints} points earned</span>
           </div>
 
-          {/* Kick-by-kick breakdown */}
-          <div className="space-y-2 mb-6">
-            {trueResults.map((r, i) => (
-              <div key={i} className={`flex items-center justify-between rounded-xl px-4 py-3 border ${r.goal ? "border-green-400/20 bg-green-400/5" : "border-red-400/20 bg-red-400/5"}`}>
-                <span className="text-white/60 text-sm font-bold">Kick {i + 1}</span>
-                <div className="flex items-center gap-3">
-                  <span className="text-white/40 text-xs">You: <span className="text-white font-bold">{DIR_LABEL[r.kick]}</span></span>
-                  <span className="text-white/40 text-xs">Keeper: <span className="text-white font-bold">{DIR_LABEL[r.goalie]}</span></span>
-                  <span className={`font-black text-sm ${r.goal ? "text-green-400" : "text-red-400"}`}>{r.goal ? "GOAL" : "SAVED"}</span>
+          {/* Visual Scoreboard */}
+          <div className="rounded-2xl border border-white/10 p-4 mb-5" style={{ background: "rgba(255,255,255,0.025)" }}>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-3 text-center">Kick Scoreboard</p>
+            {/* Goal dots row */}
+            <div className="flex justify-center gap-2 mb-4">
+              {trueResults.map((r, i) => (
+                <div key={i}
+                  className="flex flex-col items-center gap-1"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                >
+                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg transition-all ${r.goal ? "border-green-400 bg-green-400/20" : "border-red-400 bg-red-400/10"}`}>
+                    {r.goal ? "⚽" : "🧤"}
+                  </div>
+                  <span className="text-[9px] font-black" style={{ color: r.goal ? "#4ade80" : "#f87171" }}>
+                    {r.goal ? "GOAL" : "SAVE"}
+                  </span>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            {/* Detail rows */}
+            <div className="space-y-1.5">
+              {trueResults.map((r, i) => (
+                <div key={i} className={`flex items-center justify-between rounded-lg px-3 py-2 ${r.goal ? "bg-green-400/6" : "bg-red-400/6"}`}>
+                  <span className="text-white/50 text-xs font-bold">Kick {i + 1}</span>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="text-white/30">You: <span className="text-white/70 font-bold">{DIR_ARROW[r.kick]} {DIR_LABEL[r.kick]}</span></span>
+                    <span className="text-white/30">GK: <span className="text-white/70 font-bold">{DIR_ARROW[r.goalie]}</span></span>
+                    <span className={`font-black ${r.goal ? "text-green-400" : "text-red-400"}`}>{r.goal ? "+⚡" : "✗"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <button

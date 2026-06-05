@@ -9,11 +9,46 @@ type Direction = (typeof DIRECTIONS)[number];
 export async function GET(_req: NextRequest) {
   try {
     const user = await requireAuth();
+
+    // Total all-time points
     const totRes = await query(
       `SELECT COALESCE(SUM(points),0)::int AS total FROM game_scores WHERE user_id = $1 AND game_type = 'penalty'`,
       [user.userId]
     );
-    return NextResponse.json({ played: false, totalPoints: totRes.rows[0].total });
+
+    // Last 7 days stats: one row per calendar day with best score, total goals, games
+    const careerRes = await query(
+      `SELECT
+         DATE(played_at) AS day,
+         MAX(points)::int AS best_pts,
+         SUM((metadata->>'goals')::int)::int AS total_goals,
+         COUNT(*)::int AS games
+       FROM game_scores
+       WHERE user_id = $1
+         AND game_type = 'penalty'
+         AND played_at >= NOW() - INTERVAL '7 days'
+       GROUP BY DATE(played_at)
+       ORDER BY day DESC`,
+      [user.userId]
+    );
+
+    const sevenDayBest = careerRes.rows.length > 0
+      ? Math.max(...careerRes.rows.map((r: { best_pts: number }) => r.best_pts))
+      : 0;
+
+    const totalGames = careerRes.rows.reduce((s: number, r: { games: number }) => s + r.games, 0);
+    const totalGoals = careerRes.rows.reduce((s: number, r: { total_goals: number }) => s + (r.total_goals ?? 0), 0);
+
+    return NextResponse.json({
+      played: false,
+      totalPoints: totRes.rows[0].total,
+      career: {
+        sevenDayBest,
+        totalGames,
+        totalGoals,
+        days: careerRes.rows,
+      },
+    });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });
@@ -38,7 +73,6 @@ export async function POST(req: NextRequest) {
     const goalieKicks: Direction[] = kicks.map(() => DIRECTIONS[Math.floor(Math.random() * 3)]);
     const goals = kicks.filter((k, i) => k !== goalieKicks[i]).length;
     const points = POINTS_MAP[goals] ?? 0;
-    // Use timestamp as unique reference so every play is recorded
     const refId = Date.now();
 
     await query(

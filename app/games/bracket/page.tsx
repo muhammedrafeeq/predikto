@@ -976,10 +976,70 @@ function SubmittedView({
       <div className="max-w-3xl mx-auto px-4 pt-6 fade-up">
 
         {/* Lock badge */}
-        <div className="flex items-center gap-2 mb-6 px-4 py-3 rounded-xl border border-white/8 bg-white/2">
+        <div className="flex items-center gap-2 mb-4 px-4 py-3 rounded-xl border border-white/8 bg-white/2">
           <Lock className="w-4 h-4 text-white/30" />
           <p className="text-white/40 text-xs">Your bracket is locked. Results update automatically as the tournament progresses.</p>
         </div>
+
+        {/* Live Scoring Progress */}
+        {(() => {
+          // Build all picks as {team, matchupKey} pairs
+          const allPicks: { team: string; key: string }[] = [];
+          GROUP_LETTERS.forEach((l) => {
+            const g = groups[l] ?? { first: "", second: "" };
+            if (g.first)  allPicks.push({ team: g.first,  key: `${l}1` });
+            if (g.second) allPicks.push({ team: g.second, key: `${l}2` });
+          });
+          r16.forEach((t, i)   => t && allPicks.push({ team: t, key: `R16_${i}` }));
+          qf.forEach((t, i)    => t && allPicks.push({ team: t, key: `QF_${i}` }));
+          sf.forEach((t, i)    => t && allPicks.push({ team: t, key: `SF_${i}` }));
+          final.forEach((t, i) => t && allPicks.push({ team: t, key: `FINAL_${i}` }));
+          if (winner) allPicks.push({ team: winner, key: "FINAL_WINNER" });
+
+          let correct = 0, wrong = 0, pending = 0;
+          allPicks.forEach(({ team, key }) => {
+            const r = results.find((res) => res.matchup === key);
+            if (!r) pending++;
+            else if (r.winner === team) correct++;
+            else wrong++;
+          });
+          const total = allPicks.length;
+          const resolved = correct + wrong;
+          const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+
+          return (
+            <div className="mb-5 rounded-2xl border border-yellow-400/15 p-4" style={{ background: "rgba(250,204,21,0.03)" }}>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] font-black text-yellow-400/60 uppercase tracking-widest">Live Score Progress</p>
+                <span className="text-lg font-black text-yellow-400">{correct}<span className="text-white/20 text-xs font-bold"> / {total}</span></span>
+              </div>
+              {/* Progress bar */}
+              <div className="h-2 rounded-full bg-white/8 overflow-hidden mb-3 flex">
+                <div className="h-full bg-green-400 rounded-l-full transition-all duration-700" style={{ width: `${(correct / total) * 100}%` }} />
+                <div className="h-full bg-red-400/60 transition-all duration-700" style={{ width: `${(wrong / total) * 100}%` }} />
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-lg font-black text-green-400">{correct}</p>
+                  <p className="text-[9px] font-bold text-white/30 uppercase tracking-wider">Correct</p>
+                </div>
+                <div>
+                  <p className="text-lg font-black text-red-400">{wrong}</p>
+                  <p className="text-[9px] font-bold text-white/30 uppercase tracking-wider">Wrong</p>
+                </div>
+                <div>
+                  <p className="text-lg font-black text-white/40">{pending}</p>
+                  <p className="text-[9px] font-bold text-white/30 uppercase tracking-wider">Pending</p>
+                </div>
+              </div>
+              {resolved > 0 && (
+                <p className="text-[10px] text-center mt-2 font-bold" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  {pct}% accuracy on {resolved} resolved picks
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Champion */}
         <div className="mb-6 rounded-2xl border border-yellow-400/30 p-5 text-center"

@@ -55,6 +55,8 @@ export default function WhoAmIPage() {
   const [pointsEarned, setPointsEarned] = useState(0);
   const [alreadyData, setAlreadyData] = useState<{ points: number; cluesRevealed: number; correct: boolean; playerName: string } | null>(null);
   const [requestingClue, setRequestingClue] = useState(false);
+  const [clueCooldown, setClueCooldown] = useState(0); // seconds remaining before next clue allowed
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -129,25 +131,35 @@ export default function WhoAmIPage() {
     setSubmitting(false);
   };
 
+  const startCooldown = (seconds: number) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    setClueCooldown(seconds);
+    cooldownRef.current = setInterval(() => {
+      setClueCooldown((t) => {
+        if (t <= 1) { clearInterval(cooldownRef.current!); return 0; }
+        return t - 1;
+      });
+    }, 1000);
+  };
+
   const handleRequestClue = async () => {
-    if (requestingClue || cluesRevealed >= 6) return;
+    if (requestingClue || cluesRevealed >= 6 || clueCooldown > 0) return;
     setRequestingClue(true);
     setGuessError("");
 
-    // If it's the last clue, submit a skip guess to finalise
     const nextClue = cluesRevealed + 1;
-    if (nextClue > 6) {
-      setRequestingClue(false);
-      return;
-    }
+    if (nextClue > 6) { setRequestingClue(false); return; }
 
-    // Optimistically reveal next clue locally — server only cares when we guess
     setTimeout(() => {
       setCluesRevealed(nextClue);
       setRequestingClue(false);
+      startCooldown(5); // 5-second cooldown before another clue can be revealed
       setTimeout(() => inputRef.current?.focus(), 200);
     }, 300);
   };
+
+  // cleanup on unmount
+  useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current); }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleGuess();
@@ -387,12 +399,24 @@ export default function WhoAmIPage() {
           {cluesRevealed < 6 && (
             <button
               onClick={handleRequestClue}
-              disabled={requestingClue || submitting}
-              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 bg-white/3 text-white/40 text-xs font-bold hover:bg-white/8 hover:text-white/60 disabled:opacity-40 transition-all"
+              disabled={requestingClue || submitting || clueCooldown > 0}
+              className="w-full mt-2 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/10 bg-white/3 text-white/40 text-xs font-bold hover:bg-white/8 hover:text-white/60 disabled:opacity-40 transition-all relative overflow-hidden"
             >
-              <ChevronDown className={`w-4 h-4 ${requestingClue ? "animate-bounce" : ""}`} />
-              Reveal next clue
-              <span className="text-white/20">(−{POINTS_BY_CLUE[cluesRevealed] - (POINTS_BY_CLUE[cluesRevealed + 1] ?? 0)} pts max)</span>
+              {clueCooldown > 0 ? (
+                <>
+                  <span className="font-black text-teal-400">{clueCooldown}s</span>
+                  <span className="text-white/30">before next clue...</span>
+                  {/* cooldown progress bar */}
+                  <span className="absolute bottom-0 left-0 h-0.5 bg-teal-400/50 transition-all duration-1000"
+                    style={{ width: `${((5 - clueCooldown) / 5) * 100}%` }} />
+                </>
+              ) : (
+                <>
+                  <ChevronDown className={`w-4 h-4 ${requestingClue ? "animate-bounce" : ""}`} />
+                  Reveal next clue
+                  <span className="text-white/20">(−{POINTS_BY_CLUE[cluesRevealed] - (POINTS_BY_CLUE[cluesRevealed + 1] ?? 0)} pts max)</span>
+                </>
+              )}
             </button>
           )}
 

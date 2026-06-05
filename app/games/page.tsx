@@ -422,8 +422,8 @@ export default function GamesHub() {
         {/* Native banner */}
         <div className="mt-5">
           <NativeBanner
-            src="https://pl29633839.effectivecpmnetwork.com/d940a0643b83fbb38d2f7e88a787ae28/invoke.js"
-            containerId="container-d940a0643b83fbb38d2f7e88a787ae28"
+            src="https://pl29647261.effectivecpmnetwork.com/7d41dd4171d1b8c5e8e3fbbf2438574a/invoke.js"
+            containerId="container-7d41dd4171d1b8c5e8e3fbbf2438574a"
             placement="ad_games_hub_native"
           />
         </div>

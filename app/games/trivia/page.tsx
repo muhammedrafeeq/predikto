@@ -345,6 +345,10 @@ export default function TriviaPage() {
                 </div>
               )}
 
+              <div className="flex justify-center mb-4">
+                <AdBanner adKey="5ff39764255d18f0c31a900dcfb30100" width={300} height={250} placement="ad_trivia_300x250" />
+              </div>
+
               {/* Q by Q breakdown with explanation */}
               <div className="space-y-3 mb-6">
                 {results.map((r, i) => (
@@ -499,7 +503,7 @@ export default function TriviaPage() {
 
         {/* Ad banner under options */}
         <div className="mt-4 flex justify-center">
-          <AdBanner adKey="753405b7f38e29d2a92c4475af5f639c" width={320} height={50} placement="ad_trivia_320x50" />
+          <AdBanner adKey="b4d4f6824ab4db12db3a13457d9e9635" width={320} height={50} placement="ad_trivia_320x50" />
         </div>
 
         {/* Explanation shown after answering */}

@@ -255,7 +255,7 @@ export default function ContestDetailPage() {
 
         {/* Ad banner */}
         <div className="flex justify-center mb-4">
-          <AdBanner adKey="5ff9be8f6a972cfd4234d241e8db5b2d" width={160} height={300} placement="ad_contest_160x300" />
+          <AdBanner adKey="50f2f3ce0e2f6861fabc6e1d46835fa2" width={160} height={300} placement="ad_contest_160x300" />
         </div>
 
         {/* Navigation Tabs */}

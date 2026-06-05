@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
     await query(
       `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
        VALUES ($1, 'trivia', $2, $3, $4, NOW())`,
-      [user.userId, Date.now(), totalPoints, JSON.stringify({ correct, difficulty, answers })]
+      [user.userId, null, totalPoints, JSON.stringify({ correct, difficulty, answers })]
     );
 
     return NextResponse.json({ results, totalPoints, correct, streakBonus });

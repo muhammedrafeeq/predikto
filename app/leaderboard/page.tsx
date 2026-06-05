@@ -202,7 +202,7 @@ export default function Leaderboard() {
 
       {/* Sidebar 160x600 desktop only */}
       <div className="hidden lg:flex fixed right-4 top-24 z-40">
-        <AdBanner adKey="ac22ba37d5a293ea9cfab0711c413069" width={160} height={600} />
+        <AdBanner adKey="ac22ba37d5a293ea9cfab0711c413069" width={160} height={600} placement="ad_leaderboard_160x600" />
       </div>
 
       {/* Main Container */}
@@ -396,10 +396,10 @@ export default function Leaderboard() {
         {/* Ad banner after podium — 728x90 desktop, 300x250 mobile */}
         <div className="my-4">
           <div className="hidden lg:flex justify-center">
-            <AdBanner adKey="e6c3313ea909108b25518bcf45214f98" width={728} height={90} />
+            <AdBanner adKey="e6c3313ea909108b25518bcf45214f98" width={728} height={90} placement="ad_leaderboard_728x90" />
           </div>
           <div className="flex justify-center lg:hidden">
-            <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+            <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} placement="ad_leaderboard_300x250" />
           </div>
         </div>
 

@@ -4,6 +4,14 @@ import { query } from "@/lib/db";
 
 export const AD_KEYS = [
   "ad_hilltop_banner",
+  "ad_games_hub_300x250",
+  "ad_games_hub_native",
+  "ad_trivia_320x50",
+  "ad_leaderboard_728x90",
+  "ad_leaderboard_300x250",
+  "ad_leaderboard_160x600",
+  "ad_contest_160x300",
+  "ad_match_result_468x60",
 ];
 
 export async function GET() {

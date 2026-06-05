@@ -416,7 +416,7 @@ export default function GamesHub() {
 
         {/* Ad banner */}
         <div className="mt-5 flex justify-center">
-          <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+          <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} placement="ad_games_hub_300x250" />
         </div>
 
         {/* Native banner */}
@@ -424,6 +424,7 @@ export default function GamesHub() {
           <NativeBanner
             src="https://pl29633839.effectivecpmnetwork.com/d940a0643b83fbb38d2f7e88a787ae28/invoke.js"
             containerId="container-d940a0643b83fbb38d2f7e88a787ae28"
+            placement="ad_games_hub_native"
           />
         </div>
 

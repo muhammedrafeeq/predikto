@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
-
-const AD_KEYS = [
-  "ad_hilltop_banner",
-];
+import { AD_KEYS } from "@/app/api/admin/ads/route";
 
 export async function GET() {
   try {
@@ -18,7 +15,9 @@ export async function GET() {
       settings[row.key] = row.value !== "false";
     }
 
-    return NextResponse.json({ success: true, settings });
+    return NextResponse.json({ success: true, settings }, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" },
+    });
   } catch {
     const fallback: Record<string, boolean> = {};
     for (const k of AD_KEYS) fallback[k] = true;

@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   other: {
     "3ab35c5b9da6236fff41dc5eca6c57ee4b990300": "3ab35c5b9da6236fff41dc5eca6c57ee4b990300",
     "google-adsense-account": "ca-pub-3775560788605769",
+    "google-site-verification": "OpmBFVnkW2OQfgrjMq9Xjx6B8h_IUA25fxCDAEgfk3c",
   },
 };
 

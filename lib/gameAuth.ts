@@ -1,9 +1,6 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is not set");
-
 export interface AuthUser {
   userId: number;
   name: string;
@@ -11,12 +8,15 @@ export interface AuthUser {
 }
 
 export async function requireAuth(): Promise<AuthUser> {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw Object.assign(new Error("Server misconfigured"), { status: 500 });
+
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
   if (!token) throw Object.assign(new Error("Not authenticated"), { status: 401 });
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthUser & { userId: number };
+    const decoded = jwt.verify(token, secret) as AuthUser & { userId: number };
     return { userId: decoded.userId, name: decoded.name, role: decoded.role };
   } catch {
     throw Object.assign(new Error("Invalid token"), { status: 401 });

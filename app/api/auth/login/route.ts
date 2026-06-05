@@ -4,8 +4,6 @@ import { query } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) throw new Error("JWT_SECRET environment variable is not set");
 
 export async function POST(request: Request) {
   try {
@@ -45,6 +43,9 @@ export async function POST(request: Request) {
       );
     }
 
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+
     // Generate JWT
     const token = jwt.sign(
       {
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
         name: user.name,
         role: user.role,
       },
-      JWT_SECRET,
+      jwtSecret,
       { expiresIn: "7d" }
     );
 

@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://predikto.vercel.app";
+  const base = "https://www.skorio.in";
   const now = new Date();
 
   return [

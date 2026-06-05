@@ -16,7 +16,7 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const BASE_URL = "https://predikto.vercel.app";
+const BASE_URL = "https://www.skorio.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

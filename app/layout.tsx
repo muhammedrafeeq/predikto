@@ -16,9 +16,39 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+const BASE_URL = "https://predikto.vercel.app";
+
 export const metadata: Metadata = {
-  title: "Skorio - FIFA World Cup 2026 Prediction App",
-  description: "Predict FIFA World Cup 2026 match outcomes, top scorers, and compete in the leaderboards.",
+  metadataBase: new URL(BASE_URL),
+  title: {
+    default: "Skorio — FIFA World Cup 2026 Predictions",
+    template: "%s | Skorio",
+  },
+  description: "Predict FIFA World Cup 2026 match scores, top scorers, and compete on the global leaderboard. Free sports prediction game.",
+  keywords: ["FIFA World Cup 2026", "football predictions", "soccer predictions", "match predictor", "sports game", "leaderboard", "prediction app"],
+  authors: [{ name: "Skorio" }],
+  creator: "Skorio",
+  publisher: "Skorio",
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: BASE_URL,
+    siteName: "Skorio",
+    title: "Skorio — FIFA World Cup 2026 Predictions",
+    description: "Predict FIFA World Cup 2026 match scores, top scorers, and compete on the global leaderboard.",
+    images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Skorio Logo" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Skorio — FIFA World Cup 2026 Predictions",
+    description: "Predict FIFA World Cup 2026 match scores and compete on the global leaderboard.",
+    images: ["/icon-512.png"],
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/icon-192.png",
+  },
   other: {
     "3ab35c5b9da6236fff41dc5eca6c57ee4b990300": "3ab35c5b9da6236fff41dc5eca6c57ee4b990300",
     "google-adsense-account": "ca-pub-3775560788605769",
@@ -44,6 +74,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script id="json-ld" type="application/ld+json" strategy="beforeInteractive">{`
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Skorio",
+            "url": "${BASE_URL}",
+            "description": "Predict FIFA World Cup 2026 match scores, top scorers, and compete on the global leaderboard.",
+            "applicationCategory": "SportsApplication",
+            "operatingSystem": "Web",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "author": { "@type": "Organization", "name": "Skorio" }
+          }
+        `}</Script>
         <AdProvider>
           {children}
           <PwaInstallPrompt />

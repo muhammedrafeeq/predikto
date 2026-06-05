@@ -8,6 +8,7 @@ import {
   Crown, Star, Award
 } from "lucide-react";
 import MatchPredictionContestView from "@/components/MatchPredictionContestView";
+import AdBanner from "@/components/AdBanner";
 import FirstGoalContestView from "@/components/FirstGoalContestView";
 import FormationContestView from "@/components/FormationContestView";
 import BracketContestView from "@/components/BracketContestView";
@@ -251,6 +252,11 @@ export default function ContestDetailPage() {
           <h2 className="text-2xl font-black text-white tracking-tight">{contest.name}</h2>
           <p className="text-white/40 text-xs mt-1">Share the code <span className="font-mono text-yellow-400 font-bold">{contest.joinCode}</span> to invite other members to this contest.</p>
         </section>
+
+        {/* Ad banner */}
+        <div className="flex justify-center mb-4">
+          <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+        </div>
 
         {/* Navigation Tabs */}
         <section className="mb-6 fade-up">

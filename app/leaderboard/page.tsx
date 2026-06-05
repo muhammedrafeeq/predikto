@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History, Gamepad2 } from "lucide-react";
+import AdBanner from "@/components/AdBanner";
 import { useRouter } from "next/navigation";
 import ShareCard from "@/components/ShareCard";
 import TopBar from "@/components/TopBar";
@@ -386,6 +387,11 @@ export default function Leaderboard() {
             </div>
           )}
         </section>
+
+        {/* Ad banner after podium */}
+        <div className="flex justify-center my-4">
+          <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+        </div>
 
         {/* Ranking List Table Grid */}
         <section className="flex flex-col gap-3">

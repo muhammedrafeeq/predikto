@@ -200,6 +200,11 @@ export default function Leaderboard() {
         activeTab="rankings"
       />
 
+      {/* Sidebar 160x600 desktop only */}
+      <div className="hidden lg:flex fixed right-4 top-24 z-40">
+        <AdBanner adKey="ac22ba37d5a293ea9cfab0711c413069" width={160} height={600} />
+      </div>
+
       {/* Main Container */}
       <main className="max-w-3xl mx-auto px-4 md:px-6 pt-24 pb-8">
         
@@ -388,9 +393,14 @@ export default function Leaderboard() {
           )}
         </section>
 
-        {/* Ad banner after podium */}
-        <div className="flex justify-center my-4">
-          <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+        {/* Ad banner after podium — 728x90 desktop, 300x250 mobile */}
+        <div className="my-4">
+          <div className="hidden lg:flex justify-center">
+            <AdBanner adKey="e6c3313ea909108b25518bcf45214f98" width={728} height={90} />
+          </div>
+          <div className="flex justify-center lg:hidden">
+            <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+          </div>
         </div>
 
         {/* Ranking List Table Grid */}

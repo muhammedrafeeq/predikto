@@ -499,7 +499,7 @@ export default function TriviaPage() {
 
         {/* Ad banner under options */}
         <div className="mt-4 flex justify-center">
-          <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+          <AdBanner adKey="753405b7f38e29d2a92c4475af5f639c" width={320} height={50} />
         </div>
 
         {/* Explanation shown after answering */}

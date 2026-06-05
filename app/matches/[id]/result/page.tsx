@@ -473,7 +473,7 @@ export default function ResultPage({ params }: ResultPageProps) {
             </div>
 
             <div className="mt-6 flex justify-center">
-              <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} />
+              <AdBanner adKey="36cddb46254d8d5aeb4a5bf6fe81747e" width={468} height={60} />
             </div>
 
             <div className="mt-8 w-full max-w-md flex flex-col gap-3">

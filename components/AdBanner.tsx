@@ -9,6 +9,31 @@ interface AdBannerProps {
   className?: string;
 }
 
+interface NativeBannerProps {
+  src: string;
+  containerId: string;
+  className?: string;
+}
+
+export function NativeBanner({ src, containerId, className = "" }: NativeBannerProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    ref.current.innerHTML = `<div id="${containerId}"></div>`;
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.setAttribute("data-cfasync", "false");
+    ref.current.appendChild(script);
+
+    return () => { if (ref.current) ref.current.innerHTML = ""; };
+  }, [src, containerId]);
+
+  return <div ref={ref} className={className} />;
+}
+
 export default function AdBanner({ adKey, width, height, className = "" }: AdBannerProps) {
   const ref = useRef<HTMLDivElement>(null);
 

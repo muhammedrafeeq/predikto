@@ -16,14 +16,12 @@ interface AdUnit {
 const AD_UNITS: AdUnit[] = [
   { key: "ad_hilltop_banner",       label: "HillTopAds Banner",       size: "Responsive", type: "Global",   placement: "All pages — injected by HillTopAds",          icon: Monitor, color: "text-lime-400"   },
   { key: "ad_games_hub_300x250",    label: "Games Hub — Rectangle",   size: "300×250",    type: "Adsterra", placement: "Games hub — below game grid",                  icon: Monitor, color: "text-sky-400"    },
-  { key: "ad_games_hub_native",     label: "Games Hub — Native",      size: "Native",     type: "Adsterra", placement: "Games hub — below game grid (native)",         icon: Layers,  color: "text-violet-400" },
   { key: "ad_trivia_300x250",        label: "Trivia — Results",        size: "300×250",    type: "Adsterra", placement: "Trivia results screen — above Q breakdown",          icon: Monitor, color: "text-green-400"  },
   { key: "ad_trivia_320x50",        label: "Trivia — Mobile Strip",   size: "320×50",     type: "Adsterra", placement: "Trivia game — under answer options",           icon: Monitor, color: "text-green-400"  },
   { key: "ad_leaderboard_728x90",   label: "Leaderboard — Desktop",   size: "728×90",     type: "Adsterra", placement: "Leaderboard — after podium (desktop only)",    icon: Monitor, color: "text-amber-400"  },
   { key: "ad_leaderboard_300x250",  label: "Leaderboard — Mobile",    size: "300×250",    type: "Adsterra", placement: "Leaderboard — after podium (mobile only)",     icon: Monitor, color: "text-amber-400"  },
   { key: "ad_leaderboard_160x600",  label: "Leaderboard — Sidebar",   size: "160×600",    type: "Adsterra", placement: "Leaderboard — fixed right sidebar (desktop)",  icon: Monitor, color: "text-rose-400"   },
-  { key: "ad_contest_160x300",      label: "Contest Detail — Half",   size: "160×300",    type: "Adsterra", placement: "Contest detail page — below contest header",   icon: Monitor, color: "text-teal-400"   },
-  { key: "ad_contest_300x250",      label: "Contest Detail — Rectangle", size: "300×250", type: "Adsterra", placement: "Contest detail page — between match cards",       icon: Monitor, color: "text-teal-400"   },
+  { key: "ad_contest_300x250",      label: "Contest Detail — Rectangle", size: "300×250", type: "Adsterra", placement: "Contest detail page — below contest header",     icon: Monitor, color: "text-teal-400"   },
   { key: "ad_match_result_468x60",  label: "Match Result — Banner",   size: "468×60",     type: "Adsterra", placement: "Match result page — above action buttons",     icon: Monitor, color: "text-indigo-400" },
 ];
 

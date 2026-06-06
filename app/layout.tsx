@@ -60,7 +60,6 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/icon-192.png",
   },
-  alternates: { canonical: "https://www.skorio.in" },
   other: {
     "3ab35c5b9da6236fff41dc5eca6c57ee4b990300": "3ab35c5b9da6236fff41dc5eca6c57ee4b990300",
     "google-adsense-account": "ca-pub-3775560788605769",

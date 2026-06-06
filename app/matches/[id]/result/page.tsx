@@ -4,7 +4,6 @@ import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Timer, CheckCircle2, XCircle, Trophy, Shield, ArrowLeft, History, LayoutGrid, Gamepad2 } from "lucide-react";
 import ShareCard from "@/components/ShareCard";
-import AdBanner from "@/components/AdBanner";
 import SportsEventJsonLd from "@/components/seo/SportsEventJsonLd";
 
 interface ResultPageProps {
@@ -470,10 +469,6 @@ export default function ResultPage({ params }: ResultPageProps) {
                   +{breakdown.bonusPoints} pts
                 </span>
               </div>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <AdBanner adKey="83d0a65722f0fd0e172650d66f5b7806" width={468} height={60} placement="ad_match_result_468x60" />
             </div>
 
             <div className="mt-8 w-full max-w-md flex flex-col gap-3">

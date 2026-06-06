@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nslookup skorio.in 8.8.8.8)",
+      "Bash(nslookup www.skorio.in 8.8.8.8)"
+    ]
+  }
+}

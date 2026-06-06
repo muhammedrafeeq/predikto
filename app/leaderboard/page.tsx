@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History, Gamepad2 } from "lucide-react";
-import AdBanner from "@/components/AdBanner";
 import { useRouter } from "next/navigation";
 import ShareCard from "@/components/ShareCard";
 import TopBar from "@/components/TopBar";
@@ -200,11 +199,6 @@ export default function Leaderboard() {
         activeTab="rankings"
       />
 
-      {/* Sidebar 160x600 desktop only */}
-      <div className="hidden lg:flex fixed right-4 top-24 z-40">
-        <AdBanner adKey="8c7d0a1083cd82ee2813c7e54e7c5c63" width={160} height={600} placement="ad_leaderboard_160x600" />
-      </div>
-
       {/* Main Container */}
       <main className="max-w-3xl mx-auto px-4 md:px-6 pt-24 pb-8">
         
@@ -393,15 +387,7 @@ export default function Leaderboard() {
           )}
         </section>
 
-        {/* Ad banner after podium — 728x90 desktop, 300x250 mobile */}
-        <div className="my-4">
-          <div className="hidden lg:flex justify-center">
-            <AdBanner adKey="35e5e57eac7b7613e82ccb3e6addda4e" width={728} height={90} placement="ad_leaderboard_728x90" />
-          </div>
-          <div className="flex justify-center lg:hidden">
-            <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} placement="ad_leaderboard_300x250" />
-          </div>
-        </div>
+
 
         {/* Ranking List Table Grid */}
         <section className="flex flex-col gap-3">

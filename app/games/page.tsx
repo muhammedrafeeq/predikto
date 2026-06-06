@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Trophy, Shield, History, Gamepad2, ChevronRight, Sparkles, LayoutGrid } from "lucide-react";
-import AdBanner from "@/components/AdBanner";
 
 const SoccerBallIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -414,10 +413,6 @@ export default function GamesHub() {
           })}
         </div>
 
-        {/* Ad banner */}
-        <div className="mt-5 flex justify-center">
-          <AdBanner adKey="70c7ee89310beba32f1c1ee13a530480" width={300} height={250} placement="ad_games_hub_300x250" />
-        </div>
 
 
         {/* Points summary */}

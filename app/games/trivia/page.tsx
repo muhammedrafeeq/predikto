@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trophy, Clock, CheckCircle, XCircle, Zap, Flame } from "lucide-react";
-import AdBanner from "@/components/AdBanner";
 
 interface TriviaQuestion {
   id: number;
@@ -496,12 +495,6 @@ export default function TriviaPage() {
               </button>
             );
           })}
-        </div>
-
-        {/* Ad banners below options */}
-        <div className="mt-4 flex flex-col items-center gap-3">
-          <AdBanner adKey="5ff39764255d18f0c31a900dcfb30100" width={300} height={250} placement="ad_trivia_300x250" />
-          <AdBanner adKey="b4d4f6824ab4db12db3a13457d9e9635" width={320} height={50} placement="ad_trivia_320x50" />
         </div>
 
         {/* Explanation shown after answering */}

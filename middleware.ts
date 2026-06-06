@@ -43,8 +43,9 @@ export function middleware(request: NextRequest) {
   }
 
   // 2. If trying to access protected user routes but not logged in, redirect to login
+  // /contests base is public — only sub-routes (predict, contest detail) require auth
   const isUserRoute =
-    pathname.startsWith("/contests") ||
+    (pathname.startsWith("/contests") && pathname !== "/contests") ||
     pathname.startsWith("/matches") ||
     pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/history") ||

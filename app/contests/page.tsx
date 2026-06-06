@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Trophy, Shield, History, Plus, Users, 
+import {
+  Trophy, Shield, History, Plus, Users,
   ArrowRight, Sparkles, Copy, Check, LogOut,
   Gamepad2, Calendar, LayoutGrid
 } from "lucide-react";
 import TopBar from "@/components/TopBar";
+import AuthModal from "@/components/AuthModal";
 
 interface Contest {
   id: number;
@@ -97,56 +98,79 @@ export default function ContestsDashboard() {
 
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [userRes, contestsRes, tourRes, settingsRes] = await Promise.all([
-          fetch("/api/auth/me"),
-          fetch("/api/contests"),
-          fetch("/api/tournaments"),
-          fetch("/api/settings")
-        ]);
+  // Auth modal state
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authHint, setAuthHint] = useState("");
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
-        if (userRes.ok) {
-          const ud = await userRes.json();
-          if (ud.user) setCurrentUser(ud.user);
-        } else {
-          router.push("/login");
-          return;
-        }
+  // Gate any action behind auth — shows modal if not logged in
+  const gateAction = useCallback((hint: string, action: () => void) => {
+    if (!currentUser) {
+      setAuthHint(hint);
+      setPendingAction(() => action);
+      setShowAuthModal(true);
+    } else {
+      action();
+    }
+  }, [currentUser]);
 
-        if (contestsRes.ok) {
-          const cd = await contestsRes.json();
-          if (cd.success) {
-            setContests(cd.contests);
-            setGlobalContests(cd.globalContests || []);
-          }
-        }
+  const handleAuthSuccess = useCallback(() => {
+    setShowAuthModal(false);
+    // Reload the page so user + contests data refreshes with the new session
+    window.location.reload();
+  }, []);
 
-        if (tourRes.ok) {
-          const td = await tourRes.json();
-          if (td.success) {
-            setTournaments(td.tournaments);
-            if (td.tournaments.length > 0) {
-              setSelectedTournament(td.tournaments[0].id.toString());
+  const loadData = useCallback(async () => {
+    try {
+      const [userRes, publicContestsRes, tourRes, settingsRes] = await Promise.all([
+        fetch("/api/auth/me"),
+        fetch("/api/contests/public"),
+        fetch("/api/tournaments"),
+        fetch("/api/settings"),
+      ]);
+
+      if (userRes.ok) {
+        const ud = await userRes.json();
+        if (ud.user) {
+          setCurrentUser(ud.user);
+          // Load user-specific contests only when authenticated
+          const contestsRes = await fetch("/api/contests");
+          if (contestsRes.ok) {
+            const cd = await contestsRes.json();
+            if (cd.success) {
+              setContests(cd.contests);
+              setGlobalContests(cd.globalContests || []);
             }
           }
         }
-
-        if (settingsRes.ok) {
-          const sData = await settingsRes.json();
-          if (sData.success) {
-            setAllowContestCreation(sData.settings.allow_contest_creation);
-          }
+      } else {
+        // Not logged in — show public contests only
+        if (publicContestsRes.ok) {
+          const pd = await publicContestsRes.json();
+          if (pd.success) setGlobalContests(pd.contests || []);
         }
-      } catch (err) {
-        console.error("Dashboard load error", err);
-      } finally {
-        setLoading(false);
       }
+
+      if (tourRes.ok) {
+        const td = await tourRes.json();
+        if (td.success) {
+          setTournaments(td.tournaments);
+          if (td.tournaments.length > 0) setSelectedTournament(td.tournaments[0].id.toString());
+        }
+      }
+
+      if (settingsRes.ok) {
+        const sData = await settingsRes.json();
+        if (sData.success) setAllowContestCreation(sData.settings.allow_contest_creation);
+      }
+    } catch (err) {
+      console.error("Dashboard load error", err);
+    } finally {
+      setLoading(false);
     }
-    load();
-  }, [router]);
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleJoinWithCode = async (code: string) => {
     setJoining(true);
@@ -196,7 +220,7 @@ export default function ContestsDashboard() {
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!joinCode.trim()) return;
-    await handleJoinWithCode(joinCode);
+    gateAction("Sign in to join this contest", () => handleJoinWithCode(joinCode));
   };
 
   const handleCreateContest = async (e: React.FormEvent) => {
@@ -362,7 +386,7 @@ export default function ContestsDashboard() {
 
                     <div className="relative z-10 shrink-0 w-full sm:w-auto">
                       <button
-                        onClick={() => handleJoinWithCode(globalContest.joinCode)}
+                        onClick={() => gateAction("Sign in to join the Global Arena", () => handleJoinWithCode(globalContest.joinCode))}
                         disabled={joining}
                         className="w-full sm:w-auto bg-primary text-on-primary hover:bg-primary/90 active:scale-95 px-8 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/20 hover:shadow-primary/30 flex items-center justify-center gap-2 cursor-pointer"
                       >
@@ -428,7 +452,7 @@ export default function ContestsDashboard() {
                 <p className="text-xs text-white/40 mt-1">Start a custom scoreboard with friends playing any prediction mode.</p>
               </div>
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => gateAction("Sign in to create a contest", () => setShowCreateModal(true))}
                 className="w-full bg-gradient-to-r from-primary-container to-primary text-on-primary-container py-3 rounded-xl text-xs font-black uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" /> Start A Contest
@@ -443,7 +467,21 @@ export default function ContestsDashboard() {
             <h3 className="label-md uppercase tracking-widest text-white/45">My Active Contests ({contests.length})</h3>
           </div>
 
-          {contests.length === 0 ? (
+          {!currentUser ? (
+            <div className="surface-glass-1 border border-white/5 rounded-2xl p-10 text-center flex flex-col items-center gap-4">
+              <Trophy className="w-12 h-12 opacity-20 text-white" />
+              <div>
+                <p className="text-sm font-bold text-white/50">Sign in to see your contests</p>
+                <p className="text-xs mt-1 text-white/25">Join or create contests after logging in.</p>
+              </div>
+              <button
+                onClick={() => { setAuthHint("Sign in to access your contests"); setShowAuthModal(true); }}
+                className="px-6 py-2.5 bg-primary text-on-primary rounded-xl text-xs font-black uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all cursor-pointer"
+              >
+                Sign In / Join as Guest
+              </button>
+            </div>
+          ) : contests.length === 0 ? (
             <div className="surface-glass-1 border border-white/5 rounded-2xl p-12 text-center text-white/20">
               <Trophy className="w-12 h-12 mx-auto mb-3 opacity-30 text-white" />
               <p className="text-sm font-semibold">You have not joined any contests yet.</p>
@@ -465,7 +503,7 @@ export default function ContestsDashboard() {
                 return (
                   <div
                     key={contest.id}
-                    onClick={() => router.push(`/contests/${contest.id}`)}
+                    onClick={() => gateAction("Sign in to enter this contest", () => router.push(`/contests/${contest.id}`))}
                     className="group relative surface-glass-1 hover:surface-glass-2 border border-white/5 hover:border-white/12 rounded-2xl p-5 flex items-center justify-between transition-all duration-300 cursor-pointer shadow-xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
@@ -537,6 +575,14 @@ export default function ContestsDashboard() {
           </a>
         )}
       </nav>
+
+      {/* AUTH MODAL */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => { setShowAuthModal(false); setPendingAction(null); }}
+        onSuccess={handleAuthSuccess}
+        hint={authHint}
+      />
 
       {/* CREATE CONTEST MODAL */}
       {showCreateModal && (

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, LogOut, ShieldAlert, FileText, Mail, Trophy, User } from "lucide-react";
+import { Menu, X, LogOut, ShieldAlert, FileText, Mail, Trophy, User, UserPlus } from "lucide-react";
 import NotificationBar from "./NotificationBar";
 
 interface TopBarProps {
@@ -175,7 +175,7 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
                 <div className="min-w-0">
                   <p className="text-white font-bold text-sm truncate leading-tight">{userName}</p>
                   <p className="text-white/40 text-[10px] mt-0.5 font-bold uppercase tracking-wider">
-                    {userRole === "admin" ? "Admin Staff" : "Competitor"}
+                    {userRole === "admin" ? "Admin Staff" : userRole === "guest" ? "Guest Player" : "Competitor"}
                   </p>
                 </div>
               </div>
@@ -229,8 +229,17 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
               </button>
             </div>
 
-            {/* Logout Footer Section */}
-            <div className="border-t border-white/10 pt-4 mt-auto shrink-0">
+            {/* Logout / Create Account Footer */}
+            <div className="border-t border-white/10 pt-4 mt-auto shrink-0 flex flex-col gap-2">
+              {userRole === "guest" && (
+                <button
+                  onClick={() => { setMenuOpen(false); router.push("/login"); }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Create Real Account
+                </button>
+              )}
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"

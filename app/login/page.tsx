@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Loader2, UserPlus, LogIn } from "lucide-react";
+import { Loader2, UserPlus, LogIn, Zap } from "lucide-react";
 
 type Mode = "login" | "register";
 
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [regPin, setRegPin] = useState<string[]>(["", "", "", "", "", ""]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -127,6 +128,28 @@ export default function LoginPage() {
     setMode(m);
     setError("");
     setSuccess("");
+  };
+
+  const handleGuestLogin = async () => {
+    setIsGuestLoading(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/guest", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Could not create guest session.");
+        setIsGuestLoading(false);
+        return;
+      }
+      // Store credentials so the guest can retrieve their account later
+      if (data.credentials) {
+        localStorage.setItem("guestCredentials", JSON.stringify(data.credentials));
+      }
+      window.location.href = "/contests";
+    } catch {
+      setError("Network error. Please try again.");
+      setIsGuestLoading(false);
+    }
   };
 
   // Login submit
@@ -426,6 +449,27 @@ export default function LoginPage() {
               )}
 
             </div>
+          </div>
+
+          {/* Guest entry */}
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex items-center gap-3 w-full">
+              <div className="h-px flex-1 bg-white/10" />
+              <span className="label-sm text-outline shrink-0">or jump right in</span>
+              <div className="h-px flex-1 bg-white/10" />
+            </div>
+            <button
+              onClick={handleGuestLogin}
+              disabled={isGuestLoading}
+              className={`w-full py-3.5 rounded-md label-md flex items-center justify-center gap-2 border border-primary/30 text-primary hover:bg-primary/10 transition-all active:scale-[0.98] select-none ${
+                isGuestLoading ? "opacity-70 cursor-not-allowed" : "cursor-pointer"
+              }`}
+            >
+              {isGuestLoading
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating guest session...</>
+                : <><Zap className="w-4 h-4" /> Continue as Guest</>
+              }
+            </button>
           </div>
 
           <p className="text-center label-sm text-outline">

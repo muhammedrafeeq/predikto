@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Timer, CheckCircle2, Trophy, Lock, Calendar, Zap, ChevronRight, Star } from "lucide-react";
-import AdBanner from "@/components/AdBanner";
 
 interface Match {
   id: string;
@@ -287,11 +286,6 @@ export default function MatchPredictionContestView({
 
           return (
             <React.Fragment key={match.id}>
-            {index > 0 && index % 3 === 0 && (
-              <div className="flex justify-center">
-                <AdBanner adKey="5ff39764255d18f0c31a900dcfb30100" width={300} height={250} placement="ad_contest_300x250" />
-              </div>
-            )}
             <div
               key={match.id}
               className="relative rounded-2xl overflow-hidden shadow-xl"

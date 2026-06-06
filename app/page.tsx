@@ -10,6 +10,7 @@ import {
 import TopBar from "@/components/TopBar";
 import AuthModal from "@/components/AuthModal";
 import AdBanner from "@/components/AdBanner";
+import AppInstallBanner from "@/components/AppInstallBanner";
 
 interface Contest {
   id: number;
@@ -225,6 +226,10 @@ export default function ContestsDashboard() {
       </div>
 
       <main className="relative z-10 max-w-2xl mx-auto px-4 pt-6">
+
+        <div className="mb-6 fade-up">
+          <AppInstallBanner />
+        </div>
 
         <section className="mb-8 text-left fade-up">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3 surface-glass-1 border border-primary/20">

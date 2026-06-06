@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-// Simple module-level cache so all banners on a page share one fetch
 let settingsCache: Record<string, boolean> | null = null;
 let fetchPromise: Promise<void> | null = null;
+let hilltopInjected = false;
 
 function fetchSettings(): Promise<void> {
   if (settingsCache !== null) return Promise.resolve();
@@ -16,6 +16,16 @@ function fetchSettings(): Promise<void> {
   return fetchPromise;
 }
 
+function injectHilltop() {
+  if (hilltopInjected || typeof document === "undefined") return;
+  hilltopInjected = true;
+  const s = document.createElement("script");
+  s.src = "//untimely-hello.com/bEXPVas.daGtl/0HY/WRce/le/m/9/uMZXU/lXkmPATZc_xTMhDIgmwAN/TzcLtGNWzIE/wrOZDYAT2nMIQa";
+  s.async = true;
+  s.referrerPolicy = "no-referrer-when-downgrade";
+  document.head.appendChild(s);
+}
+
 interface AdBannerProps {
   adKey: string;
   width: number;
@@ -24,50 +34,20 @@ interface AdBannerProps {
   className?: string;
 }
 
-interface NativeBannerProps {
-  src: string;
-  containerId: string;
-  placement: string;
-  className?: string;
-}
-
-export function NativeBanner({ src, containerId, placement, className = "" }: NativeBannerProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [enabled, setEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    fetchSettings().then(() => {
-      setEnabled(settingsCache?.[placement] !== false);
-    });
-  }, [placement]);
-
-  useEffect(() => {
-    if (!enabled || !ref.current) return;
-    ref.current.innerHTML = `<div id="${containerId}"></div>`;
-    const script = document.createElement("script");
-    script.src = src;
-    script.async = true;
-    script.setAttribute("data-cfasync", "false");
-    ref.current.appendChild(script);
-    return () => { if (ref.current) ref.current.innerHTML = ""; };
-  }, [enabled, src, containerId]);
-
-  if (!enabled) return null;
-  return <div ref={ref} className={className} />;
-}
-
 export default function AdBanner({ adKey, width, height, placement, className = "" }: AdBannerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [enabled, setEnabled] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchSettings().then(() => {
-      setEnabled(settingsCache?.[placement] !== false);
+      const on = settingsCache?.[placement] !== false;
+      setEnabled(on);
+      if (!on) injectHilltop();
     });
   }, [placement]);
 
   useEffect(() => {
-    if (!enabled || !ref.current) return;
+    if (enabled !== true || !ref.current) return;
     ref.current.innerHTML = "";
     const optScript = document.createElement("script");
     optScript.text = `atOptions = { 'key': '${adKey}', 'format': 'iframe', 'height': ${height}, 'width': ${width}, 'params': {} };`;
@@ -78,7 +58,7 @@ export default function AdBanner({ adKey, width, height, placement, className = 
     return () => { if (ref.current) ref.current.innerHTML = ""; };
   }, [enabled, adKey]);
 
-  if (!enabled) return null;
+  if (enabled !== true) return null;
   return (
     <div
       ref={ref}

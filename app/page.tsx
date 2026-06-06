@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import AuthModal from "@/components/AuthModal";
+import AdBanner from "@/components/AdBanner";
 
 interface Contest {
   id: number;
@@ -218,7 +219,12 @@ export default function ContestsDashboard() {
 
       <TopBar userName={currentUser?.name} userPoints={currentUser?.points} userRole={currentUser?.role} activeTab="contests" />
 
-      <main className="relative z-10 max-w-2xl mx-auto px-4 pt-24">
+      {/* Top banner — below header */}
+      <div className="relative z-10 flex justify-center pt-16">
+        <AdBanner adKey="b4d4f6824ab4db12db3a13457d9e9635" width={320} height={50} placement="ad_home_top_320x50" />
+      </div>
+
+      <main className="relative z-10 max-w-2xl mx-auto px-4 pt-6">
 
         <section className="mb-8 text-left fade-up">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3 surface-glass-1 border border-primary/20">
@@ -338,6 +344,7 @@ export default function ContestsDashboard() {
           ) : (
             <div className="flex flex-col gap-4">
               {contests.map((contest, index) => {
+                const showAd = index > 0 && index % 2 === 0;
                 const gameModeCfg = {
                   match_prediction: { label: "Match Predictor", color: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20" },
                   first_goal: { label: "First Goal", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
@@ -345,7 +352,13 @@ export default function ContestsDashboard() {
                   bracket: { label: "Bracket", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" }
                 }[contest.gameType] ?? { label: contest.gameType, color: "text-white/40 bg-white/5 border-white/10" };
                 return (
-                  <div key={contest.id}
+                  <React.Fragment key={contest.id}>
+                  {showAd && (
+                    <div className="flex justify-center py-1">
+                      <AdBanner adKey="8c7d0a1083cd82ee2813c7e54e7c5c63" width={300} height={250} placement="ad_home_cards_300x250" />
+                    </div>
+                  )}
+                  <div
                     onClick={() => gateAction("Sign in to enter this contest", () => router.push(`/contests/${contest.id}`))}
                     className="group relative surface-glass-1 hover:surface-glass-2 border border-white/5 hover:border-white/12 rounded-2xl p-5 flex items-center justify-between transition-all duration-300 cursor-pointer shadow-xl hover:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
                     style={{ animationDelay: `${index * 0.05}s` }}
@@ -371,6 +384,7 @@ export default function ContestsDashboard() {
                     </div>
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none" />
                   </div>
+                  </React.Fragment>
                 );
               })}
             </div>

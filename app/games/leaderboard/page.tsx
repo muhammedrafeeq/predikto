@@ -308,7 +308,7 @@ export default function GamesLeaderboard() {
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 md:hidden"
         style={{ background: "rgba(10,10,15,0.9)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <a href="/contests" className="flex flex-col items-center justify-center text-white/40 hover:text-primary gap-0.5 transition-colors">
+        <a href="/" className="flex flex-col items-center justify-center text-white/40 hover:text-primary gap-0.5 transition-colors">
           <LayoutGrid className="w-5 h-5" />
           <span className="text-[10px] font-semibold">My Contests</span>
         </a>

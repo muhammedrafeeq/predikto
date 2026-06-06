@@ -541,7 +541,7 @@ export default function ResultPage({ params }: ResultPageProps) {
 
       {/* Responsive Bottom Navigation Bar */}
       <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 pb-safe bg-[#0a0a0f]/90 backdrop-blur-xl border-t border-white/10 md:hidden">
-        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary gap-0.5" href="/contests">
+        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary gap-0.5" href="/">
           <LayoutGrid className="w-5 h-5 text-on-surface-variant" />
           <span className="label-sm select-none text-xs">My Contests</span>
         </a>

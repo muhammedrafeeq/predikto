@@ -444,7 +444,7 @@ export default function GamesHub() {
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 md:hidden"
         style={{ background: "rgba(10,10,15,0.92)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <a href="/contests" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
+        <a href="/" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
           <LayoutGrid className="w-5 h-5" />
           <span className="text-[10px] font-semibold">My Contests</span>
         </a>

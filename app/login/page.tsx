@@ -145,7 +145,7 @@ export default function LoginPage() {
       if (data.credentials) {
         localStorage.setItem("guestCredentials", JSON.stringify(data.credentials));
       }
-      window.location.href = "/contests";
+      window.location.href = "/";
     } catch {
       setError("Network error. Please try again.");
       setIsGuestLoading(false);
@@ -180,7 +180,7 @@ export default function LoginPage() {
       if (data.user?.role === "admin") {
         window.location.href = "/admin";
       } else {
-        window.location.href = "/contests";
+        window.location.href = "/";
       }
     } catch {
       setError("Network error. Please try again.");

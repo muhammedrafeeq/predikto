@@ -72,7 +72,7 @@ export default function ContestDetailPage() {
         const res = await fetch(`/api/contests/${contestId}`);
         if (!res.ok) {
           if (res.status === 401) router.push("/login");
-          else router.push("/contests");
+          else router.push("/");
           return;
         }
 
@@ -183,7 +183,7 @@ export default function ContestDetailPage() {
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-base-bg text-on-surface">
         <ShieldAlert className="w-12 h-12 text-red-400" />
         <p className="text-sm">Contest not found</p>
-        <button onClick={() => router.push("/contests")} className="text-primary text-xs underline font-bold">Go back</button>
+        <button onClick={() => router.push("/")} className="text-primary text-xs underline font-bold">Go back</button>
       </div>
     );
   }
@@ -220,7 +220,7 @@ export default function ContestDetailPage() {
       {/* Header Bar */}
       <header className="fixed top-0 w-full z-50 flex items-center justify-between px-5 py-3 h-16"
         style={{ background: "rgba(10,10,15,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <button onClick={() => router.push("/contests")} className="flex items-center gap-2 text-white/50 hover:text-white text-xs font-bold transition-colors">
+        <button onClick={() => router.push("/")} className="flex items-center gap-2 text-white/50 hover:text-white text-xs font-bold transition-colors">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <h1 className="text-white font-black text-sm tracking-wide uppercase truncate max-w-[50%]">

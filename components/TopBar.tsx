@@ -45,7 +45,7 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
         }}
       >
         {/* Left Side: Logo & App Title */}
-        <div className="flex items-center gap-2 cursor-pointer select-none" onClick={() => router.push("/contests")}>
+        <div className="flex items-center gap-2 cursor-pointer select-none" onClick={() => router.push("/")}>
           <img src="/skorio-logo.png" alt="Skorio Logo" className="w-8 h-8 object-contain rounded-lg" />
           <h1 className="text-xl font-extrabold tracking-tighter text-primary">
             SKO<span className="text-white">RIO</span>
@@ -55,7 +55,7 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
         {/* Center: Desktop-only Navigation Links */}
         <nav className="hidden md:flex items-center gap-8">
           <button
-            onClick={() => router.push("/contests")}
+            onClick={() => router.push("/")}
             className={`label-md transition-colors cursor-pointer ${
               activeTab === "contests" ? "text-primary font-black" : "text-white/60 hover:text-white"
             }`}
@@ -185,7 +185,7 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
             <div className="flex-1 flex flex-col gap-2 overflow-y-auto">
               <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest px-2 mb-1">Navigation</span>
               <button
-                onClick={() => { setMenuOpen(false); router.push("/contests"); }}
+                onClick={() => { setMenuOpen(false); router.push("/"); }}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all hover:bg-white/5 text-left cursor-pointer ${
                   activeTab === "contests" ? "text-primary bg-primary/5" : "text-white/70 hover:text-white"
                 }`}

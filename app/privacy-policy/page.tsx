@@ -49,7 +49,7 @@ export default function PrivacyPolicy() {
       <main className="relative z-10 max-w-2xl mx-auto px-4 pt-24">
         {/* Back Button */}
         <button
-          onClick={() => router.push("/contests")}
+          onClick={() => router.push("/")}
           className="inline-flex items-center gap-2 text-white/50 hover:text-white text-xs font-bold transition-colors mb-6 cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard

@@ -192,67 +192,43 @@ export default function PublicCollectionPage() {
         })}
       </div>
 
-      {/* Grid rendering cards (Goalkeepers, Defenders, etc.) */}
-      {loading ? (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 rounded-full border-4 border-t-indigo-500 border-neutral-800 animate-spin" />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-8">
-          {/* Custom Group Rendering with Trade Action */}
-          {["GK", "DEF", "MID", "FWD"].map((posKey) => {
-            const posCards = cards.filter((c) => c.position === posKey);
-            if (posCards.length === 0) return null;
+        {/* Single continuous grid (no position categorisation) */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
+          {cards.map((card) => {
+            const isOwned = (card.quantity || 0) > 0;
+            const isDuplicate = (card.quantity || 0) >= 2;
+            const canOffer = isDuplicate && !isOwnCollection && viewerUserId && card.rarity !== "legendary";
 
             return (
-              <div key={posKey} className="flex flex-col gap-4">
-                <div className="border-b border-neutral-800 pb-2">
-                  <span className="text-xs font-black uppercase tracking-widest text-indigo-400">
-                    {posKey === "GK" ? "Goalkeepers" : posKey === "DEF" ? "Defenders" : posKey === "MID" ? "Midfielders" : "Forwards"}
-                  </span>
-                </div>
+              <div key={card.id} className="flex flex-col items-center gap-2">
+                {isOwned ? (
+                  <PlayerCard card={card} size="sm" showStats={false} />
+                ) : (
+                  <MissingCard
+                    playerName={card.player_name}
+                    position={card.position}
+                    jerseyNumber={card.jersey_number}
+                    teamName={card.team_name}
+                    flagEmoji={card.flag_emoji}
+                    size="sm"
+                  />
+                )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
-                  {posCards.map((card) => {
-                    const isOwned = (card.quantity || 0) > 0;
-                    const isDuplicate = (card.quantity || 0) >= 2;
-                    const canOffer = isDuplicate && !isOwnCollection && viewerUserId && card.rarity !== "legendary";
-
-                    return (
-                      <div key={card.id} className="relative group">
-                        {isOwned ? (
-                          <div className="relative">
-                            <PlayerCard card={card} size="sm" showStats={false} />
-                            
-                            {/* Propose Trade Badge for Viewer */}
-                            {canOffer && (
-                              <button
-                                onClick={() => handleOpenTradeModal(card)}
-                                className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full opacity-90 hover:opacity-100 shadow-[0_2px_10px_rgba(99,102,241,0.4)] transition-all cursor-pointer"
-                              >
-                                Offer Trade
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          <MissingCard
-                            playerName={card.player_name}
-                            position={card.position}
-                            jerseyNumber={card.jersey_number}
-                            teamName={card.team_name}
-                            flagEmoji={card.flag_emoji}
-                            size="sm"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* Propose Trade Action Button for Viewer */}
+                {canOffer ? (
+                  <button
+                    onClick={() => handleOpenTradeModal(card)}
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10.5px] font-black uppercase tracking-wider py-1.5 rounded-xl shadow-[0_2px_8px_rgba(99,102,241,0.25)] hover:scale-[1.03] transition-all cursor-pointer text-center"
+                  >
+                    Offer Trade
+                  </button>
+                ) : (
+                  <div className="h-7" /> // Aligner space
+                )}
               </div>
             );
           })}
         </div>
-      )}
 
       {/* Offer Trade Modal */}
       {selectedRequestedCard && (

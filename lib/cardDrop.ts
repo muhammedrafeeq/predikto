@@ -66,7 +66,8 @@ export async function dropCard(
   userId: number,
   trigger: string,
   triggerRefId?: number,
-  forceRarity?: CardRarity
+  forceRarity?: CardRarity,
+  excludeCardIds: number[] = []
 ): Promise<PlayerCardData | null> {
   // 1. Pick Rarity
   const rarity = forceRarity || pickRarity(trigger);
@@ -92,9 +93,9 @@ export async function dropCard(
       `SELECT pc.*, t.name as team_name, t.flag_emoji 
        FROM player_cards pc
        JOIN teams t ON pc.team_id = t.id
-       WHERE pc.rarity = $1 AND pc.team_id = $2 AND pc.is_active = true
+       WHERE pc.rarity = $1 AND pc.team_id = $2 AND pc.is_active = true AND NOT (pc.id = ANY($3::int[]))
        ORDER BY RANDOM() LIMIT 1`,
-      [rarity, favTeamId]
+      [rarity, favTeamId, excludeCardIds]
     );
 
     if (favCardsRes.rows.length > 0) {
@@ -108,9 +109,9 @@ export async function dropCard(
       `SELECT pc.*, t.name as team_name, t.flag_emoji 
        FROM player_cards pc
        JOIN teams t ON pc.team_id = t.id
-       WHERE pc.rarity = $1 AND pc.team_id = ANY($2) AND pc.is_active = true
+       WHERE pc.rarity = $1 AND pc.team_id = ANY($2) AND pc.is_active = true AND NOT (pc.id = ANY($3::int[]))
        ORDER BY RANDOM() LIMIT 1`,
-      [rarity, activeFavTeamIds]
+      [rarity, activeFavTeamIds, excludeCardIds]
     );
 
     if (restrictedCardsRes.rows.length > 0) {
@@ -124,9 +125,9 @@ export async function dropCard(
       `SELECT pc.*, t.name as team_name, t.flag_emoji 
        FROM player_cards pc
        JOIN teams t ON pc.team_id = t.id
-       WHERE pc.rarity = $1 AND pc.is_active = true
+       WHERE pc.rarity = $1 AND pc.is_active = true AND NOT (pc.id = ANY($2::int[]))
        ORDER BY RANDOM() LIMIT 1`,
-      [rarity]
+      [rarity, excludeCardIds]
     );
 
     if (allCardsRes.rows.length > 0) {
@@ -142,8 +143,9 @@ export async function dropCard(
       `SELECT pc.*, t.name as team_name, t.flag_emoji 
        FROM player_cards pc
        JOIN teams t ON pc.team_id = t.id
-       WHERE pc.is_active = true
-       ORDER BY RANDOM() LIMIT 1`
+       WHERE pc.is_active = true AND NOT (pc.id = ANY($1::int[]))
+       ORDER BY RANDOM() LIMIT 1`,
+      [excludeCardIds]
     );
     if (fallbackRes.rows.length > 0) {
       selectedCard = fallbackRes.rows[0];
@@ -202,12 +204,14 @@ export async function dropMultipleCards(
   day7Index = -1 // If >= 0, the card at this index will have guaranteed Rare+ rarity
 ): Promise<PlayerCardData[]> {
   const cards: PlayerCardData[] = [];
+  const excludeIds: number[] = [];
   for (let i = 0; i < count; i++) {
     const isStreakDay7 = i === day7Index;
     const forceRarity = isStreakDay7 ? pickRarity(trigger, true) : undefined;
-    const card = await dropCard(userId, trigger, triggerRefId, forceRarity);
+    const card = await dropCard(userId, trigger, triggerRefId, forceRarity, excludeIds);
     if (card) {
       cards.push(card);
+      excludeIds.push(card.id);
     }
   }
   return cards;

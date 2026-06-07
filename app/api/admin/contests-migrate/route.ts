@@ -243,6 +243,14 @@ export async function POST() {
       )
     `);
 
+    // Add game_types array column to contests
+    await query(`
+      ALTER TABLE contests ADD COLUMN IF NOT EXISTS game_types TEXT[] DEFAULT ARRAY['match_prediction']
+    `);
+    await query(`
+      UPDATE contests SET game_types = ARRAY[game_type] WHERE game_types IS NULL OR game_types = '{}'
+    `);
+
     // Allow contest_id to be NULL for standalone games (trivia, penalty)
     await query(`ALTER TABLE game_scores ALTER COLUMN contest_id DROP NOT NULL`);
     await query(`

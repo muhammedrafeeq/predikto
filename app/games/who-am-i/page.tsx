@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trophy, User, ChevronDown, HelpCircle } from "lucide-react";
+import { ArrowLeft, Trophy, User, ChevronDown, HelpCircle, Search } from "lucide-react";
 
 type GamePhase = "loading" | "playing" | "correct" | "gameover" | "already_played";
 
@@ -47,6 +47,8 @@ export default function WhoAmIPage() {
   const router = useRouter();
   const [phase, setPhase] = useState<GamePhase>("loading");
   const [clues, setClues] = useState<string[]>([]);
+  const [cluesMl, setCluesMl] = useState<string[]>([]);
+  const [lang, setLang] = useState<"en" | "ml">("en");
   const [cluesRevealed, setCluesRevealed] = useState(1);
   const [guess, setGuess] = useState("");
   const [guessError, setGuessError] = useState("");
@@ -55,9 +57,12 @@ export default function WhoAmIPage() {
   const [pointsEarned, setPointsEarned] = useState(0);
   const [alreadyData, setAlreadyData] = useState<{ points: number; cluesRevealed: number; correct: boolean; playerName: string } | null>(null);
   const [requestingClue, setRequestingClue] = useState(false);
-  const [clueCooldown, setClueCooldown] = useState(0); // seconds remaining before next clue allowed
+  const [clueCooldown, setClueCooldown] = useState(0);
+  const [playerSuggestions, setPlayerSuggestions] = useState<{ name: string; teamName: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -66,6 +71,7 @@ export default function WhoAmIPage() {
         if (res.ok) {
           const data = await res.json();
           setClues(data.clues ?? []);
+          setCluesMl(data.cluesMl ?? []);
           if (data.played) {
             setAlreadyData({
               points: data.points,
@@ -162,7 +168,27 @@ export default function WhoAmIPage() {
   useEffect(() => () => { if (cooldownRef.current) clearInterval(cooldownRef.current); }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleGuess();
+    if (e.key === "Enter") { setShowSuggestions(false); handleGuess(); }
+    if (e.key === "Escape") setShowSuggestions(false);
+  };
+
+  const fetchSuggestions = useCallback(async (q: string) => {
+    if (q.length < 2) { setPlayerSuggestions([]); return; }
+    try {
+      const res = await fetch(`/api/admin/players?q=${encodeURIComponent(q)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPlayerSuggestions(data.players ?? []);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleGuessChange = (val: string) => {
+    setGuess(val);
+    setGuessError("");
+    setShowSuggestions(true);
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    suggestTimer.current = setTimeout(() => fetchSuggestions(val), 200);
   };
 
   // ── Loading ───────────────────────────────────────────────────────────────
@@ -318,10 +344,19 @@ export default function WhoAmIPage() {
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
         <h1 className="text-white font-black text-base">Who Am I?</h1>
-        <div className="flex items-center gap-1.5">
-          <span className="text-white/30 text-xs font-bold">Clue</span>
-          <span className="text-teal-400 font-black text-sm">{cluesRevealed}</span>
-          <span className="text-white/20 text-xs">/6</span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLang(l => l === "en" ? "ml" : "en")}
+            className="text-xs font-black px-2.5 py-1 rounded-full border transition-all"
+            style={{ color: "#a78bfa", borderColor: "rgba(167,139,250,0.3)", background: "rgba(167,139,250,0.08)" }}
+          >
+            {lang === "en" ? "മല" : "EN"}
+          </button>
+          <div className="flex items-center gap-1.5">
+            <span className="text-white/30 text-xs font-bold">Clue</span>
+            <span className="text-teal-400 font-black text-sm">{cluesRevealed}</span>
+            <span className="text-white/20 text-xs">/6</span>
+          </div>
         </div>
       </header>
 
@@ -358,33 +393,57 @@ export default function WhoAmIPage() {
 
         {/* Clue cards */}
         <div className="space-y-2 mb-5">
-          {clues.slice(0, 6).map((clue, i) => (
-            <div key={i} className={i === cluesRevealed - 1 ? "clue-reveal" : ""}>
-              <ClueCard
-                clue={clue}
-                number={i + 1}
-                revealed={i < cluesRevealed}
-                active={i === cluesRevealed - 1}
-              />
-            </div>
-          ))}
+          {clues.slice(0, 6).map((clue, i) => {
+            const mlClue = cluesMl[i];
+            const displayClue = lang === "ml" && mlClue ? mlClue : clue;
+            return (
+              <div key={i} className={i === cluesRevealed - 1 ? "clue-reveal" : ""}>
+                <ClueCard
+                  clue={displayClue}
+                  number={i + 1}
+                  revealed={i < cluesRevealed}
+                  active={i === cluesRevealed - 1}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {/* Guess input */}
         <div className="sticky bottom-4 bg-[#0a0a0f] pt-2">
-          <div className={`flex gap-2 ${guessError ? "shake" : ""}`}>
-            <input
-              ref={inputRef}
-              type="text"
-              value={guess}
-              onChange={(e) => { setGuess(e.target.value); setGuessError(""); }}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a player name..."
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/25 text-sm font-medium outline-none focus:border-teal-400/40 focus:ring-1 focus:ring-teal-400/20 transition-all"
-              disabled={submitting}
-            />
+          <div className={`flex gap-2 ${guessError ? "shake" : ""} relative`}>
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 pointer-events-none" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={guess}
+                onChange={(e) => handleGuessChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => { if (guess.length >= 2) setShowSuggestions(true); }}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                placeholder="Search player name..."
+                className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-white placeholder-white/25 text-sm font-medium outline-none focus:border-teal-400/40 focus:ring-1 focus:ring-teal-400/20 transition-all"
+                disabled={submitting}
+              />
+              {/* Autocomplete dropdown */}
+              {showSuggestions && playerSuggestions.length > 0 && (
+                <div className="absolute bottom-full mb-1 left-0 right-0 bg-[#101015] border border-white/10 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto">
+                  {playerSuggestions.map((p) => (
+                    <div
+                      key={p.name}
+                      onMouseDown={() => { setGuess(p.name); setShowSuggestions(false); setGuessError(""); }}
+                      className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-0"
+                    >
+                      <span className="text-sm font-semibold text-white/90">{p.name}</span>
+                      <span className="text-[10px] text-white/35 uppercase font-medium">{p.teamName}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
-              onClick={handleGuess}
+              onClick={() => { setShowSuggestions(false); handleGuess(); }}
               disabled={!guess.trim() || submitting}
               className="px-5 py-3 rounded-xl bg-teal-400/15 border border-teal-400/30 text-teal-400 font-black text-sm hover:bg-teal-400/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
             >

@@ -13,6 +13,7 @@ import {
   Layers,
   GitBranch,
   MonitorPlay,
+  HelpCircle,
 } from "lucide-react";
 
 interface AdminUser {
@@ -100,6 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Bracket Manager", href: "/admin/bracket", icon: GitBranch },
     { label: "User Registry", href: "/admin/users", icon: Users },
     { label: "Ad Manager", href: "/admin/ads", icon: MonitorPlay },
+    { label: "Who Am I", href: "/admin/who-am-i", icon: HelpCircle },
   ];
 
   return (

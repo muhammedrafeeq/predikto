@@ -251,6 +251,20 @@ export async function POST() {
         WHERE contest_id IS NULL
     `);
 
+    // Who Am I players table
+    await query(`
+      CREATE TABLE IF NOT EXISTS who_am_i_players (
+        id          SERIAL PRIMARY KEY,
+        player_name TEXT NOT NULL,
+        aliases     JSONB NOT NULL DEFAULT '[]',
+        clues       JSONB NOT NULL DEFAULT '[]',
+        clues_ml    JSONB NOT NULL DEFAULT '[]',
+        active      BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_who_am_i_active ON who_am_i_players(active)`);
+
     // Seed default setting
     await query(`
       INSERT INTO system_settings (key, value)

@@ -429,7 +429,7 @@ export default function AdminContestsPage() {
     const lines: string[] = [];
     if (preds.winner?.answer) lines.push(`🏆 ജേതാവ്: *${preds.winner.answer}*`);
     if (preds.score?.answer) lines.push(`📊 സ്കോർ: *${preds.score.answer}*`);
-    if (preds.scorer?.answer) lines.push(`🎯 ആദ്യ ഗോൾ: *${preds.scorer.answer}*`);
+    if (preds.scorer?.answer) lines.push(`🌟 Man of the Match: *${preds.scorer.answer}*`);
     const matchTimeStr = new Date(match.matchTime).toLocaleString("ml-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
     const text = `🔮 *${member.name}-ന്റെ Predictions*\n\n⚽ *${match.teamHome} vs ${match.teamAway}*\n📅 ${matchTimeStr} IST\n\n${lines.join("\n")}\n\n🏟️ *Skorio WC 2026*`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");

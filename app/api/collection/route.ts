@@ -87,11 +87,34 @@ export async function GET(req: NextRequest) {
       [user.userId, activeTeamId]
     );
 
+    // 4. Fetch all cards owned by the user (from any team)
+    const ownedRes = await query<any>(
+      `SELECT 
+        pc.id, 
+        pc.team_id, 
+        pc.player_name, 
+        pc.position, 
+        pc.jersey_number, 
+        pc.rarity, 
+        pc.overall_rating, 
+        pc.stats,
+        t.name as team_name,
+        t.flag_emoji,
+        uc.quantity
+       FROM user_cards uc
+       JOIN player_cards pc ON uc.card_id = pc.id
+       JOIN teams t ON pc.team_id = t.id
+       WHERE uc.user_id = $1 AND uc.quantity > 0
+       ORDER BY t.name ASC, pc.overall_rating DESC, pc.player_name ASC`,
+      [user.userId]
+    );
+
     return NextResponse.json({
       userId: user.userId,
       cards: cardsRes.rows,
       activeTeamId,
       teams,
+      ownedCards: ownedRes.rows,
     });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };

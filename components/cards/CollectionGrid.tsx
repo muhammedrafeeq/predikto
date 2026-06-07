@@ -17,17 +17,7 @@ export default function CollectionGrid({ cards, onCardClick }: CollectionGridPro
   const progressPercent = totalCards > 0 ? Math.round((ownedCount / totalCards) * 100) : 0;
   const isComplete = ownedCount === totalCards && totalCards > 0;
 
-  // Group cards by position
-  const positions: { label: string; key: "GK" | "DEF" | "MID" | "FWD" }[] = [
-    { label: "Goalkeepers", key: "GK" },
-    { label: "Defenders", key: "DEF" },
-    { label: "Midfielders", key: "MID" },
-    { label: "Forwards", key: "FWD" },
-  ];
-
-  const getCardsByPosition = (posKey: string) => {
-    return cards.filter((c) => c.position === posKey);
-  };
+  const [showSquad, setShowSquad] = React.useState(false);
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -40,6 +30,12 @@ export default function CollectionGrid({ cards, onCardClick }: CollectionGridPro
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowSquad(!showSquad)}
+              className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+            >
+              {showSquad ? "Hide Squad" : "Show Squad"}
+            </button>
             <div className="text-right">
               <span className="text-2xl font-black text-white">{ownedCount}</span>
               <span className="text-neutral-500 text-sm"> / {totalCards}</span>
@@ -75,33 +71,35 @@ export default function CollectionGrid({ cards, onCardClick }: CollectionGridPro
       </div>
 
       {/* Grid of all cards (no position categorisation) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
-        {cards.map((card) => {
-          const isOwned = (card.quantity || 0) > 0;
+      {showSquad && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
+          {cards.map((card) => {
+            const isOwned = (card.quantity || 0) > 0;
 
-          return (
-            <div key={card.id} className="relative">
-              {isOwned ? (
-                <PlayerCard
-                  card={card}
-                  size="sm"
-                  showStats={false}
-                  onClick={() => onCardClick?.(card)}
-                />
-              ) : (
-                <MissingCard
-                  playerName={card.player_name}
-                  position={card.position}
-                  jerseyNumber={card.jersey_number}
-                  teamName={card.team_name}
-                  flagEmoji={card.flag_emoji}
-                  size="sm"
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
+            return (
+              <div key={card.id} className="relative">
+                {isOwned ? (
+                  <PlayerCard
+                    card={card}
+                    size="sm"
+                    showStats={false}
+                    onClick={() => onCardClick?.(card)}
+                  />
+                ) : (
+                  <MissingCard
+                    playerName={card.player_name}
+                    position={card.position}
+                    jerseyNumber={card.jersey_number}
+                    teamName={card.team_name}
+                    flagEmoji={card.flag_emoji}
+                    size="sm"
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

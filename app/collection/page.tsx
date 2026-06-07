@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeftRight, Layers, Sparkles, Gamepad2, ChevronLeft } from "lucide-react";
 import CollectionGrid from "@/components/cards/CollectionGrid";
 import CardReveal from "@/components/cards/CardReveal";
+import PlayerCard from "@/components/cards/PlayerCard";
 import { PlayerCardData } from "@/lib/cardDrop";
 
 interface Team {
@@ -26,6 +27,7 @@ export default function MyCollectionPage() {
   const [cards, setCards] = useState<PlayerCardData[]>([]);
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [currentUser, setCurrentUser] = useState<{ id: number; name: string; role?: string } | null>(null);
+  const [ownedCards, setOwnedCards] = useState<PlayerCardData[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -72,6 +74,7 @@ export default function MyCollectionPage() {
       setCards(data.cards || []);
       setTeams(data.teams || []);
       setActiveTeamId(data.activeTeamId);
+      setOwnedCards(data.ownedCards || []);
     } catch (err) {
       setError("Error loading collection cards.");
       console.error(err);
@@ -157,12 +160,6 @@ export default function MyCollectionPage() {
             <ArrowLeftRight className="w-3.5 h-3.5" />
             Trades Hub
           </Link>
-          <div
-            className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm select-none"
-            style={{ background: "linear-gradient(135deg,#a855f7,#6366f1)" }}
-          >
-            {(currentUser?.name ?? "U")[0].toUpperCase()}
-          </div>
         </div>
       </header>
 
@@ -274,6 +271,48 @@ export default function MyCollectionPage() {
             }}
           />
         )}
+
+        {/* Collected Cards from Any Team Section */}
+        <div className="mt-8 border-t border-neutral-900 pt-8">
+          <h3 className="text-sm font-black uppercase tracking-wider text-indigo-400 mb-4 flex items-center gap-2">
+            <span>🎴</span> Collected Cards (All Teams)
+          </h3>
+          
+          {ownedCards.length === 0 ? (
+            <div className="surface-glass-2 border border-neutral-900 rounded-2xl p-8 text-center text-xs text-neutral-400 uppercase tracking-widest font-bold">
+              No cards collected yet. Play games to earn cards!
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
+              {ownedCards.map((card) => {
+                const isEligibleForTrade = (card.quantity || 0) >= 2 && card.rarity !== "legendary";
+                return (
+                  <div key={card.id} className="flex flex-col items-center gap-2">
+                    <PlayerCard 
+                      card={card} 
+                      size="sm" 
+                      showStats={false} 
+                      onClick={() => window.location.href = `/collection/${card.id}`} 
+                    />
+                    
+                    {isEligibleForTrade ? (
+                      <Link
+                        href="/trades"
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-wider py-1.5 rounded-xl shadow-[0_2px_8px_rgba(99,102,241,0.25)] hover:scale-[1.03] transition-all text-center cursor-pointer"
+                      >
+                        Trade (x{card.quantity})
+                      </Link>
+                    ) : (
+                      <div className="h-7 text-[10px] text-neutral-500 font-bold uppercase tracking-wider flex items-center justify-center">
+                        x{card.quantity} Owned
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* How to Collect Cards Section */}
         <div className="mt-8 border-t border-neutral-900 pt-8">

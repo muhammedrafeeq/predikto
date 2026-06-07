@@ -422,8 +422,8 @@ export default function GamesHub() {
           </button>
         </div>
 
-        {/* 2-column grid */}
-        <div className="grid grid-cols-2 gap-x-5 gap-y-5 px-6">
+        {/* 3-column grid */}
+        <div className="grid grid-cols-3 gap-x-3 gap-y-5 px-2">
           {GAMES.map((game, idx) => {
             const isHovered = hovered === game.id;
             const isPressed = pressed === game.id;
@@ -474,14 +474,14 @@ export default function GamesHub() {
                 </div>
 
                 {/* Text outside below tile */}
-                <div className="text-center w-full">
-                  <p className="text-sm font-black text-white leading-tight">{game.title}</p>
-                  <div className="flex items-center justify-center gap-1.5 mt-1">
-                    <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full"
+                <div className="text-center w-full px-0.5">
+                  <p className="text-[11px] font-black text-white leading-tight min-h-[32px] flex items-center justify-center">{game.title}</p>
+                  <div className="flex flex-wrap items-center justify-center gap-1 mt-1">
+                    <span className="text-[8px] font-black uppercase tracking-wider px-1 py-0.5 rounded-full whitespace-nowrap"
                       style={{ background: `${game.accent}18`, color: game.accent, border: `1px solid ${game.accent}33` }}>
-                      {game.badge}
+                      {game.badge.split(" ")[0]}
                     </span>
-                    <span className="text-[9px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    <span className="text-[8px] font-bold" style={{ color: "rgba(255,255,255,0.3)" }}>
                       {game.maxPts} pts
                     </span>
                   </div>

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   Plus, Trash2, Pencil, Save, X, Search, Loader2, User,
-  CheckCircle, AlertTriangle, ChevronDown, ChevronUp,
+  CheckCircle, AlertTriangle, ChevronDown, ChevronUp, Database,
 } from "lucide-react";
 
 interface WhoAmIPlayer {
@@ -40,6 +40,8 @@ export default function AdminWhoAmIPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<WhoAmIPlayer | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [seeding, setSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState<string | null>(null);
 
   // Player search
   const [playerSearch, setPlayerSearch] = useState("");
@@ -165,6 +167,26 @@ export default function AdminWhoAmIPage() {
   const setClueMl = (i: number, val: string) =>
     setForm((f) => { const c = [...f.cluesMl]; c[i] = val; return { ...f, cluesMl: c }; });
 
+  const handleSeedFromPlayers = async () => {
+    if (seeding) return;
+    setSeeding(true);
+    setSeedResult(null);
+    try {
+      const res = await fetch("/api/admin/seed-who-am-i", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setSeedResult(`✅ ${data.message}`);
+        await loadPlayers();
+      } else {
+        setSeedResult(`❌ ${data.error ?? "Seeding failed"}`);
+      }
+    } catch {
+      setSeedResult("❌ Network error");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -176,17 +198,35 @@ export default function AdminWhoAmIPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <header className="flex items-center justify-between">
-        <div>
-          <h2 className="headline-lg text-on-surface mb-1">Who Am I — Players</h2>
-          <p className="text-on-surface-variant text-xs font-mono">{players.length} players configured</p>
+      <header className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="headline-lg text-on-surface mb-1">Who Am I — Players</h2>
+            <p className="text-on-surface-variant text-xs font-mono">{players.length} players configured</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSeedFromPlayers}
+              disabled={seeding}
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary/10 text-primary border border-primary/20 label-md font-bold rounded-lg active:scale-95 transition-all disabled:opacity-50"
+              title="Auto-seed all WC 2026 players from the players table using Wikipedia data"
+            >
+              {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+              {seeding ? "Seeding…" : "Seed from Players"}
+            </button>
+            <button
+              onClick={openCreate}
+              className="flex items-center gap-2 px-4 py-2.5 bg-secondary text-on-secondary label-md font-bold rounded-lg active:scale-95 transition-all"
+            >
+              <Plus className="w-4 h-4" /> Add Player
+            </button>
+          </div>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2.5 bg-secondary text-on-secondary label-md font-bold rounded-lg active:scale-95 transition-all"
-        >
-          <Plus className="w-4 h-4" /> Add Player
-        </button>
+        {seedResult && (
+          <div className={`text-xs px-4 py-2 rounded-lg font-mono ${seedResult.startsWith("✅") ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}>
+            {seedResult}
+          </div>
+        )}
       </header>
 
       {/* Players list */}

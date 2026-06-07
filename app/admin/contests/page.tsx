@@ -21,6 +21,8 @@ import {
   Pencil,
   ChevronLeft,
   Save,
+  Minus,
+  Share2,
 } from "lucide-react";
 
 interface Contest {
@@ -114,6 +116,14 @@ export default function AdminContestsPage() {
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  // Rich predict UI state
+  const [adminScoreHome, setAdminScoreHome] = useState(0);
+  const [adminScoreAway, setAdminScoreAway] = useState(0);
+  const [adminWinner, setAdminWinner] = useState<"home" | "draw" | "away" | null>(null);
+  const [adminScorer, setAdminScorer] = useState("");
+  const [adminScorerOpen, setAdminScorerOpen] = useState(false);
+  const [adminPlayers, setAdminPlayers] = useState<{ id: number; name: string }[]>([]);
+  const [adminPlayerQuery, setAdminPlayerQuery] = useState("");
 
   // Delete modal
   const [deleteContest, setDeleteContest] = useState<Contest | null>(null);
@@ -121,6 +131,18 @@ export default function AdminContestsPage() {
 
   // Copy-to-clipboard state
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (adminPlayerQuery.length < 2) { setAdminPlayers([]); return; }
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/players?q=${encodeURIComponent(adminPlayerQuery)}`);
+        const d = await res.json();
+        setAdminPlayers(d.players ?? []);
+      } catch { setAdminPlayers([]); }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [adminPlayerQuery]);
 
   const loadContests = useCallback(async () => {
     try {
@@ -304,6 +326,8 @@ export default function AdminContestsPage() {
     setQuestions([]);
     setPredictAnswers({});
     setSaveSuccess(false);
+    setAdminScoreHome(0); setAdminScoreAway(0);
+    setAdminWinner(null); setAdminScorer(""); setAdminPlayers([]); setAdminPlayerQuery("");
   };
 
   const selectMatchForPrediction = async (match: MatchInfo) => {
@@ -326,6 +350,22 @@ export default function AdminContestsPage() {
           }
         }
         setPredictAnswers(prefilled);
+        // Pre-fill rich UI state
+        const ep = existingEntry?.predictions;
+        if (ep?.score?.answer) {
+          const parts = (ep.score.answer as string).split("-");
+          setAdminScoreHome(parseInt(parts[0], 10) || 0);
+          setAdminScoreAway(parseInt(parts[1], 10) || 0);
+        } else { setAdminScoreHome(0); setAdminScoreAway(0); }
+        if (ep?.winner?.answer) {
+          const w = ep.winner.answer as string;
+          if (w === match.teamHome) setAdminWinner("home");
+          else if (w === match.teamAway) setAdminWinner("away");
+          else if (w === "Draw") setAdminWinner("draw");
+          else setAdminWinner(null);
+        } else setAdminWinner(null);
+        setAdminScorer(ep?.scorer?.answer ?? "");
+        setAdminPlayerQuery(""); setAdminPlayers([]);
       }
     } catch {
       setQuestions([]);
@@ -338,9 +378,16 @@ export default function AdminContestsPage() {
     if (!membersContest || !predictingMember || !predictMatch) return;
     setSaving(true);
     try {
-      const predictions = Object.entries(predictAnswers)
-        .filter(([, answer]) => answer.trim() !== "")
-        .map(([qId, answer]) => ({ questionId: parseInt(qId, 10), answer }));
+      const scoreQ = questions.find(q => q.type === "score");
+      const winnerQ = questions.find(q => q.type === "winner");
+      const scorerQ = questions.find(q => q.type === "scorer");
+      const predictions: { questionId: number; answer: string }[] = [];
+      if (scoreQ) predictions.push({ questionId: scoreQ.id, answer: `${adminScoreHome}-${adminScoreAway}` });
+      if (winnerQ && adminWinner) {
+        const ans = adminWinner === "home" ? predictMatch.teamHome : adminWinner === "away" ? predictMatch.teamAway : "Draw";
+        predictions.push({ questionId: winnerQ.id, answer: ans });
+      }
+      if (scorerQ && adminScorer.trim()) predictions.push({ questionId: scorerQ.id, answer: adminScorer.trim() });
 
       const res = await fetch(`/api/admin/contests/${membersContest.id}/predict`, {
         method: "POST",
@@ -373,6 +420,19 @@ export default function AdminContestsPage() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleShareMemberPredictions = (match: MatchInfo, member: Member) => {
+    const entry = entriesData?.userEntries?.[member.id]?.[match.id];
+    if (!entry) return;
+    const preds = entry.predictions as Record<string, { answer?: string }>;
+    const lines: string[] = [];
+    if (preds.winner?.answer) lines.push(`🏆 ജേതാവ്: *${preds.winner.answer}*`);
+    if (preds.score?.answer) lines.push(`📊 സ്കോർ: *${preds.score.answer}*`);
+    if (preds.scorer?.answer) lines.push(`🎯 ആദ്യ ഗോൾ: *${preds.scorer.answer}*`);
+    const matchTimeStr = new Date(match.matchTime).toLocaleString("ml-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
+    const text = `🔮 *${member.name}-ന്റെ Predictions*\n\n⚽ *${match.teamHome} vs ${match.teamAway}*\n📅 ${matchTimeStr} IST\n\n${lines.join("\n")}\n\n🏟️ *Skorio WC 2026*`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   const handleDelete = async () => {
@@ -776,9 +836,18 @@ export default function AdminContestsPage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 {hasPreds && (
-                                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
-                                    Saved
-                                  </span>
+                                  <>
+                                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
+                                      Saved
+                                    </span>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); handleShareMemberPredictions(match, predictingMember!); }}
+                                      className="p-1 text-[#25D366] bg-[#25D366]/10 border border-[#25D366]/25 rounded-lg hover:bg-[#25D366]/20 transition-colors"
+                                      title="Share predictions"
+                                    >
+                                      <Share2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
                                 )}
                                 <Pencil className="w-4 h-4 text-on-surface-variant group-hover:text-primary transition-colors" />
                               </div>
@@ -810,23 +879,99 @@ export default function AdminContestsPage() {
                       ) : questions.length === 0 ? (
                         <p className="text-sm text-on-surface-variant text-center py-6">No questions set for this match yet</p>
                       ) : (
-                        <div className="flex flex-col gap-3">
-                          {questions.map((q) => (
-                            <div key={q.id} className="flex flex-col gap-1.5">
-                              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
-                                {q.label}
-                                <span className="ml-2 text-[10px] text-primary/60 normal-case">{q.points} pts</span>
+                        <div className="flex flex-col gap-4">
+                          {/* Score */}
+                          {questions.some(q => q.type === "score") && (
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-white/40">
+                                Exact Scoreline <span className="text-primary">*</span>
+                                <span className="ml-2 text-primary/50 normal-case font-normal">{questions.find(q=>q.type==="score")?.points} pts</span>
                               </label>
-                              <input
-                                value={predictAnswers[q.id] ?? ""}
-                                onChange={(e) =>
-                                  setPredictAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
-                                }
-                                placeholder={`Enter ${q.label.toLowerCase()}...`}
-                                className="w-full bg-white/5 border border-white/10 focus:border-primary/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
-                              />
+                              <div className="bg-white/5 border border-white/8 rounded-xl p-4 flex items-center justify-center gap-6">
+                                {(["home", "away"] as const).map((side) => {
+                                  const val = side === "home" ? adminScoreHome : adminScoreAway;
+                                  const set = side === "home" ? setAdminScoreHome : setAdminScoreAway;
+                                  return (
+                                    <div key={side} className="flex flex-col items-center gap-2">
+                                      <button type="button" onClick={() => set(v => Math.min(9, v + 1))} className="w-8 h-8 rounded-full border border-white/10 bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 cursor-pointer">
+                                        <Plus className="w-4 h-4" />
+                                      </button>
+                                      <span className="text-3xl font-black font-mono text-white select-none">{val}</span>
+                                      <button type="button" onClick={() => set(v => Math.max(0, v - 1))} className="w-8 h-8 rounded-full border border-white/10 bg-white/5 text-white flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 cursor-pointer">
+                                        <Minus className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                                <span className="text-white/20 text-2xl font-black font-mono absolute">–</span>
+                              </div>
                             </div>
-                          ))}
+                          )}
+
+                          {/* Winner */}
+                          {questions.some(q => q.type === "winner") && (
+                            <div className="flex flex-col gap-2">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-white/40">
+                                Winner <span className="text-white/20 font-normal normal-case">(Optional)</span>
+                                <span className="ml-2 text-primary/50 normal-case font-normal">{questions.find(q=>q.type==="winner")?.points} pts</span>
+                              </label>
+                              <div className="grid grid-cols-3 gap-2">
+                                {[
+                                  { id: "home" as const, label: predictMatch!.teamHome },
+                                  { id: "draw" as const, label: "Draw" },
+                                  { id: "away" as const, label: predictMatch!.teamAway },
+                                ].map((opt) => (
+                                  <button
+                                    key={opt.id}
+                                    type="button"
+                                    onClick={() => setAdminWinner(adminWinner === opt.id ? null : opt.id)}
+                                    className={`py-2.5 px-2 rounded-xl text-xs font-bold uppercase tracking-wider border cursor-pointer transition-all ${
+                                      adminWinner === opt.id
+                                        ? "border-primary bg-primary/10 text-primary"
+                                        : "border-white/8 bg-white/[0.02] text-white/50 hover:bg-white/5"
+                                    }`}
+                                  >
+                                    {opt.label.length > 9 ? opt.label.substring(0, 7) + "." : opt.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Scorer */}
+                          {questions.some(q => q.type === "scorer") && (
+                            <div className="flex flex-col gap-2 relative">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-white/40">
+                                First Scorer <span className="text-white/20 font-normal normal-case">(Optional)</span>
+                                <span className="ml-2 text-primary/50 normal-case font-normal">{questions.find(q=>q.type==="scorer")?.points} pts</span>
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={adminScorer}
+                                  onChange={(e) => { setAdminScorer(e.target.value); setAdminPlayerQuery(e.target.value); setAdminScorerOpen(true); }}
+                                  onFocus={() => setAdminScorerOpen(true)}
+                                  onBlur={() => setTimeout(() => setAdminScorerOpen(false), 200)}
+                                  placeholder="Type player name..."
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary placeholder:text-white/20"
+                                />
+                                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />
+                              </div>
+                              {adminScorerOpen && adminPlayers.length > 0 && (
+                                <div className="absolute left-0 right-0 top-[calc(100%+2px)] bg-[#101015] border border-white/10 rounded-xl shadow-2xl z-50 max-h-40 overflow-y-auto">
+                                  {adminPlayers.map((p) => (
+                                    <div
+                                      key={p.id}
+                                      onMouseDown={() => { setAdminScorer(p.name); setAdminScorerOpen(false); }}
+                                      className="px-4 py-2 hover:bg-white/5 cursor-pointer text-xs text-white/80"
+                                    >
+                                      {p.name}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                           {saveSuccess && (
                             <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-sm">

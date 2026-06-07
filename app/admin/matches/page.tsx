@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Share2, Loader2 } from "lucide-react";
+import { Share2, Loader2, MessageSquare } from "lucide-react";
 import {
   Calendar,
   Plus,
@@ -106,6 +106,7 @@ export default function MatchManager() {
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sharingId, setSharingId] = useState<number | null>(null);
+  const [sharingQuestionsId, setSharingQuestionsId] = useState<number | null>(null);
   const [shareData, setShareData] = useState<Record<number, any>>({});
   const shareCardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -154,6 +155,44 @@ export default function MatchManager() {
       setSharingId(null);
     }
   }, [sharingId]);
+
+  const handleShareQuestions = useCallback(async (match: Match) => {
+    if (sharingQuestionsId) return;
+    setSharingQuestionsId(match.id);
+    try {
+      const res = await fetch(`/api/admin/matches/${match.id}/questions`);
+      const data = await res.json();
+      const qs: { type: string; label: string; points: number }[] = data.questions ?? [];
+
+      const kickoff = new Date(match.matchTime);
+      const dl = new Date(match.deadline);
+      const dateStr = kickoff.toLocaleDateString("ml-IN", { day: "2-digit", month: "long", year: "numeric", timeZone: "Asia/Kolkata" });
+      const timeStr = kickoff.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST";
+      const dlStr = dl.toLocaleDateString("ml-IN", { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" }) + " " + dl.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST";
+
+      const mlLabels: Record<string, string> = {
+        winner: "ജേതാവ് ആര്?",
+        score: "ഫൈനൽ സ്കോർ എന്ത്?",
+        scorer: "ആദ്യ ഗോൾ ആര്?",
+      };
+      const mlHints: Record<string, string> = {
+        winner: `   🏠 ${match.teamHome} | 🤝 Draw | ✈️ ${match.teamAway}`,
+        score: `   ഉദാഹരണം: 2-1, 0-0, 1-1`,
+        scorer: `   ഇരു ടീമിലെ ഏതെങ്കിലും കളിക്കാരൻ`,
+      };
+      const nums = ["1️⃣", "2️⃣", "3️⃣"];
+      const qLines = qs.map((q, i) =>
+        `${nums[i] ?? `${i + 1}.`} *${mlLabels[q.type] ?? q.label}* (${q.points} pts)\n${mlHints[q.type] ?? ""}`
+      ).join("\n\n");
+
+      const text = `🏟️ *ഇന്നത്തെ മത്സരം* 🏟️\n\n⚽ *${match.teamHome} vs ${match.teamAway}*\n📅 ${dateStr} | ${timeStr}\n⏰ Deadline: ${dlStr}\n\n🎯 *ഇന്നത്തെ ചോദ്യങ്ങൾ*\n\n${qLines}\n\n🔗 *Skorio* ൽ Predict ചെയ്ത് Points നേടൂ! 🏆`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    } catch {
+      window.open(`https://wa.me/?text=${encodeURIComponent(`⚽ ${match.teamHome} vs ${match.teamAway} - Predict now on Skorio!`)}`, "_blank");
+    } finally {
+      setSharingQuestionsId(null);
+    }
+  }, [sharingQuestionsId]);
 
   useEffect(() => {
     async function fetchMatches() {
@@ -548,6 +587,15 @@ export default function MatchManager() {
                 >
                   <CheckCircle className="w-4 h-4" />
                   {statusInfo.type === "resulted" ? "Edit Result" : "Set Result"}
+                </button>
+
+                <button
+                  onClick={() => handleShareQuestions(match)}
+                  disabled={sharingQuestionsId === match.id}
+                  className="h-11 w-11 rounded-lg label-sm font-bold text-blue-400 bg-blue-400/10 border border-blue-400/25 hover:bg-blue-400/20 transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 shrink-0"
+                  title="Share questions (Malayalam)"
+                >
+                  {sharingQuestionsId === match.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
                 </button>
 
                 {isResulted && (

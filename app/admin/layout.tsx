@@ -14,6 +14,7 @@ import {
   GitBranch,
   MonitorPlay,
   HelpCircle,
+  Flag,
 } from "lucide-react";
 
 interface AdminUser {
@@ -102,6 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "User Registry", href: "/admin/users", icon: Users },
     { label: "Ad Manager", href: "/admin/ads", icon: MonitorPlay },
     { label: "Who Am I", href: "/admin/who-am-i", icon: HelpCircle },
+    { label: "Flag Quiz", href: "/admin/flag-quiz", icon: Flag },
   ];
 
   return (

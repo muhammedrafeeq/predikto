@@ -240,10 +240,47 @@ const Icon3dBracket = () => (
   </svg>
 );
 
+const Icon3dFlag = () => (
+  <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+    <defs>
+      <linearGradient id="flag-pole" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#d1d5db" />
+        <stop offset="100%" stopColor="#6b7280" />
+      </linearGradient>
+      <linearGradient id="flag-top" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f87171" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#991b1b" />
+      </linearGradient>
+      <linearGradient id="flag-bot" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="100%" stopColor="#1d4ed8" />
+      </linearGradient>
+      <filter id="flag-glow">
+        <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#ef4444" floodOpacity="0.4" />
+      </filter>
+    </defs>
+    <ellipse cx="21" cy="73" rx="6" ry="2.5" fill="#6b7280" opacity="0.3" />
+    {/* Pole */}
+    <rect x="18" y="10" width="4" height="62" rx="2" fill="url(#flag-pole)" />
+    {/* Flag body - waving shape */}
+    <path d="M22 12 Q40 10 56 16 Q48 22 56 28 Q40 34 22 32 Z" fill="url(#flag-top)" filter="url(#flag-glow)" />
+    <path d="M22 32 Q40 30 56 36 Q48 42 56 48 Q40 50 22 48 Z" fill="url(#flag-bot)" />
+    {/* Star on top flag */}
+    <path d="M39 18 l1 3 3 0 -2.5 2 1 3 -2.5-1.8 -2.5 1.8 1-3 -2.5-2 3 0z" fill="white" opacity="0.9" />
+    {/* Shine */}
+    <path d="M24 14 Q36 12 50 17" stroke="white" strokeWidth="1.5" strokeLinecap="round" opacity="0.3" />
+    {/* Ball at pole top */}
+    <circle cx="20" cy="10" r="4" fill="#f9fafb" />
+    <circle cx="19" cy="9" r="1.5" fill="white" opacity="0.6" />
+  </svg>
+);
+
 const GAMES = [
   { id: "penalty",   title: "Penalty Shootout",    Icon3d: Icon3dPenalty,   accent: "#4ade80", glow: "rgba(74,222,128,0.5)",   bg: "linear-gradient(145deg,#052e16,#15803d)",  badge: "DAILY",     maxPts: "20",  href: "/games/penalty" },
   { id: "trivia",    title: "Football Trivia",      Icon3d: Icon3dTrivia,    accent: "#38bdf8", glow: "rgba(56,189,248,0.5)",   bg: "linear-gradient(145deg,#082f49,#0369a1)",  badge: "DAILY",     maxPts: "30",  href: "/games/trivia" },
   { id: "who_am_i",  title: "Who Am I?",            Icon3d: Icon3dWhoAmI,    accent: "#2dd4bf", glow: "rgba(45,212,191,0.5)",   bg: "linear-gradient(145deg,#042f2e,#0f766e)",  badge: "DAILY",     maxPts: "15",  href: "/games/who-am-i" },
+  { id: "flag_quiz", title: "Flag Quiz",             Icon3d: Icon3dFlag,      accent: "#f87171", glow: "rgba(248,113,113,0.5)",  bg: "linear-gradient(145deg,#1c0a0a,#991b1b)",  badge: "DAILY",     maxPts: "90",  href: "/games/flag-quiz" },
   { id: "first_goal",title: "First Goal Timer",     Icon3d: Icon3dClock,     accent: "#fbbf24", glow: "rgba(251,191,36,0.5)",   bg: "linear-gradient(145deg,#1c1400,#b45309)",  badge: "PER MATCH", maxPts: "20",  href: "/games/first-goal" },
   { id: "formation", title: "Formation Predictor",  Icon3d: Icon3dFormation, accent: "#a78bfa", glow: "rgba(167,139,250,0.5)",  bg: "linear-gradient(145deg,#1e1035,#6d28d9)",  badge: "PER MATCH", maxPts: "20",  href: "/games/formation" },
   { id: "bracket",   title: "Tournament Bracket",   Icon3d: Icon3dBracket,   accent: "#facc15", glow: "rgba(250,204,21,0.5)",   bg: "linear-gradient(145deg,#1a1200,#a16207)",  badge: "ONE-SHOT",  maxPts: "100+",href: "/games/bracket" },

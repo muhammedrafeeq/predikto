@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const game = searchParams.get("game") ?? "all";
 
-    const validGames = ["all", "penalty", "formation", "first_goal", "trivia", "who_am_i", "bracket"];
+    const validGames = ["all", "penalty", "formation", "first_goal", "trivia", "who_am_i", "bracket", "flag_quiz"];
     if (!validGames.includes(game)) {
       return NextResponse.json({ error: "Invalid game filter" }, { status: 400 });
     }

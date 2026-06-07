@@ -273,6 +273,52 @@ export async function POST() {
     `);
     await query(`CREATE INDEX IF NOT EXISTS idx_who_am_i_active ON who_am_i_players(active)`);
 
+    // Flag Quiz flags table
+    await query(`
+      CREATE TABLE IF NOT EXISTS flag_quiz_flags (
+        id           SERIAL PRIMARY KEY,
+        country_name TEXT NOT NULL,
+        flag_emoji   VARCHAR(10) NOT NULL,
+        difficulty   VARCHAR(10) NOT NULL DEFAULT 'medium' CHECK (difficulty IN ('easy','medium','hard')),
+        active       BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    await query(`CREATE INDEX IF NOT EXISTS idx_flag_quiz_active ON flag_quiz_flags(active)`);
+
+    // Seed WC 2026 nations
+    const flagSeeds = [
+      // Easy
+      ["Brazil","🇧🇷","easy"],["France","🇫🇷","easy"],["Germany","🇩🇪","easy"],
+      ["Spain","🇪🇸","easy"],["Argentina","🇦🇷","easy"],["England","🏴󠁧󠁢󠁥󠁮󠁧󠁿","easy"],
+      ["Portugal","🇵🇹","easy"],["Netherlands","🇳🇱","easy"],["Italy","🇮🇹","easy"],
+      ["USA","🇺🇸","easy"],["Mexico","🇲🇽","easy"],["Japan","🇯🇵","easy"],
+      ["South Korea","🇰🇷","easy"],["Australia","🇦🇺","easy"],["Canada","🇨🇦","easy"],
+      ["Morocco","🇲🇦","easy"],
+      // Medium
+      ["Colombia","🇨🇴","medium"],["Senegal","🇸🇳","medium"],["Croatia","🇭🇷","medium"],
+      ["Denmark","🇩🇰","medium"],["Switzerland","🇨🇭","medium"],["Belgium","🇧🇪","medium"],
+      ["Poland","🇵🇱","medium"],["Turkey","🇹🇷","medium"],["Ukraine","🇺🇦","medium"],
+      ["Ecuador","🇪🇨","medium"],["Uruguay","🇺🇾","medium"],["Chile","🇨🇱","medium"],
+      ["Serbia","🇷🇸","medium"],["Hungary","🇭🇺","medium"],["Greece","🇬🇷","medium"],
+      ["Saudi Arabia","🇸🇦","medium"],
+      // Hard
+      ["Panama","🇵🇦","hard"],["Honduras","🇭🇳","hard"],["Jamaica","🇯🇲","hard"],
+      ["Costa Rica","🇨🇷","hard"],["El Salvador","🇸🇻","hard"],["Paraguay","🇵🇾","hard"],
+      ["Bolivia","🇧🇴","hard"],["Venezuela","🇻🇪","hard"],["Cameroon","🇨🇲","hard"],
+      ["Mali","🇲🇱","hard"],["DR Congo","🇨🇩","hard"],["Albania","🇦🇱","hard"],
+      ["Slovakia","🇸🇰","hard"],["Georgia","🇬🇪","hard"],["Iraq","🇮🇶","hard"],
+      ["New Zealand","🇳🇿","hard"],
+    ];
+    for (const [name, emoji, diff] of flagSeeds) {
+      await query(
+        `INSERT INTO flag_quiz_flags (country_name, flag_emoji, difficulty)
+         VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [name, emoji, diff]
+      );
+    }
+
     // Seed default setting
     await query(`
       INSERT INTO system_settings (key, value)

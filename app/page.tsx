@@ -42,7 +42,7 @@ const SoccerBallIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
 );
 
 const GAME_MODES = [
-  { id: "match_prediction", title: "Match Predictor", desc: "Predict winner, exact score, and first scorer for 3x points.", accent: "#c6c0ff", bg: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", glow: "rgba(198, 192, 255, 0.25)" },
+  { id: "match_prediction", title: "Match Predictor", desc: "Predict winner, exact score, and Man of the Match for 3x points.", accent: "#c6c0ff", bg: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)", glow: "rgba(198, 192, 255, 0.25)" },
   { id: "first_goal", title: "First Goal Timer", desc: "Guess the exact minute the first goal is scored in each match.", accent: "#ffb955", bg: "linear-gradient(135deg, #2b1b00 0%, #7c2d12 100%)", glow: "rgba(255, 185, 85, 0.25)" },
   { id: "formation", title: "Formation Predictor", desc: "Predict starting lineups and standard tactical setups.", accent: "#a855f7", bg: "linear-gradient(135deg, #1e1035 0%, #581c87 100%)", glow: "rgba(168, 85, 247, 0.25)" },
   { id: "bracket", title: "Tournament Bracket", desc: "Build the complete knockout path from Round of 16 to final winner.", accent: "#43df9e", bg: "linear-gradient(135deg, #022c22 0%, #064e3b 100%)", glow: "rgba(67, 223, 158, 0.25)" }

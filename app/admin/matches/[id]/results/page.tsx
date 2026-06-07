@@ -693,7 +693,7 @@ export default function ResultEntry({
                   <span className="font-bold text-primary">+4 pts</span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
-                  <span className="text-on-surface-variant font-sans text-sm">First Scorer</span>
+                  <span className="text-on-surface-variant font-sans text-sm">Man of the Match</span>
                   <span className="font-bold text-primary">+2 pts</span>
                 </div>
 

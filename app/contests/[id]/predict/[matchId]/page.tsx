@@ -372,14 +372,14 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
         {/* 3. Scorer */}
         <section className="flex flex-col gap-2 relative">
           <label className="text-[10px] font-black uppercase tracking-wider text-white/40 px-1">
-            First Scorer <span className="text-white/20 font-normal">(Optional)</span>
+            Man of the Match <span className="text-white/20 font-normal">(Optional)</span>
           </label>
           <div className="surface-glass-1 border border-white/5 rounded-2xl p-4 flex flex-col gap-3 relative">
             <div className="relative">
               <input
                 type="text"
                 disabled={hasClosed}
-                placeholder="Type or select first scorer..."
+                placeholder="Type or select Man of the Match..."
                 value={topScorer}
                 onChange={(e) => { setTopScorer(e.target.value); setDropdownOpen(true); }}
                 onFocus={() => { if (!hasClosed) setDropdownOpen(true); }}

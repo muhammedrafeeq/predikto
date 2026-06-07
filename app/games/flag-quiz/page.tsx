@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trophy, Zap, CheckCircle, XCircle, Flag } from "lucide-react";
+import CardReveal from "@/components/cards/CardReveal";
 
 type Difficulty = "easy" | "medium" | "hard";
 type Phase = "pick" | "loading" | "playing" | "result";
@@ -55,6 +56,19 @@ export default function FlagQuizPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
 
+  // Card drop states
+  const [revealQueue, setRevealQueue] = useState<any[]>([]);
+  const [currentRevealIndex, setCurrentRevealIndex] = useState(-1);
+
+  const handleRevealComplete = () => {
+    if (currentRevealIndex < revealQueue.length - 1) {
+      setCurrentRevealIndex(currentRevealIndex + 1);
+    } else {
+      setRevealQueue([]);
+      setCurrentRevealIndex(-1);
+    }
+  };
+
   const meta = DIFF_META[difficulty];
   const question = questions[currentIndex];
 
@@ -85,6 +99,10 @@ export default function FlagQuizPage() {
               setStreakBonus(data.streakBonus);
               setResultItems(data.results);
               setCorrectCount(data.correctCount);
+              if (data.droppedCard) {
+                setRevealQueue([data.droppedCard]);
+                setCurrentRevealIndex(0);
+              }
               setPhase("result");
             } else {
               setError(data.error ?? "Submit failed");
@@ -363,6 +381,25 @@ export default function FlagQuizPage() {
             </>
           )}
         </div>
+
+        {/* Inline Card Reveal Overlay Modal */}
+        {revealQueue.length > 0 && currentRevealIndex >= 0 && (
+          <div className="fixed inset-0 bg-neutral-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+            <div className="text-center mb-6">
+              <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-indigo-400 px-3 py-1 rounded-full font-black tracking-widest uppercase animate-pulse">
+                Card Reward {currentRevealIndex + 1} of {revealQueue.length}
+              </span>
+              <h2 className="text-xl font-black text-white mt-2">
+                Flip the Card to Reveal Your Player!
+              </h2>
+            </div>
+
+            <CardReveal
+              card={revealQueue[currentRevealIndex]}
+              onComplete={handleRevealComplete}
+            />
+          </div>
+        )}
       </div>
     );
   }

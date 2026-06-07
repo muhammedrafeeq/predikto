@@ -85,17 +85,42 @@ export async function dropCard(
   );
   const activeFavTeamIds = activeFavTeamsRes.rows.map((r) => r.team_id);
 
+  // Fetch Argentina, Brazil, Portugal IDs dynamically
+  const abpTeamsRes = await query<{ id: number; name: string }>(
+    `SELECT id, name FROM teams WHERE name IN ('Argentina', 'Brazil', 'Portugal')`
+  );
+  const argId = abpTeamsRes.rows.find((r) => r.name === "Argentina")?.id;
+  const braId = abpTeamsRes.rows.find((r) => r.name === "Brazil")?.id;
+  const porId = abpTeamsRes.rows.find((r) => r.name === "Portugal")?.id;
+
+  // If Argentina is the user's favourite team, or if the active favourite teams in the system includes Argentina,
+  // we add Brazil and Portugal to the pool to prevent getting only Argentina players.
+  const isArgFav = favTeamId && argId && favTeamId === argId;
+  const isOnlyArgActive = activeFavTeamIds.length === 1 && argId && activeFavTeamIds[0] === argId;
+
+  let favoritePoolIds = favTeamId ? [favTeamId] : [];
+  if (isArgFav) {
+    if (braId) favoritePoolIds.push(braId);
+    if (porId) favoritePoolIds.push(porId);
+  }
+
+  let normalPoolIds = [...activeFavTeamIds];
+  if (isArgFav || isOnlyArgActive || (argId && activeFavTeamIds.includes(argId))) {
+    if (braId && !normalPoolIds.includes(braId)) normalPoolIds.push(braId);
+    if (porId && !normalPoolIds.includes(porId)) normalPoolIds.push(porId);
+  }
+
   let selectedCard: any = null;
 
-  // 3. 30% chance to drop from user's own favourite team (if they have one)
-  if (favTeamId && Math.random() < 0.30) {
+  // 3. 30% chance to drop from user's own favourite team pool (if they have one)
+  if (favoritePoolIds.length > 0 && Math.random() < 0.30) {
     const favCardsRes = await query<any>(
       `SELECT pc.*, t.name as team_name, t.flag_emoji 
        FROM player_cards pc
        JOIN teams t ON pc.team_id = t.id
-       WHERE pc.rarity = $1 AND pc.team_id = $2 AND pc.is_active = true AND NOT (pc.id = ANY($3::int[]))
+       WHERE pc.rarity = $1 AND pc.team_id = ANY($2::int[]) AND pc.is_active = true AND NOT (pc.id = ANY($3::int[]))
        ORDER BY RANDOM() LIMIT 1`,
-      [rarity, favTeamId, excludeCardIds]
+      [rarity, favoritePoolIds, excludeCardIds]
     );
 
     if (favCardsRes.rows.length > 0) {
@@ -103,15 +128,15 @@ export async function dropCard(
     }
   }
 
-  // 4. Normal path: Pick a random card of this rarity from teams favourited by ANY user
-  if (!selectedCard && activeFavTeamIds.length > 0) {
+  // 4. Normal path: Pick a random card of this rarity from teams in the normal pool
+  if (!selectedCard && normalPoolIds.length > 0) {
     const restrictedCardsRes = await query<any>(
       `SELECT pc.*, t.name as team_name, t.flag_emoji 
        FROM player_cards pc
        JOIN teams t ON pc.team_id = t.id
-       WHERE pc.rarity = $1 AND pc.team_id = ANY($2) AND pc.is_active = true AND NOT (pc.id = ANY($3::int[]))
+       WHERE pc.rarity = $1 AND pc.team_id = ANY($2::int[]) AND pc.is_active = true AND NOT (pc.id = ANY($3::int[]))
        ORDER BY RANDOM() LIMIT 1`,
-      [rarity, activeFavTeamIds, excludeCardIds]
+      [rarity, normalPoolIds, excludeCardIds]
     );
 
     if (restrictedCardsRes.rows.length > 0) {

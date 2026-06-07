@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trophy, RefreshCw, Star, Target, Flame } from "lucide-react";
+import CardReveal from "@/components/cards/CardReveal";
 
 interface CareerStats {
   sevenDayBest: number;
@@ -385,6 +386,19 @@ export default function PenaltyPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [career, setCareer] = useState<CareerStats | null>(null);
 
+  // Card drop states
+  const [revealQueue, setRevealQueue] = useState<any[]>([]);
+  const [currentRevealIndex, setCurrentRevealIndex] = useState(-1);
+
+  const handleRevealComplete = () => {
+    if (currentRevealIndex < revealQueue.length - 1) {
+      setCurrentRevealIndex(currentRevealIndex + 1);
+    } else {
+      setRevealQueue([]);
+      setCurrentRevealIndex(-1);
+    }
+  };
+
   useEffect(() => {
     fetch("/api/games/penalty")
       .then((r) => r.ok ? r.json() : null)
@@ -406,6 +420,10 @@ export default function PenaltyPage() {
       setFinalGoals(data.goals);
       setFinalPoints(data.points);
       if (data.goals >= 4) setConfetti(true);
+      if (data.droppedCard) {
+        setRevealQueue([data.droppedCard]);
+        setCurrentRevealIndex(0);
+      }
       setGameOver(true);
     } catch {
       setError("Network error. Please try again.");
@@ -732,6 +750,25 @@ export default function PenaltyPage() {
             </div>
           )}
         </div>
+
+        {/* Inline Card Reveal Overlay Modal */}
+        {revealQueue.length > 0 && currentRevealIndex >= 0 && (
+          <div className="fixed inset-0 bg-neutral-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+            <div className="text-center mb-6">
+              <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-indigo-400 px-3 py-1 rounded-full font-black tracking-widest uppercase animate-pulse">
+                Card Reward {currentRevealIndex + 1} of {revealQueue.length}
+              </span>
+              <h2 className="text-xl font-black text-white mt-2">
+                Flip the Card to Reveal Your Player!
+              </h2>
+            </div>
+
+            <CardReveal
+              card={revealQueue[currentRevealIndex]}
+              onComplete={handleRevealComplete}
+            />
+          </div>
+        )}
       </div>
     );
   }

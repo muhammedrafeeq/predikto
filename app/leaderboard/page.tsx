@@ -359,7 +359,10 @@ export default function Leaderboard() {
               </div>
 
               {/* Pedestal block */}
-              <div className="w-full bg-gradient-to-t from-slate-950/80 to-slate-800/40 border-t border-x border-slate-500/20 rounded-t-xl h-[120px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-slate-400/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden">
+              <div
+                onClick={() => router.push(currentUser && currentUser.id === second.id ? "/collection" : `/users/${second.id}/collection`)}
+                className="w-full bg-gradient-to-t from-slate-950/80 to-slate-800/40 border-t border-x border-slate-500/20 rounded-t-xl h-[120px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-slate-400/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden"
+              >
                 <span className="text-white font-bold text-xs truncate w-11/12 text-center group-hover:text-slate-300">{second.name}</span>
                 <span className="text-lg font-black text-white font-mono mt-1">
                   {Math.floor(multiplier * second.points).toLocaleString()}
@@ -386,7 +389,10 @@ export default function Leaderboard() {
               </div>
 
               {/* Pedestal block */}
-              <div className="w-full bg-gradient-to-t from-amber-950/80 to-amber-800/40 border-t-2 border-x border-amber-500/40 rounded-t-xl h-[160px] flex flex-col items-center justify-center shadow-2xl hover:scale-[1.03] hover:border-amber-400/60 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden">
+              <div
+                onClick={() => router.push(currentUser && currentUser.id === first.id ? "/collection" : `/users/${first.id}/collection`)}
+                className="w-full bg-gradient-to-t from-amber-950/80 to-amber-800/40 border-t-2 border-x border-amber-500/40 rounded-t-xl h-[160px] flex flex-col items-center justify-center shadow-2xl hover:scale-[1.03] hover:border-amber-400/60 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden"
+              >
                 <span className="text-white font-black text-sm truncate w-11/12 text-center group-hover:text-amber-300">{first.name}</span>
                 <span className="text-2xl font-black text-amber-400 font-mono mt-1" style={{ textShadow: "0 0 15px rgba(245,158,11,0.4)" }}>
                   {Math.floor(multiplier * first.points).toLocaleString()}
@@ -412,7 +418,10 @@ export default function Leaderboard() {
               </div>
 
               {/* Pedestal block */}
-              <div className="w-full bg-gradient-to-t from-amber-950/40 to-amber-900/10 border-t border-x border-amber-700/20 rounded-t-xl h-[100px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-amber-600/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden">
+              <div
+                onClick={() => router.push(currentUser && currentUser.id === third.id ? "/collection" : `/users/${third.id}/collection`)}
+                className="w-full bg-gradient-to-t from-amber-950/40 to-amber-900/10 border-t border-x border-amber-700/20 rounded-t-xl h-[100px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-amber-600/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden"
+              >
                 <span className="text-white font-bold text-xs truncate w-11/12 text-center group-hover:text-amber-600">{third.name}</span>
                 <span className="text-lg font-black text-white font-mono mt-1">
                   {Math.floor(multiplier * third.points).toLocaleString()}
@@ -551,7 +560,8 @@ export default function Leaderboard() {
               return (
                 <div
                   key={player.id}
-                  className={`grid grid-cols-12 items-center px-4 py-3 rounded-xl border transition-all duration-300 hover:scale-[1.01] hover:bg-white/[0.04] hover:border-white/15 stagger-in ${
+                  onClick={() => router.push(isMe ? "/collection" : `/users/${player.id}/collection`)}
+                  className={`grid grid-cols-12 items-center px-4 py-3 rounded-xl border transition-all duration-300 hover:scale-[1.01] hover:bg-white/[0.04] hover:border-white/15 stagger-in cursor-pointer ${
                     isMe
                       ? "bg-primary-container/10 border-primary shadow-[0_0_20px_rgba(168,85,247,0.15)]"
                       : "bg-white/[0.02] border-white/5"

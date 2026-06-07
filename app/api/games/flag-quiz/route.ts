@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
+import { dropCard } from "@/lib/cardDrop";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -150,7 +151,16 @@ export async function POST(req: NextRequest) {
       [user.userId, refId, totalPoints, JSON.stringify({ difficulty, date: new Date().toISOString().slice(0, 10), correct: correctCount, total: answers.length })]
     );
 
-    return NextResponse.json({ success: true, results, totalPoints, streakBonus, correctCount });
+    // Drop card if at least 5 correct answers are obtained
+    let droppedCard = null;
+    if (correctCount >= 5) {
+      const card = await dropCard(user.userId, "trivia");
+      if (card) {
+        droppedCard = card;
+      }
+    }
+
+    return NextResponse.json({ success: true, results, totalPoints, streakBonus, correctCount, droppedCard });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
+import { dropCard } from "@/lib/cardDrop";
 
 const POINTS_MAP: Record<number, number> = { 5: 20, 4: 15, 3: 10, 2: 5, 1: 2, 0: 0 };
 const DIRECTIONS = ["left", "center", "right"] as const;
@@ -90,7 +91,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Already played today" }, { status: 409 });
     }
 
-    return NextResponse.json({ goals, goalieKicks, points, alreadyPlayed: false });
+    // Drop card if at least 3 goals are scored
+    let droppedCard = null;
+    if (goals >= 3) {
+      const card = await dropCard(user.userId, "trivia");
+      if (card) {
+        droppedCard = card;
+      }
+    }
+
+    return NextResponse.json({ goals, goalieKicks, points, alreadyPlayed: false, droppedCard });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });

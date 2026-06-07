@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Timer, CheckCircle2, XCircle, Trophy, Shield, ArrowLeft, History, LayoutGrid, Gamepad2 } from "lucide-react";
 import ShareCard from "@/components/ShareCard";
 import SportsEventJsonLd from "@/components/seo/SportsEventJsonLd";
+import CardReveal from "@/components/cards/CardReveal";
 
 interface ResultPageProps {
   params: Promise<{ id: string }>;
@@ -105,6 +106,19 @@ export default function ResultPage({ params }: ResultPageProps) {
   const [confetti, setConfetti] = useState<ConfettiParticle[]>([]);
   const shareCardRef = useRef<HTMLDivElement>(null!);
 
+  // Card drop states
+  const [revealQueue, setRevealQueue] = useState<any[]>([]);
+  const [currentRevealIndex, setCurrentRevealIndex] = useState(-1);
+
+  const handleRevealComplete = () => {
+    if (currentRevealIndex < revealQueue.length - 1) {
+      setCurrentRevealIndex(currentRevealIndex + 1);
+    } else {
+      setRevealQueue([]);
+      setCurrentRevealIndex(-1);
+    }
+  };
+
   useEffect(() => {
     async function loadData() {
       try {
@@ -124,6 +138,10 @@ export default function ResultPage({ params }: ResultPageProps) {
         if (data.success) {
           setMatch(data.match);
           setBreakdown(data.breakdown);
+          if (data.droppedCards && data.droppedCards.length > 0) {
+            setRevealQueue(data.droppedCards);
+            setCurrentRevealIndex(0);
+          }
         }
       } catch (err) {
         console.error("Error loading result details:", err);
@@ -555,6 +573,25 @@ export default function ResultPage({ params }: ResultPageProps) {
           </a>
         )}
       </nav>
+
+      {/* Inline Card Reveal Overlay Modal */}
+      {revealQueue.length > 0 && currentRevealIndex >= 0 && (
+        <div className="fixed inset-0 bg-neutral-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+          <div className="text-center mb-6">
+            <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-indigo-400 px-3 py-1 rounded-full font-black tracking-widest uppercase animate-pulse">
+              Card Reward {currentRevealIndex + 1} of {revealQueue.length}
+            </span>
+            <h2 className="text-xl font-black text-white mt-2">
+              Flip the Card to Reveal Your Player!
+            </h2>
+          </div>
+
+          <CardReveal
+            card={revealQueue[currentRevealIndex]}
+            onComplete={handleRevealComplete}
+          />
+        </div>
+      )}
     </div>
   );
 }

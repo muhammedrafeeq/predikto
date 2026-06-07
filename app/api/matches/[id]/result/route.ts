@@ -94,9 +94,34 @@ export async function GET(
     const bonusPoints = hasBonus ? 3 : 0;
     const totalPoints = basePoints + bonusPoints;
 
+    // Fetch dropped cards for this user and match
+    const dropsRes = await query(
+      `SELECT pc.*, t.name as team_name, t.flag_emoji, cd.trigger
+       FROM card_drops cd
+       JOIN player_cards pc ON cd.card_id = pc.id
+       JOIN teams t ON pc.team_id = t.id
+       WHERE cd.user_id = $1 AND cd.trigger_ref_id = $2`,
+      [userId, matchId]
+    );
+
+    const droppedCards = dropsRes.rows.map((r: any) => ({
+      id: r.id,
+      team_id: r.team_id,
+      player_name: r.player_name,
+      position: r.position,
+      jersey_number: r.jersey_number,
+      rarity: r.rarity,
+      overall_rating: r.overall_rating,
+      stats: r.stats,
+      team_name: r.team_name,
+      flag_emoji: r.flag_emoji,
+      trigger: r.trigger,
+    }));
+
     return NextResponse.json({
       success: true,
       match,
+      droppedCards,
       breakdown: {
         winner: questionsBreakdown.winner || null,
         score: questionsBreakdown.score || null,

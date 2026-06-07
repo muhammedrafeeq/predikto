@@ -9,8 +9,11 @@ export async function GET(req: NextRequest) {
     const duplicatesParam = url.searchParams.get("duplicates");
     const isDuplicatesOnly = duplicatesParam === "true";
 
-    // If requesting duplicates only (for trading screen counter proposals)
+    // If requesting duplicates only (for trading screen counter proposals or initiating trades)
     if (isDuplicatesOnly) {
+      const targetUserIdParam = url.searchParams.get("userId");
+      const targetUserId = targetUserIdParam ? parseInt(targetUserIdParam, 10) : user.userId;
+      
       const dupsRes = await query<any>(
         `SELECT 
           pc.id, 
@@ -29,9 +32,9 @@ export async function GET(req: NextRequest) {
          JOIN teams t ON pc.team_id = t.id
          WHERE uc.user_id = $1 AND uc.quantity >= 2 AND pc.rarity != 'legendary' AND pc.is_active = true
          ORDER BY pc.overall_rating DESC, pc.player_name ASC`,
-        [user.userId]
+        [targetUserId]
       );
-      return NextResponse.json({ userId: user.userId, cards: dupsRes.rows });
+      return NextResponse.json({ userId: targetUserId, cards: dupsRes.rows });
     }
 
     // 1. Fetch all teams to populate filters in UI

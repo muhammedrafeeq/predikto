@@ -38,6 +38,94 @@ export default function MyCollectionPage() {
   const [currentRevealIndex, setCurrentRevealIndex] = useState(-1);
   const [isViewingCollectionCard, setIsViewingCollectionCard] = useState(false);
 
+  // Trade Modal State
+  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
+  const [selectedOfferedCard, setSelectedOfferedCard] = useState<PlayerCardData | null>(null);
+  const [leaderboardUsers, setLeaderboardUsers] = useState<any[]>([]);
+  const [selectedTargetUserId, setSelectedTargetUserId] = useState<number | null>(null);
+  const [targetUserDuplicates, setTargetUserDuplicates] = useState<PlayerCardData[]>([]);
+  const [selectedRequestedCardId, setSelectedRequestedCardId] = useState<number | null>(null);
+  const [loadingDuplicates, setLoadingDuplicates] = useState(false);
+  const [submittingTrade, setSubmittingTrade] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+
+  const handleInitTrade = async (card: PlayerCardData) => {
+    setSelectedOfferedCard(card);
+    setIsTradeModalOpen(true);
+    setSelectedTargetUserId(null);
+    setSelectedRequestedCardId(null);
+    setTargetUserDuplicates([]);
+    setUserSearchQuery("");
+    
+    // Fetch leaderboard if not already loaded
+    if (leaderboardUsers.length === 0) {
+      try {
+        const res = await fetch("/api/leaderboard");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            // Filter out current user
+            const filtered = (data.rankings || []).filter((r: any) => r.id !== currentUser?.id);
+            setLeaderboardUsers(filtered);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching leaderboard users for trade:", err);
+      }
+    }
+  };
+
+  const handleSelectTargetUser = async (targetUserId: number) => {
+    setSelectedTargetUserId(targetUserId);
+    setSelectedRequestedCardId(null);
+    setLoadingDuplicates(true);
+    try {
+      const res = await fetch(`/api/collection?duplicates=true&userId=${targetUserId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTargetUserDuplicates(data.cards || []);
+      }
+    } catch (err) {
+      console.error("Error fetching duplicates for target user:", err);
+    } finally {
+      setLoadingDuplicates(false);
+    }
+  };
+
+  const handleSendTrade = async () => {
+    if (!selectedOfferedCard || !selectedTargetUserId || !selectedRequestedCardId) return;
+    setSubmittingTrade(true);
+    setError("");
+    try {
+      const res = await fetch("/api/trades", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          toUserId: selectedTargetUserId,
+          offeredCardId: selectedOfferedCard.id,
+          requestedCardId: selectedRequestedCardId,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to propose trade");
+      }
+
+      // Close modal and refresh collection
+      setIsTradeModalOpen(false);
+      setSelectedOfferedCard(null);
+      setSelectedTargetUserId(null);
+      setSelectedRequestedCardId(null);
+      setTargetUserDuplicates([]);
+      await loadCollection();
+    } catch (err: any) {
+      setError(err.message || "Failed to send trade.");
+    } finally {
+      setSubmittingTrade(false);
+    }
+  };
+
   // Load Initial Data
   useEffect(() => {
     async function loadInitialData() {
@@ -204,7 +292,7 @@ export default function MyCollectionPage() {
         )}
 
         {/* Streak Dashboard Card */}
-        {streak && (
+        {streak && !streak.alreadyLoggedIn && (
           <div className="surface-glass-2 border border-neutral-800 rounded-2xl p-5 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-indigo-950 border border-indigo-900 flex items-center justify-center text-2xl">
@@ -303,12 +391,12 @@ export default function MyCollectionPage() {
                     />
                     
                     {isEligibleForTrade ? (
-                      <Link
-                        href="/trades"
-                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-wider py-1.5 rounded-xl shadow-[0_2px_8px_rgba(99,102,241,0.25)] hover:scale-[1.03] transition-all text-center cursor-pointer"
+                      <button
+                        onClick={() => handleInitTrade(card)}
+                        className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black uppercase tracking-wider py-1.5 rounded-xl shadow-[0_2px_8px_rgba(99,102,241,0.25)] hover:scale-[1.03] transition-all text-center cursor-pointer text-xs"
                       >
                         Trade (x{card.quantity})
-                      </Link>
+                      </button>
                     ) : (
                       <div className="h-7 text-[10px] text-neutral-500 font-bold uppercase tracking-wider flex items-center justify-center">
                         x{card.quantity} Owned
@@ -394,6 +482,169 @@ export default function MyCollectionPage() {
             onComplete={handleRevealComplete}
             detailsUrl={isViewingCollectionCard ? `/collection/${revealQueue[currentRevealIndex].id}` : undefined}
           />
+        </div>
+      )}
+
+      {/* Offer Trade Modal */}
+      {isTradeModalOpen && selectedOfferedCard && (
+        <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 text-left">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 w-full max-w-xl max-h-[85vh] flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-3 mb-4">
+                <h3 className="text-lg font-black uppercase tracking-tight text-white">
+                  Propose Trade
+                </h3>
+                <button
+                  onClick={() => setIsTradeModalOpen(false)}
+                  className="text-neutral-400 hover:text-white font-bold text-sm cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* offered card visual */}
+              <div className="bg-neutral-950/60 p-4 border border-neutral-800/80 rounded-2xl flex items-center gap-4 mb-6">
+                <div className="scale-75 origin-left w-36 h-48 -mr-10">
+                  <PlayerCard card={selectedOfferedCard} size="sm" showStats={false} />
+                </div>
+                <div className="flex-1">
+                  <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">
+                    You are offering your duplicate
+                  </span>
+                  <h4 className="font-extrabold text-white text-md uppercase">
+                    {selectedOfferedCard.player_name}
+                  </h4>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Rarity: <span className="font-bold uppercase">{selectedOfferedCard.rarity}</span>
+                  </p>
+                </div>
+              </div>
+
+              {!selectedTargetUserId ? (
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider text-indigo-400 block mb-2">
+                    Choose a player to trade with:
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search competitors..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm mb-4 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-white"
+                  />
+                  <div className="overflow-y-auto max-h-[200px] flex flex-col gap-2 pr-1 scrollbar-thin">
+                    {leaderboardUsers
+                      .filter(u => u.name.toLowerCase().includes(userSearchQuery.toLowerCase()))
+                      .map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => handleSelectTargetUser(user.id)}
+                          className="w-full text-left p-3 rounded-xl border border-neutral-800/80 bg-neutral-950/20 hover:bg-neutral-850 hover:border-neutral-750 transition-all flex items-center justify-between cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center font-black text-xs text-indigo-400">
+                              {user.name.substring(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-white">{user.name}</p>
+                              <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider mt-0.5">{user.points} points</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-black uppercase text-indigo-400">Select ➔</span>
+                        </button>
+                      ))}
+                    {leaderboardUsers.filter(u => u.name.toLowerCase().includes(userSearchQuery.toLowerCase())).length === 0 && (
+                      <p className="text-center py-6 text-xs text-neutral-500 uppercase tracking-widest font-black">
+                        No competitors found
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex items-center justify-between mb-4 bg-neutral-950/40 border border-neutral-800 rounded-xl p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center font-black text-xs text-indigo-400">
+                        {leaderboardUsers.find(u => u.id === selectedTargetUserId)?.name.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <span className="text-[8px] bg-indigo-950 text-indigo-400 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Trading Partner</span>
+                        <p className="text-xs font-bold text-white mt-0.5">{leaderboardUsers.find(u => u.id === selectedTargetUserId)?.name}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedTargetUserId(null)}
+                      className="text-[10px] font-black uppercase tracking-wider text-neutral-400 hover:text-white px-2.5 py-1.5 bg-neutral-850 hover:bg-neutral-800 border border-neutral-800 rounded-lg transition-all cursor-pointer"
+                    >
+                      Change Player
+                    </button>
+                  </div>
+
+                  <span className="text-xs font-black uppercase tracking-wider text-indigo-400 block mb-2">
+                    Select a card you want from them:
+                  </span>
+
+                  {loadingDuplicates ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <div className="w-6 h-6 rounded-full border-2 border-t-indigo-500 border-neutral-800 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="overflow-y-auto max-h-[25vh] p-1 grid grid-cols-3 gap-3 pr-2 scrollbar-thin">
+                      {targetUserDuplicates.map((card) => {
+                        const isSelected = selectedRequestedCardId === card.id;
+                        return (
+                          <div
+                            key={card.id}
+                            onClick={() => setSelectedRequestedCardId(card.id)}
+                            className={`relative rounded-xl overflow-hidden cursor-pointer select-none transition-all hover:scale-[1.03] ${
+                              isSelected
+                                ? "ring-2 ring-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.3)]"
+                                : "opacity-80 hover:opacity-100"
+                            }`}
+                          >
+                            <PlayerCard card={card} size="sm" showStats={false} />
+                            {isSelected && (
+                              <div className="absolute inset-0 bg-indigo-950/20 border-2 border-indigo-500 rounded-xl pointer-events-none flex items-center justify-center">
+                                <span className="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-black">
+                                  ✓
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {targetUserDuplicates.length === 0 && (
+                        <p className="col-span-3 text-center py-12 text-xs text-zinc-500 uppercase tracking-widest font-black text-white">
+                          They do not have any duplicate cards to trade
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2 justify-end border-t border-neutral-800 pt-4 mt-4">
+              <button
+                onClick={() => setIsTradeModalOpen(false)}
+                className="px-4 py-2 text-xs font-bold rounded-lg border border-neutral-800 hover:bg-neutral-950 text-neutral-400 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendTrade}
+                disabled={!selectedTargetUserId || !selectedRequestedCardId || submittingTrade}
+                className={`px-4 py-2 text-xs font-black rounded-lg transition-all cursor-pointer ${
+                  selectedTargetUserId && selectedRequestedCardId && !submittingTrade
+                    ? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                    : "bg-neutral-800 text-zinc-500 cursor-not-allowed"
+                }`}
+              >
+                {submittingTrade ? "Sending Proposal..." : "Propose Trade"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

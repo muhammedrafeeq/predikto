@@ -221,7 +221,7 @@ export async function POST() {
 
     // Get already-seeded set
     const existingRes = await query(`SELECT player_name FROM who_am_i_players`);
-    const seeded = new Set<string>(existingRes.rows.map((r: { player_name: string }) => r.player_name));
+    const seeded = new Set<string>(existingRes.rows.map((r) => r.player_name as string));
 
     const toProcess = players.filter(p => !seeded.has(p.name));
 

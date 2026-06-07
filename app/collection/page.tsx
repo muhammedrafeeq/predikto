@@ -36,6 +36,7 @@ export default function MyCollectionPage() {
   const [claiming, setClaiming] = useState(false);
   const [revealQueue, setRevealQueue] = useState<PlayerCardData[]>([]);
   const [currentRevealIndex, setCurrentRevealIndex] = useState(-1);
+  const [isViewingCollectionCard, setIsViewingCollectionCard] = useState(false);
 
   // Load Initial Data
   useEffect(() => {
@@ -103,6 +104,7 @@ export default function MyCollectionPage() {
 
       // Load dropped cards into the reveal queue
       if (data.droppedCards && data.droppedCards.length > 0) {
+        setIsViewingCollectionCard(false); // Ensure we are not in viewer mode
         setRevealQueue(data.droppedCards);
         setCurrentRevealIndex(0); // Start revealing the first card
       }
@@ -124,7 +126,14 @@ export default function MyCollectionPage() {
       // Finished all reveals
       setRevealQueue([]);
       setCurrentRevealIndex(-1);
+      setIsViewingCollectionCard(false);
     }
+  };
+
+  const handleOpenCollectionCardViewer = (card: PlayerCardData) => {
+    setIsViewingCollectionCard(true);
+    setRevealQueue([card]);
+    setCurrentRevealIndex(0);
   };
 
   const activeTeam = teams.find((t) => t.id === activeTeamId);
@@ -266,9 +275,7 @@ export default function MyCollectionPage() {
         ) : (
           <CollectionGrid
             cards={cards}
-            onCardClick={(c) => {
-              window.location.href = `/collection/${c.id}`;
-            }}
+            onCardClick={handleOpenCollectionCardViewer}
           />
         )}
 
@@ -292,7 +299,7 @@ export default function MyCollectionPage() {
                       card={card} 
                       size="sm" 
                       showStats={false} 
-                      onClick={() => window.location.href = `/collection/${card.id}`} 
+                      onClick={() => handleOpenCollectionCardViewer(card)} 
                     />
                     
                     {isEligibleForTrade ? (
@@ -366,19 +373,26 @@ export default function MyCollectionPage() {
 
       {/* Inline Card Reveal Overlay Modal */}
       {revealQueue.length > 0 && currentRevealIndex >= 0 && (
-        <div className="fixed inset-0 bg-neutral-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
+        <div className="fixed inset-0 bg-neutral-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4 animate-fade-in">
           <div className="text-center mb-6">
             <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-indigo-400 px-3 py-1 rounded-full font-black tracking-widest uppercase">
-              Card Reward {currentRevealIndex + 1} of {revealQueue.length}
+              {isViewingCollectionCard 
+                ? "Card Viewer" 
+                : `Card Reward ${currentRevealIndex + 1} of ${revealQueue.length}`
+              }
             </span>
             <h2 className="text-xl font-black text-white mt-2">
-              Flip the Card to Reveal Your Player!
+              {isViewingCollectionCard 
+                ? "Tap the Card to Flip and View Stats!" 
+                : "Flip the Card to Reveal Your Player!"
+              }
             </h2>
           </div>
 
           <CardReveal
             card={revealQueue[currentRevealIndex]}
             onComplete={handleRevealComplete}
+            detailsUrl={isViewingCollectionCard ? `/collection/${revealQueue[currentRevealIndex].id}` : undefined}
           />
         </div>
       )}

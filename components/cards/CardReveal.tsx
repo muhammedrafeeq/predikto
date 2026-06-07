@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import PlayerCard from "./PlayerCard";
 import { PlayerCardData } from "@/lib/cardDrop";
 
 interface CardRevealProps {
   card: PlayerCardData;
   onComplete?: () => void;
+  detailsUrl?: string; // Optional URL for details page
 }
 
-export default function CardReveal({ card, onComplete }: CardRevealProps) {
+export default function CardReveal({ card, onComplete, detailsUrl }: CardRevealProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [countedStats, setCountedStats] = useState({
@@ -155,12 +157,31 @@ export default function CardReveal({ card, onComplete }: CardRevealProps) {
 
       {/* Action CTA appears after flip */}
       {isFlipped && (
-        <button
-          onClick={onComplete}
-          className="mt-12 px-8 py-3 rounded-full font-bold bg-white text-stone-950 hover:bg-neutral-200 transition-all duration-300 shadow-[0_4px_20px_rgba(255,255,255,0.2)]"
-        >
-          {isLegendary ? "Claim Legendary!" : "Continue"}
-        </button>
+        <div className="mt-12 flex gap-4">
+          {detailsUrl ? (
+            <>
+              <button
+                onClick={onComplete}
+                className="px-8 py-3 rounded-full font-bold bg-neutral-800 hover:bg-neutral-700 text-white transition-all duration-300 shadow-[0_4px_20px_rgba(255,255,255,0.1)] cursor-pointer"
+              >
+                Close
+              </button>
+              <Link
+                href={detailsUrl}
+                className="px-8 py-3 rounded-full font-bold bg-white text-stone-950 hover:bg-neutral-200 transition-all duration-300 shadow-[0_4px_20px_rgba(255,255,255,0.2)] cursor-pointer text-center flex items-center justify-center"
+              >
+                View Details
+              </Link>
+            </>
+          ) : (
+            <button
+              onClick={onComplete}
+              className="px-8 py-3 rounded-full font-bold bg-white text-stone-950 hover:bg-neutral-200 transition-all duration-300 shadow-[0_4px_20px_rgba(255,255,255,0.2)] cursor-pointer"
+            >
+              {isLegendary ? "Claim Legendary!" : "Continue"}
+            </button>
+          )}
+        </div>
       )}
 
       {/* Insert keyframe style tag for animations */}

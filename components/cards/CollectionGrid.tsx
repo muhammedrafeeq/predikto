@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import PlayerCard from "./PlayerCard";
 import MissingCard from "./MissingCard";
 import { PlayerCardData } from "@/lib/cardDrop";
@@ -22,23 +23,40 @@ export default function CollectionGrid({ cards, onCardClick }: CollectionGridPro
   return (
     <div className="w-full flex flex-col gap-6">
       {/* Progress Bar & Header Stats */}
-      <div className="surface-glass-1 rounded-2xl p-6 border border-neutral-800">
+      <div
+        onClick={() => setShowSquad(!showSquad)}
+        className="surface-glass-1 rounded-2xl p-6 border border-neutral-800 cursor-pointer hover:border-neutral-700/80 hover:bg-neutral-900/10 transition-all select-none group"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-xl font-extrabold text-white">Squad Completion</h2>
-            <p className="text-xs text-neutral-400 mt-1">Collect all 26 players from this nation</p>
+            <h2 className="text-xl font-extrabold text-white group-hover:text-indigo-400 transition-colors">
+              Squad Completion
+            </h2>
+            <p className="text-xs text-neutral-450 mt-1">Collect all {totalCards} players from this nation</p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowSquad(!showSquad)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSquad(!showSquad);
+              }}
               className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
             >
               {showSquad ? "Hide Squad" : "Show Squad"}
             </button>
-            <div className="text-right">
-              <span className="text-2xl font-black text-white">{ownedCount}</span>
-              <span className="text-neutral-500 text-sm"> / {totalCards}</span>
+            <div className="text-right flex items-center gap-2">
+              <div>
+                <span className="text-2xl font-black text-white">{ownedCount}</span>
+                <span className="text-neutral-500 text-sm"> / {totalCards}</span>
+              </div>
+              <div className="text-neutral-400 group-hover:text-white transition-colors">
+                {showSquad ? (
+                  <ChevronUp className="w-5 h-5" />
+                ) : (
+                  <ChevronDown className="w-5 h-5" />
+                )}
+              </div>
             </div>
             <div className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-800 font-bold text-xs text-indigo-400">
               {progressPercent}% Complete

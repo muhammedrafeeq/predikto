@@ -177,6 +177,32 @@ export async function POST() {
       )
     `);
 
+    // Create game result tables (needed for first_goal, formation, and bracket contests)
+    await query(`
+      CREATE TABLE IF NOT EXISTS first_goal_results (
+        match_id          INTEGER PRIMARY KEY REFERENCES matches(id) ON DELETE CASCADE,
+        first_goal_minute INTEGER NOT NULL,
+        recorded_at       TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query(`
+      CREATE TABLE IF NOT EXISTS formation_results (
+        match_id       INTEGER PRIMARY KEY REFERENCES matches(id) ON DELETE CASCADE,
+        home_formation VARCHAR(20) NOT NULL,
+        away_formation VARCHAR(20) NOT NULL,
+        recorded_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query(`
+      CREATE TABLE IF NOT EXISTS bracket_results (
+        id          SERIAL PRIMARY KEY,
+        stage       VARCHAR(20)  NOT NULL,
+        matchup     VARCHAR(50)  NOT NULL UNIQUE,
+        winner      VARCHAR(100) NOT NULL,
+        recorded_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+
     // Seed default setting
     await query(`
       INSERT INTO system_settings (key, value)

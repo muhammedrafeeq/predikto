@@ -23,9 +23,19 @@ export async function POST() {
       )
     `);
 
+    await query(`
+      CREATE TABLE IF NOT EXISTS bracket_results (
+        id          SERIAL PRIMARY KEY,
+        stage       VARCHAR(20)  NOT NULL,
+        matchup     VARCHAR(50)  NOT NULL UNIQUE,
+        winner      VARCHAR(100) NOT NULL,
+        recorded_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+
     return NextResponse.json({
       success: true,
-      message: "first_goal_results and formation_results tables created",
+      message: "first_goal_results, formation_results, and bracket_results tables created",
     });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };

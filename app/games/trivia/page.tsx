@@ -10,6 +10,7 @@ interface TriviaQuestion {
   question_ml: string;
   options: string[];
   options_ml: string[];
+  correct_index: number;
 }
 
 interface QuestionResult {
@@ -165,7 +166,7 @@ export default function TriviaPage() {
           setShownResult(null);
           setPhase("playing");
         }
-      }, 2200);
+      }, 1200);
     },
     [phase, questions, currentIdx, answers] // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -467,14 +468,20 @@ export default function TriviaPage() {
             let textColor = "rgba(255,255,255,0.8)";
 
             if (phase === "answered" && selectedOption !== null) {
-              if (i === selectedOption) {
-                borderColor = `${cfg.color}99`;
-                bgColor = `${cfg.color}22`;
-                textColor = "#fff";
+              const isCorrect = i === currentQ.correct_index;
+              const isSelected = i === selectedOption;
+              if (isCorrect) {
+                borderColor = "rgba(74,222,128,0.6)";
+                bgColor = "rgba(74,222,128,0.15)";
+                textColor = "#4ade80";
+              } else if (isSelected && !isCorrect) {
+                borderColor = "rgba(248,113,113,0.6)";
+                bgColor = "rgba(248,113,113,0.15)";
+                textColor = "#f87171";
               } else {
                 borderColor = "rgba(255,255,255,0.05)";
                 bgColor = "rgba(255,255,255,0.02)";
-                textColor = "rgba(255,255,255,0.3)";
+                textColor = "rgba(255,255,255,0.25)";
               }
             }
 

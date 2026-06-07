@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const difficulty = validDiffs.includes(diff) ? diff : "medium";
 
     const res = await query(
-      `SELECT id, question, question_ml, options, options_ml
+      `SELECT id, question, question_ml, options, options_ml, correct_index
        FROM trivia_questions
        WHERE difficulty = $1 AND active = true
        ORDER BY RANDOM()
@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
       question: r.question,
       question_ml: r.question_ml,
       options: r.options,
+      correct_index: r.correct_index,
       options_ml: r.options_ml,
     }));
 

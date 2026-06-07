@@ -25,18 +25,18 @@ type TabId = "groups" | "knockout" | "review";
 
 // ── WC 2026 Groups ────────────────────────────────────────────────────────────
 const WC2026_GROUPS: { [key: string]: string[] } = {
-  A: ["USA", "Canada", "Mexico", "Jamaica"],
-  B: ["Argentina", "Chile", "Peru", "Bolivia"],
-  C: ["Brazil", "Colombia", "Ecuador", "Venezuela"],
-  D: ["Uruguay", "Paraguay", "Panama", "Costa Rica"],
-  E: ["England", "Germany", "Netherlands", "Belgium"],
-  F: ["France", "Spain", "Portugal", "Italy"],
-  G: ["Switzerland", "Denmark", "Sweden", "Norway"],
-  H: ["Croatia", "Poland", "Czech Republic", "Austria"],
-  I: ["Morocco", "Senegal", "Egypt", "Nigeria"],
-  J: ["Cameroon", "Tunisia", "Ghana", "Ivory Coast"],
-  K: ["Japan", "South Korea", "Australia", "Iran"],
-  L: ["Saudi Arabia", "Qatar", "UAE", "Bahrain"],
+  A: ["Mexico", "South Korea", "South Africa", "Czech Republic"],
+  B: ["Canada", "Switzerland", "Qatar", "Bosnia & Herzegovina"],
+  C: ["Brazil", "Morocco", "Scotland", "Haiti"],
+  D: ["United States", "Paraguay", "Australia", "Turkey"],
+  E: ["Germany", "Ecuador", "Ivory Coast", "Curacao"],
+  F: ["Netherlands", "Japan", "Tunisia", "Sweden"],
+  G: ["Belgium", "Iran", "Egypt", "New Zealand"],
+  H: ["Spain", "Uruguay", "Saudi Arabia", "Cape Verde"],
+  I: ["France", "Senegal", "Norway", "Iraq"],
+  J: ["Argentina", "Algeria", "Austria", "Jordan"],
+  K: ["Portugal", "Colombia", "Uzbekistan", "DR Congo"],
+  L: ["England", "Croatia", "Panama", "Ghana"],
 };
 
 const GROUP_LETTERS = Object.keys(WC2026_GROUPS);

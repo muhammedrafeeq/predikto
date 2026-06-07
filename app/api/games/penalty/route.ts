@@ -79,9 +79,9 @@ export async function POST(req: NextRequest) {
     const refId = parseInt(`${today}${user.userId}`, 10) % 2147483647;
 
     const insert = await query(
-      `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
-       VALUES ($1, 'penalty', $2, $3, $4, NOW())
-       ON CONFLICT (user_id, game_type, reference_id) DO NOTHING
+      `INSERT INTO game_scores (user_id, contest_id, game_type, reference_id, points, metadata, played_at)
+       VALUES ($1, NULL, 'penalty', $2, $3, $4, NOW())
+       ON CONFLICT (user_id, game_type, reference_id) WHERE contest_id IS NULL DO NOTHING
        RETURNING id`,
       [user.userId, refId, points, JSON.stringify({ goals, goalieKicks })]
     );

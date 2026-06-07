@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
     totalPoints += streakBonus;
 
     await query(
-      `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
-       VALUES ($1, 'trivia', $2, $3, $4, NOW())`,
+      `INSERT INTO game_scores (user_id, contest_id, game_type, reference_id, points, metadata, played_at)
+       VALUES ($1, NULL, 'trivia', $2, $3, $4, NOW())`,
       [user.userId, null, totalPoints, JSON.stringify({ correct, difficulty, answers })]
     );
 

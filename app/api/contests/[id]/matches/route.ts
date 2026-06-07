@@ -60,6 +60,18 @@ export async function GET(
             WHERE p.match_id = m.id AND p.user_id = $1 AND p.contest_id = $2 AND q.type = 'score'
             LIMIT 1
           ) as "predictedScore",
+          (
+            SELECT p.answer FROM predictions p
+            JOIN questions q ON p.question_id = q.id
+            WHERE p.match_id = m.id AND p.user_id = $1 AND p.contest_id = $2 AND q.type = 'winner'
+            LIMIT 1
+          ) as "predictedWinner",
+          (
+            SELECT p.answer FROM predictions p
+            JOIN questions q ON p.question_id = q.id
+            WHERE p.match_id = m.id AND p.user_id = $1 AND p.contest_id = $2 AND q.type = 'scorer'
+            LIMIT 1
+          ) as "predictedScorer",
           s.points as "pointsEarned"
         FROM matches m
         LEFT JOIN scores s ON m.id = s.match_id AND s.user_id = $1 AND s.contest_id = $2

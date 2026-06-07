@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Timer, CheckCircle2, Trophy, Lock, Calendar, Zap, ChevronRight, Star } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Timer, CheckCircle2, Trophy, Lock, Calendar, Zap, ChevronRight, Star, Share2, Loader2 } from "lucide-react";
 
 interface Match {
   id: string;
@@ -12,6 +12,9 @@ interface Match {
   teamHome: string;
   teamAway: string;
   prediction?: string;
+  predictedWinner?: string;
+  predictedScore?: string;
+  predictedScorer?: string;
   pointsEarned?: number;
   scoreHome?: number;
   scoreAway?: number;
@@ -141,6 +144,43 @@ export default function MatchPredictionContestView({
 }) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sharingMatchId, setSharingMatchId] = useState<string | null>(null);
+  const shareCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const handleShare = useCallback(async (match: Match) => {
+    if (sharingMatchId) return;
+    setSharingMatchId(match.id);
+    try {
+      const el = shareCardRefs.current[match.id];
+      if (!el) throw new Error("No card element");
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(el, {
+        backgroundColor: "#0a0a0f",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      });
+      const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95));
+      const file = new File([blob], "skorio-prediction.png", { type: "image/png" });
+      const text = `⚽ My prediction for ${match.teamHome} vs ${match.teamAway}: ${[match.predictedWinner, match.predictedScore, match.predictedScorer].filter(Boolean).join(" · ")} | Skorio FIFA WC 2026 🏆`;
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text });
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      }
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        const match2 = matches.find((m) => m.id === match.id);
+        if (match2) {
+          const text = `⚽ My prediction for ${match2.teamHome} vs ${match2.teamAway}: ${[match2.predictedWinner, match2.predictedScore, match2.predictedScorer].filter(Boolean).join(" · ")} | Skorio FIFA WC 2026 🏆`;
+          window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+        }
+      }
+    } finally {
+      setSharingMatchId(null);
+    }
+  }, [sharingMatchId, matches]);
 
   useEffect(() => {
     async function loadData() {
@@ -199,6 +239,9 @@ export default function MatchPredictionContestView({
                 teamHome: m.teamHome,
                 teamAway: m.teamAway,
                 prediction: m.predictedScore || undefined,
+                predictedWinner: m.predictedWinner || undefined,
+                predictedScore: m.predictedScore || undefined,
+                predictedScorer: m.predictedScorer || undefined,
                 pointsEarned: m.pointsEarned !== null ? m.pointsEarned : undefined,
               };
             });
@@ -386,12 +429,25 @@ export default function MatchPredictionContestView({
                     )}
 
                     {match.status === "Predicted" && (
-                      <button
-                        onClick={() => onNavigate(`/contests/${contestId}/predict/${match.id}`)}
-                        className="w-full py-2 border border-white/10 hover:bg-white/5 text-white/60 hover:text-white rounded-xl text-xs font-bold transition-all"
-                      >
-                        Change Prediction
-                      </button>
+                      <div className="flex gap-2 w-full">
+                        <button
+                          onClick={() => onNavigate(`/contests/${contestId}/predict/${match.id}`)}
+                          className="flex-1 py-2 border border-white/10 hover:bg-white/5 text-white/50 hover:text-white rounded-xl text-xs font-bold transition-all"
+                        >
+                          Change
+                        </button>
+                        <button
+                          onClick={() => handleShare(match)}
+                          disabled={sharingMatchId === match.id}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#25D366]/15 border border-[#25D366]/30 hover:bg-[#25D366]/25 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                          {sharingMatchId === match.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <Share2 className="w-3.5 h-3.5 text-[#25D366]" />
+                          }
+                          Share
+                        </button>
+                      </div>
                     )}
 
                     {match.status === "Resulted" && (
@@ -407,6 +463,66 @@ export default function MatchPredictionContestView({
                 </div>
               </div>
             </div>
+
+            {/* Off-screen share card captured by html2canvas */}
+            {match.status === "Predicted" && (() => {
+              const homeAccent = getAccent(match.teamHome);
+              const awayAccent = getAccent(match.teamAway);
+              const homeFlag = getFlag(match.teamHome);
+              const awayFlag = getFlag(match.teamAway);
+              return (
+                <div
+                  ref={(el) => { shareCardRefs.current[match.id] = el; }}
+                  style={{
+                    position: "fixed", left: "-9999px", top: 0,
+                    width: "360px",
+                    background: "linear-gradient(145deg, #0d0d18 0%, #0a0a0f 100%)",
+                    borderRadius: "20px", padding: "24px",
+                    fontFamily: "system-ui, -apple-system, sans-serif",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div style={{ height: "3px", borderRadius: "2px", background: `linear-gradient(90deg, ${homeAccent}, ${awayAccent})`, marginBottom: "20px" }} />
+                  <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "10px", fontWeight: 700, letterSpacing: "3px", textTransform: "uppercase" }}>My Prediction · Skorio</p>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px", marginBottom: "20px" }}>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                      <div style={{ width: "64px", height: "64px", borderRadius: "16px", overflow: "hidden", background: `linear-gradient(135deg, ${homeAccent}33, ${homeAccent}55)`, border: `1.5px solid ${homeAccent}66`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {homeFlag ? <img src={homeFlag} alt={match.teamHome} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ color: "#fff", fontWeight: 900, fontSize: "14px" }}>{match.teamHome.substring(0, 3).toUpperCase()}</span>}
+                      </div>
+                      <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: "11px", textAlign: "center" }}>{match.teamHome}</span>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                      <span style={{ color: "rgba(255,255,255,0.15)", fontWeight: 900, fontSize: "18px" }}>VS</span>
+                      <span style={{ color: "rgba(255,255,255,0.2)", fontSize: "9px", fontWeight: 600 }}>{match.kickoffTime}</span>
+                    </div>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                      <div style={{ width: "64px", height: "64px", borderRadius: "16px", overflow: "hidden", background: `linear-gradient(135deg, ${awayAccent}33, ${awayAccent}55)`, border: `1.5px solid ${awayAccent}66`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {awayFlag ? <img src={awayFlag} alt={match.teamAway} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span style={{ color: "#fff", fontWeight: 900, fontSize: "14px" }}>{match.teamAway.substring(0, 3).toUpperCase()}</span>}
+                      </div>
+                      <span style={{ color: "rgba(255,255,255,0.85)", fontWeight: 700, fontSize: "11px", textAlign: "center" }}>{match.teamAway}</span>
+                    </div>
+                  </div>
+                  <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: "14px", padding: "16px", border: "1px solid rgba(255,255,255,0.07)" }}>
+                    <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "9px", fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase", marginBottom: "12px" }}>My Predictions</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {([
+                        { label: "Winner", value: match.predictedWinner },
+                        { label: "Score", value: match.predictedScore },
+                        { label: "1st Scorer", value: match.predictedScorer },
+                      ] as { label: string; value?: string }[]).map(({ label, value }) => value ? (
+                        <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px", fontWeight: 600 }}>{label}</span>
+                          <span style={{ color: "#fff", fontSize: "13px", fontWeight: 800, background: "rgba(255,255,255,0.08)", padding: "2px 10px", borderRadius: "6px" }}>{value}</span>
+                        </div>
+                      ) : null)}
+                    </div>
+                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.15)", fontSize: "10px", textAlign: "center", marginTop: "16px", fontWeight: 600 }}>⚽ FIFA World Cup 2026 · skorio.app</p>
+                </div>
+              );
+            })()}
             </React.Fragment>
           );
         })}

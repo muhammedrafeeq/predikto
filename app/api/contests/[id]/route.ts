@@ -27,11 +27,12 @@ export async function GET(
 
     // 2. Fetch contest and tournament details
     const contestRes = await query(
-      `SELECT 
-        c.id, 
-        c.name, 
-        c.game_type as "gameType", 
-        c.join_code as "joinCode", 
+      `SELECT
+        c.id,
+        c.name,
+        c.game_type as "gameType",
+        c.game_types as "gameTypes",
+        c.join_code as "joinCode",
         c.created_at as "createdAt",
         c.creator_id as "creatorId",
         t.name as "tournamentName",

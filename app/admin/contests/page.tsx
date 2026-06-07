@@ -103,7 +103,7 @@ export default function AdminContestsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [newName, setNewName] = useState("");
-  const [newGameType, setNewGameType] = useState("match_prediction");
+  const [newGameTypes, setNewGameTypes] = useState<string[]>(["match_prediction"]);
   const [newIsPublic, setNewIsPublic] = useState(false);
   const [createError, setCreateError] = useState("");
   const [creating, setCreating] = useState(false);
@@ -179,7 +179,7 @@ export default function AdminContestsPage() {
   const openCreate = async () => {
     setShowCreate(true);
     setNewName("");
-    setNewGameType("match_prediction");
+    setNewGameTypes(["match_prediction"]);
     setNewIsPublic(false);
     setCreateError("");
     try {
@@ -200,6 +200,10 @@ export default function AdminContestsPage() {
       setCreateError("Contest name is required");
       return;
     }
+    if (newGameTypes.length === 0) {
+      setCreateError("Select at least one game type");
+      return;
+    }
     setCreating(true);
     try {
       const res = await fetch("/api/admin/contests", {
@@ -208,7 +212,7 @@ export default function AdminContestsPage() {
         body: JSON.stringify({
           name: newName.trim(),
           tournamentId: 1,
-          gameType: newGameType,
+          gameTypes: newGameTypes,
           isPublic: newIsPublic,
         }),
       });
@@ -703,22 +707,32 @@ export default function AdminContestsPage() {
               </div>
 
               <div>
-                <label className="block label-md text-on-surface-variant mb-1.5">Game Type</label>
+                <label className="block label-md text-on-surface-variant mb-1.5">Game Types <span className="text-white/30 font-normal text-xs">(select one or more)</span></label>
                 <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(GAME_TYPE_META).map(([type, meta]) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setNewGameType(type)}
-                      className={`p-3 rounded-lg border text-sm font-semibold transition-all text-left ${
-                        newGameType === type
-                          ? "border-secondary bg-secondary/10 text-secondary"
-                          : "border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20"
-                      }`}
-                    >
-                      {meta.label}
-                    </button>
-                  ))}
+                  {Object.entries(GAME_TYPE_META).map(([type, meta]) => {
+                    const selected = newGameTypes.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() =>
+                          setNewGameTypes((prev) =>
+                            prev.includes(type)
+                              ? prev.filter((t) => t !== type)
+                              : [...prev, type]
+                          )
+                        }
+                        className={`p-3 rounded-lg border text-sm font-semibold transition-all text-left flex items-center justify-between gap-2 ${
+                          selected
+                            ? "border-secondary bg-secondary/10 text-secondary"
+                            : "border-white/10 bg-white/5 text-on-surface-variant hover:border-white/20"
+                        }`}
+                      >
+                        <span>{meta.label}</span>
+                        {selected && <span className="w-4 h-4 rounded-full bg-secondary flex items-center justify-center text-[10px] text-on-secondary font-black">✓</span>}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

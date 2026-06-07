@@ -12,10 +12,13 @@ import FirstGoalContestView from "@/components/FirstGoalContestView";
 import FormationContestView from "@/components/FormationContestView";
 import BracketContestView from "@/components/BracketContestView";
 
+type GameType = "match_prediction" | "first_goal" | "formation" | "bracket";
+
 interface ContestMetadata {
   id: number;
   name: string;
-  gameType: "match_prediction" | "first_goal" | "formation" | "bracket";
+  gameType: GameType;
+  gameTypes: GameType[];
   joinCode: string;
   createdAt: string;
   creatorId: number | null;
@@ -62,6 +65,7 @@ export default function ContestDetailPage() {
   const [currentUser, setCurrentUser] = useState<{ id: number; name: string; role?: string } | null>(null);
   const [multiplier, setMultiplier] = useState(0);
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
+  const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
 
   useEffect(() => {
     if (isNaN(contestId)) return;
@@ -187,12 +191,22 @@ export default function ContestDetailPage() {
     );
   }
 
-  const gameModeLabel = {
-    match_prediction: "Match Predictor",
-    first_goal: "First Goal Timer",
-    formation: "Formation Predictor",
-    bracket: "Tournament Bracket"
-  }[contest.gameType];
+  const GAME_META: Record<GameType, { label: string; icon: string; desc: string; color: string }> = {
+    match_prediction: { label: "Match Predictor", icon: "⚽", desc: "Predict winners, scores & MOM", color: "from-blue-900/60 to-blue-800/20 border-blue-500/30" },
+    first_goal:       { label: "First Goal Timer", icon: "⏱️", desc: "Guess the first goal minute",    color: "from-amber-900/60 to-amber-800/20 border-amber-500/30" },
+    formation:        { label: "Formation Predictor", icon: "🧩", desc: "Pick the starting lineup",    color: "from-emerald-900/60 to-emerald-800/20 border-emerald-500/30" },
+    bracket:          { label: "Tournament Bracket", icon: "🏆", desc: "Build your bracket picks",     color: "from-purple-900/60 to-purple-800/20 border-purple-500/30" },
+  };
+
+  const activeGameTypes: GameType[] = (contest.gameTypes && contest.gameTypes.length > 0)
+    ? contest.gameTypes
+    : [contest.gameType];
+
+  const isMultiGame = activeGameTypes.length > 1;
+
+  const gameModeLabel = isMultiGame
+    ? activeGameTypes.map((t) => GAME_META[t].label).join(" · ")
+    : GAME_META[contest.gameType]?.label ?? "Contest";
 
   return (
     <div className="relative min-h-screen bg-base-bg text-on-surface pb-24 bg-pitch overflow-x-hidden">
@@ -282,17 +296,60 @@ export default function ContestDetailPage() {
           {/* PLAY TAB VIEW */}
           {activeTab === "play" && (
             <div>
-              {contest.gameType === "match_prediction" && (
+              {/* Single match_prediction — keep original layout */}
+              {!isMultiGame && contest.gameType === "match_prediction" && (
                 <MatchPredictionContestView contestId={contestId} onNavigate={(path) => router.push(path)} />
               )}
-              {contest.gameType === "first_goal" && (
+              {!isMultiGame && contest.gameType === "first_goal" && (
                 <FirstGoalContestView contestId={contestId} />
               )}
-              {contest.gameType === "formation" && (
+              {!isMultiGame && contest.gameType === "formation" && (
                 <FormationContestView contestId={contestId} />
               )}
-              {contest.gameType === "bracket" && (
+              {!isMultiGame && contest.gameType === "bracket" && (
                 <BracketContestView contestId={contestId} />
+              )}
+
+              {/* Multi-game: show grid or selected game */}
+              {isMultiGame && !selectedGame && (
+                <div className="px-1 pt-2">
+                  <p className="text-xs text-white/40 font-semibold uppercase tracking-widest mb-4 px-1">Choose a Game</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {activeGameTypes.map((type) => {
+                      const meta = GAME_META[type];
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => setSelectedGame(type)}
+                          className={`relative flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border bg-gradient-to-b ${meta.color} transition-all active:scale-95 hover:brightness-110`}
+                        >
+                          <span className="text-4xl">{meta.icon}</span>
+                          <div className="text-center">
+                            <p className="text-white font-black text-sm leading-tight">{meta.label}</p>
+                            <p className="text-white/40 text-[10px] mt-0.5 leading-tight">{meta.desc}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {isMultiGame && selectedGame && (
+                <div>
+                  <button
+                    onClick={() => setSelectedGame(null)}
+                    className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-bold mb-4 transition-colors"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" /> Back to Games
+                  </button>
+                  {selectedGame === "match_prediction" && (
+                    <MatchPredictionContestView contestId={contestId} onNavigate={(path) => router.push(path)} />
+                  )}
+                  {selectedGame === "first_goal" && <FirstGoalContestView contestId={contestId} />}
+                  {selectedGame === "formation" && <FormationContestView contestId={contestId} />}
+                  {selectedGame === "bracket" && <BracketContestView contestId={contestId} />}
+                </div>
               )}
             </div>
           )}

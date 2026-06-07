@@ -210,6 +210,16 @@ async function runMigration() {
       ALTER TABLE game_scores ADD CONSTRAINT unique_user_contest_game_ref UNIQUE (user_id, contest_id, game_type, reference_id)
     `);
 
+    // 7b. Add game_types array column
+    console.log("Adding game_types column to contests...");
+    await client.query(`
+      ALTER TABLE contests ADD COLUMN IF NOT EXISTS game_types TEXT[] DEFAULT ARRAY['match_prediction']
+    `);
+    // Backfill from existing game_type
+    await client.query(`
+      UPDATE contests SET game_types = ARRAY[game_type] WHERE game_types IS NULL OR game_types = '{}'
+    `);
+
     // 8. Create Indexes
     console.log("Creating optimization indexes...");
     await client.query(`CREATE INDEX IF NOT EXISTS idx_contest_members_user ON contest_members(user_id)`);

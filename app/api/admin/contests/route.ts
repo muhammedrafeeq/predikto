@@ -27,6 +27,7 @@ export async function GET() {
         c.id,
         c.name,
         c.game_type       AS "gameType",
+        c.game_types      AS "gameTypes",
         c.join_code       AS "joinCode",
         c.created_at      AS "createdAt",
         c.is_public       AS "isPublic",
@@ -52,16 +53,17 @@ export async function POST(request: Request) {
   try {
     await requireAdmin();
     const body = await request.json();
-    const { name, tournamentId, gameType, isPublic } = body as {
+    const { name, tournamentId, gameType, gameTypes, isPublic } = body as {
       name?: string;
       tournamentId?: number;
       gameType?: string;
+      gameTypes?: string[];
       isPublic?: boolean;
     };
 
-    if (!name || !gameType) {
+    if (!name || (!gameType && (!gameTypes || gameTypes.length === 0))) {
       return NextResponse.json(
-        { error: "name and gameType are required" },
+        { error: "name and gameTypes are required" },
         { status: 400 }
       );
     }
@@ -69,9 +71,15 @@ export async function POST(request: Request) {
     const tId = tournamentId || 1;
 
     const validGameTypes = ["match_prediction", "first_goal", "formation", "bracket"];
-    if (!validGameTypes.includes(gameType)) {
+    // Resolve final game types array
+    const resolvedGameTypes: string[] = gameTypes && gameTypes.length > 0
+      ? gameTypes
+      : [gameType as string];
+    if (resolvedGameTypes.some((t) => !validGameTypes.includes(t))) {
       return NextResponse.json({ error: "Invalid gameType" }, { status: 400 });
     }
+    // Primary game_type is first entry (for backward compat)
+    const primaryGameType = resolvedGameTypes[0];
 
     // Validate tournament
     const tourCheck = await query("SELECT id FROM tournaments WHERE id = $1", [tId]);
@@ -82,10 +90,10 @@ export async function POST(request: Request) {
     const joinCode = await generateUniqueJoinCode();
 
     const res = await query(
-      `INSERT INTO contests (name, tournament_id, game_type, join_code, is_public)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, name, game_type AS "gameType", join_code AS "joinCode", created_at AS "createdAt", is_public AS "isPublic"`,
-      [name.trim(), tId, gameType, joinCode, !!isPublic]
+      `INSERT INTO contests (name, tournament_id, game_type, game_types, join_code, is_public)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, game_type AS "gameType", game_types AS "gameTypes", join_code AS "joinCode", created_at AS "createdAt", is_public AS "isPublic"`,
+      [name.trim(), tId, primaryGameType, resolvedGameTypes, joinCode, !!isPublic]
     );
 
     const contest = res.rows[0];

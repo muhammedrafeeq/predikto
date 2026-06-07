@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
+import { dropCard } from "@/lib/cardDrop";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -107,15 +108,23 @@ export async function POST(req: NextRequest) {
 
     const streakBonus = calcStreakBonus(results);
     totalPoints += streakBonus;
-
     await query(
       `INSERT INTO game_scores (user_id, contest_id, game_type, reference_id, points, metadata, played_at)
        VALUES ($1, NULL, 'trivia', $2, $3, $4, NOW())`,
       [user.userId, null, totalPoints, JSON.stringify({ correct, difficulty, answers })]
     );
 
-    return NextResponse.json({ results, totalPoints, correct, streakBonus });
-  } catch (err: unknown) {
+    // Card Collection Reward Drop Integration
+    const cardDrops = [];
+    if (correct >= 5) {
+      const trigger = correct === 10 ? "perfect" : "trivia";
+      const card = await dropCard(user.userId, trigger);
+      if (card) {
+        cardDrops.push(card);
+      }
+    }
+
+    return NextResponse.json({ results, totalPoints, correct, streakBonus, cardDrops });  } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });
   }

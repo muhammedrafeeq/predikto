@@ -47,7 +47,10 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/matches") ||
     pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/history") ||
-    pathname.startsWith("/games");
+    pathname.startsWith("/games") ||
+    pathname.startsWith("/collection") ||
+    pathname.startsWith("/trades") ||
+    pathname.startsWith("/onboarding");
 
   if (isUserRoute && !isLoggedIn) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -73,5 +76,8 @@ export const config = {
     "/history/:path*",
     "/admin/:path*",
     "/games/:path*",
+    "/collection/:path*",
+    "/trades/:path*",
+    "/onboarding/:path*",
   ],
 };

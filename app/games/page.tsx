@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy, Shield, History, Gamepad2, ChevronRight, Sparkles, LayoutGrid } from "lucide-react";
+import { Trophy, Shield, History, Gamepad2, ChevronRight, Sparkles, LayoutGrid, Layers } from "lucide-react";
 
 const SoccerBallIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -276,6 +276,46 @@ const Icon3dFlag = () => (
   </svg>
 );
 
+const Icon3dCards = () => (
+  <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%" }}>
+    <defs>
+      <linearGradient id="card-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fde68a" />
+        <stop offset="50%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#92400e" />
+      </linearGradient>
+      <linearGradient id="card-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#c084fc" />
+        <stop offset="100%" stopColor="#581c87" />
+      </linearGradient>
+      <linearGradient id="card-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="100%" stopColor="#1e3a8a" />
+      </linearGradient>
+      <filter id="card-glow">
+        <feDropShadow dx="0" dy="4" stdDeviation="5" floodColor="#a78bfa" floodOpacity="0.5" />
+      </filter>
+    </defs>
+    {/* Shadow */}
+    <ellipse cx="40" cy="74" rx="18" ry="4" fill="#a78bfa" opacity="0.15" />
+    
+    {/* Back Card (Blue) */}
+    <rect x="22" y="18" width="28" height="42" rx="4" transform="rotate(-15 22 18)" fill="url(#card-blue)" stroke="#3b82f6" strokeWidth="1" opacity="0.8" />
+    
+    {/* Middle Card (Purple) */}
+    <rect x="30" y="14" width="28" height="42" rx="4" transform="rotate(5 30 14)" fill="url(#card-purple)" stroke="#a855f7" strokeWidth="1" opacity="0.9" />
+    
+    {/* Front Card (Gold) */}
+    <rect x="28" y="16" width="30" height="44" rx="4" fill="url(#card-gold)" filter="url(#card-glow)" stroke="#fbbf24" strokeWidth="1.5" />
+    
+    {/* Details on front card */}
+    <circle cx="43" cy="26" r="6" fill="#fff5" />
+    <rect x="34" y="42" width="18" height="3" rx="1.5" fill="#fff7" />
+    <rect x="36" y="49" width="14" height="2" rx="1" fill="#fff5" />
+    <circle cx="35" cy="22" r="2.5" fill="#fff" />
+  </svg>
+);
+
 const GAMES = [
   { id: "penalty",   title: "Penalty Shootout",    Icon3d: Icon3dPenalty,   accent: "#4ade80", glow: "rgba(74,222,128,0.5)",   bg: "linear-gradient(145deg,#052e16,#15803d)",  badge: "DAILY",     maxPts: "20",  href: "/games/penalty" },
   { id: "trivia",    title: "Football Trivia",      Icon3d: Icon3dTrivia,    accent: "#38bdf8", glow: "rgba(56,189,248,0.5)",   bg: "linear-gradient(145deg,#082f49,#0369a1)",  badge: "DAILY",     maxPts: "30",  href: "/games/trivia" },
@@ -284,6 +324,7 @@ const GAMES = [
   { id: "first_goal",title: "First Goal Timer",     Icon3d: Icon3dClock,     accent: "#fbbf24", glow: "rgba(251,191,36,0.5)",   bg: "linear-gradient(145deg,#1c1400,#b45309)",  badge: "PER MATCH", maxPts: "20",  href: "/games/first-goal" },
   { id: "formation", title: "Formation Predictor",  Icon3d: Icon3dFormation, accent: "#a78bfa", glow: "rgba(167,139,250,0.5)",  bg: "linear-gradient(145deg,#1e1035,#6d28d9)",  badge: "PER MATCH", maxPts: "20",  href: "/games/formation" },
   { id: "bracket",   title: "Tournament Bracket",   Icon3d: Icon3dBracket,   accent: "#facc15", glow: "rgba(250,204,21,0.5)",   bg: "linear-gradient(145deg,#1a1200,#a16207)",  badge: "ONE-SHOT",  maxPts: "100+",href: "/games/bracket" },
+  { id: "cards",     title: "Card Collection",      Icon3d: Icon3dCards,     accent: "#a78bfa", glow: "rgba(167,139,250,0.5)",  bg: "linear-gradient(145deg,#1e1035,#581c87)",  badge: "COLLECT",   maxPts: "200+",href: "/collection" },
 ];
 
 export default function GamesHub() {
@@ -475,6 +516,10 @@ export default function GamesHub() {
         <a href="/games" className="flex flex-col items-center gap-0.5" style={{ color: "#a78bfa" }}>
           <Gamepad2 className="w-5 h-5" />
           <span className="text-[10px] font-semibold">Games</span>
+        </a>
+        <a href="/collection" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
+          <Layers className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">Cards</span>
         </a>
         <a href="/history" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
           <History className="w-5 h-5" />

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   Trophy, Shield, History, Plus, Users,
   ArrowRight, Sparkles, Copy, Check, LogOut,
-  Gamepad2, Calendar, LayoutGrid
+  Gamepad2, Calendar, LayoutGrid, Layers
 } from "lucide-react";
 import TopBar from "@/components/TopBar";
 import AuthModal from "@/components/AuthModal";
@@ -396,6 +396,10 @@ export default function ContestsDashboard() {
         <a href="/games" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
           <Gamepad2 className="w-5 h-5" />
           <span className="text-[10px] font-semibold">Games</span>
+        </a>
+        <a href="/collection" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
+          <Layers className="w-5 h-5" />
+          <span className="text-[10px] font-semibold">Cards</span>
         </a>
         <a href="/history" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
           <History className="w-5 h-5" />

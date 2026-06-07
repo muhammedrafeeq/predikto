@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 import webpush from "web-push";
+import { dropMultipleCards } from "@/lib/cardDrop";
 
 export async function POST(
   request: Request,
@@ -137,6 +138,33 @@ export async function POST(
          DO UPDATE SET points = EXCLUDED.points`,
         [uId, matchId, totalPoints]
       );
+
+      // Card Collection drops integration
+      if (correctCount === 3) {
+        await dropMultipleCards(uId, "perfect", 1, matchId);
+        await dropMultipleCards(uId, "prediction", 2, matchId);
+      } else if (correctCount > 0) {
+        await dropMultipleCards(uId, "prediction", correctCount, matchId);
+      }
+
+      // Check Hot Streak (3 correct predictions in a row)
+      if (correctCount > 0) {
+        const streakCheck = await query<any>(
+          `SELECT s.points 
+           FROM scores s 
+           JOIN matches m ON s.match_id = m.id 
+           WHERE s.user_id = $1 
+             AND m.status = 'resulted' 
+             AND m.match_time < (SELECT match_time FROM matches WHERE id = $2) 
+           ORDER BY m.match_time DESC 
+           LIMIT 2`,
+          [uId, matchId]
+        );
+        if (streakCheck.rows.length === 2 && streakCheck.rows.every(r => r.points > 0)) {
+          // Trigger hot streak bonus drop!
+          await dropMultipleCards(uId, "streak", 1, matchId);
+        }
+      }
     }
 
     // 5. Update match status to 'resulted'

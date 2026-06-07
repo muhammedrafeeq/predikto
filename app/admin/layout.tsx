@@ -15,6 +15,7 @@ import {
   MonitorPlay,
   HelpCircle,
   Flag,
+  CreditCard,
 } from "lucide-react";
 
 interface AdminUser {
@@ -104,6 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Ad Manager", href: "/admin/ads", icon: MonitorPlay },
     { label: "Who Am I", href: "/admin/who-am-i", icon: HelpCircle },
     { label: "Flag Quiz", href: "/admin/flag-quiz", icon: Flag },
+    { label: "Cards", href: "/admin/cards", icon: CreditCard },
   ];
 
   return (

@@ -942,7 +942,7 @@ export default function AdminContestsPage() {
                           {questions.some(q => q.type === "scorer") && (
                             <div className="flex flex-col gap-2 relative">
                               <label className="text-[10px] font-black uppercase tracking-wider text-white/40">
-                                First Scorer <span className="text-white/20 font-normal normal-case">(Optional)</span>
+                                Man of the Match <span className="text-white/20 font-normal normal-case">(Optional)</span>
                                 <span className="ml-2 text-primary/50 normal-case font-normal">{questions.find(q=>q.type==="scorer")?.points} pts</span>
                               </label>
                               <div className="relative">
@@ -952,7 +952,7 @@ export default function AdminContestsPage() {
                                   onChange={(e) => { setAdminScorer(e.target.value); setAdminPlayerQuery(e.target.value); setAdminScorerOpen(true); }}
                                   onFocus={() => setAdminScorerOpen(true)}
                                   onBlur={() => setTimeout(() => setAdminScorerOpen(false), 200)}
-                                  placeholder="Type player name..."
+                                  placeholder="Type MOTM player name..."
                                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary placeholder:text-white/20"
                                 />
                                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25 pointer-events-none" />

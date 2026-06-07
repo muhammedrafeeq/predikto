@@ -171,14 +171,14 @@ export default function MatchManager() {
       const dlStr = dl.toLocaleDateString("ml-IN", { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" }) + " " + dl.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST";
 
       const mlLabels: Record<string, string> = {
-        winner: "ജേതാവ് ആര്?",
-        score: "ഫൈനൽ സ്കോർ എന്ത്?",
-        scorer: "ആദ്യ ഗോൾ ആര്?",
+        winner: "മത്സര വിജയി ആര്? 🏆",
+        score: "ഗോൾ സ്കോർ എന്ത്? ⚽",
+        scorer: "Man of the Match ആര്? 🌟",
       };
       const mlHints: Record<string, string> = {
         winner: `   🏠 ${match.teamHome} | 🤝 Draw | ✈️ ${match.teamAway}`,
         score: `   ഉദാഹരണം: 2-1, 0-0, 1-1`,
-        scorer: `   ഇരു ടീമിലെ ഏതെങ്കിലും കളിക്കാരൻ`,
+        scorer: `   ഇരു ടീമിലെ Best കളിക്കാരൻ`,
       };
       const nums = ["1️⃣", "2️⃣", "3️⃣"];
       const qLines = qs.map((q, i) =>

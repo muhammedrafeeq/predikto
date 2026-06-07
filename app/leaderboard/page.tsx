@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History, Gamepad2 } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Trophy, Minus, Award, User, Shield, Users, Activity, TrendingUp, Crown, Star, Sparkles, History, Gamepad2, Share2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ShareCard from "@/components/ShareCard";
 import TopBar from "@/components/TopBar";
@@ -58,6 +58,8 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [multiplier, setMultiplier] = useState(0);
   const shareCardRef = useRef<HTMLDivElement>(null!);
+  const leaderboardShareRef = useRef<HTMLDivElement>(null!);
+  const [sharingLeaderboard, setSharingLeaderboard] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -85,6 +87,42 @@ export default function Leaderboard() {
     }
     loadData();
   }, []);
+
+  const handleShareLeaderboard = useCallback(async () => {
+    if (sharingLeaderboard || !leaderboardShareRef.current) return;
+    setSharingLeaderboard(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(leaderboardShareRef.current, {
+        backgroundColor: "#0a0a0f",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      });
+      const blob = await new Promise<Blob>((resolve) => canvas.toBlob((b) => resolve(b!), "image/png", 0.95));
+      const file = new File([blob], "skorio-leaderboard.png", { type: "image/png" });
+      const myRank = rankings.find((p) => p.id === currentUser?.id);
+      const text = myRank
+        ? `🏆 Global Leaderboard — Skorio FIFA WC 2026! I'm #${myRank.rank} with ${myRank.points} pts. Join & predict! ⚽`
+        : `🏆 Global Leaderboard — Skorio FIFA WC 2026! Top ${Math.min(rankings.length, 10)} players. Join & predict! ⚽`;
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], text });
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      }
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        const myRank = rankings.find((p) => p.id === currentUser?.id);
+        const text = myRank
+          ? `🏆 Global Leaderboard — Skorio FIFA WC 2026! I'm #${myRank.rank} with ${myRank.points} pts. Join & predict! ⚽`
+          : `🏆 Check the Global Leaderboard on Skorio FIFA WC 2026! ⚽`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      }
+    } finally {
+      setSharingLeaderboard(false);
+    }
+  }, [sharingLeaderboard, rankings, currentUser]);
 
   // Synchronized count-up animation multiplier over 1.5 seconds
   useEffect(() => {
@@ -389,9 +427,106 @@ export default function Leaderboard() {
 
 
 
+        {/* Off-screen leaderboard share card */}
+        <div
+          ref={leaderboardShareRef}
+          style={{
+            position: "fixed", left: "-9999px", top: 0,
+            width: "380px",
+            background: "linear-gradient(145deg, #0a0a0f 0%, #0f0a1e 100%)",
+            borderRadius: "20px",
+            padding: "24px",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            overflow: "hidden",
+          }}
+        >
+          {/* Header bar */}
+          <div style={{ height: "3px", borderRadius: "2px", background: "linear-gradient(90deg, #a855f7, #f59e0b, #a855f7)", marginBottom: "20px" }} />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px" }}>
+            <div>
+              <div style={{ fontSize: "16px", fontWeight: 900, color: "#fff", letterSpacing: "-0.5px" }}>
+                SKO<span style={{ color: "#a855f7" }}>RIO</span>
+              </div>
+              <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: "2px", marginTop: "2px" }}>
+                FIFA World Cup 2026
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: "11px", fontWeight: 800, color: "#f59e0b", textTransform: "uppercase", letterSpacing: "1px" }}>
+                🏆 Leaderboard
+              </div>
+              <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.25)", marginTop: "2px" }}>
+                {rankings.length} players
+              </div>
+            </div>
+          </div>
+
+          {/* Top players */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            {rankings.slice(0, 10).map((player, i) => {
+              const isMe = currentUser?.id === player.id;
+              const medal = i === 0 ? "#f59e0b" : i === 1 ? "#94a3b8" : i === 2 ? "#b45309" : null;
+              return (
+                <div key={player.id} style={{
+                  display: "flex", alignItems: "center", gap: "10px",
+                  background: isMe ? "rgba(168,85,247,0.12)" : "rgba(255,255,255,0.03)",
+                  borderRadius: "10px", padding: "8px 12px",
+                  border: isMe ? "1px solid rgba(168,85,247,0.25)" : "1px solid rgba(255,255,255,0.05)",
+                }}>
+                  <div style={{
+                    width: "22px", height: "22px", borderRadius: "6px",
+                    background: medal ? `${medal}22` : "rgba(255,255,255,0.05)",
+                    border: `1px solid ${medal ? `${medal}44` : "rgba(255,255,255,0.08)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "10px", fontWeight: 900,
+                    color: medal ?? "rgba(255,255,255,0.35)",
+                    flexShrink: 0,
+                  }}>
+                    {i + 1}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: "12px", fontWeight: 700,
+                      color: isMe ? "#c084fc" : "#fff",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {player.name}{isMe ? " 👈" : ""}
+                    </div>
+                    <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                      {getTier(player.points)}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "14px", fontWeight: 900, color: medal ?? (isMe ? "#c084fc" : "rgba(255,255,255,0.7)"), flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                    {player.points}
+                    <span style={{ fontSize: "9px", fontWeight: 600, color: "rgba(255,255,255,0.25)", marginLeft: "2px" }}>pts</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ marginTop: "16px", textAlign: "center", fontSize: "10px", color: "rgba(255,255,255,0.18)", fontWeight: 600 }}>
+            ⚽ Join at skorio.app · Predict the World Cup
+          </div>
+        </div>
+
         {/* Ranking List Table Grid */}
         <section className="flex flex-col gap-3">
-          
+
+          {/* Share leaderboard button */}
+          <div className="flex justify-end mb-1">
+            <button
+              onClick={handleShareLeaderboard}
+              disabled={sharingLeaderboard}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white bg-[#25D366]/15 border border-[#25D366]/30 hover:bg-[#25D366]/25 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {sharingLeaderboard
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <Share2 className="w-4 h-4 text-[#25D366]" />}
+              Share Leaderboard
+            </button>
+          </div>
+
           {/* Table Header */}
           <div className="grid grid-cols-12 px-4 py-2 text-white/30 label-sm uppercase tracking-wider font-bold select-none text-[10px] border-b border-white/5">
             <div className="col-span-2 text-left">Pos</div>

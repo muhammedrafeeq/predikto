@@ -74,52 +74,30 @@ export default function CollectionGrid({ cards, onCardClick }: CollectionGridPro
         )}
       </div>
 
-      {/* Grid Sections grouped by Position */}
-      <div className="flex flex-col gap-10">
-        {positions.map((pos) => {
-          const positionCards = getCardsByPosition(pos.key);
-          if (positionCards.length === 0) return null;
+      {/* Grid of all cards (no position categorisation) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
+        {cards.map((card) => {
+          const isOwned = (card.quantity || 0) > 0;
 
           return (
-            <div key={pos.key} className="flex flex-col gap-4">
-              {/* Position Header */}
-              <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-2">
-                <span className="text-sm font-black uppercase tracking-widest text-indigo-400">
-                  {pos.label}
-                </span>
-                <span className="bg-neutral-900 border border-neutral-800 text-neutral-400 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                  {positionCards.filter((c) => (c.quantity || 0) > 0).length} / {positionCards.length}
-                </span>
-              </div>
-
-              {/* Responsive Card Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 justify-items-center">
-                {positionCards.map((card) => {
-                  const isOwned = (card.quantity || 0) > 0;
-
-                  return (
-                    <div key={card.id} className="relative">
-                      {isOwned ? (
-                        <PlayerCard
-                          card={card}
-                          size="sm"
-                          showStats={false}
-                          onClick={() => onCardClick?.(card)}
-                        />
-                      ) : (
-                        <MissingCard
-                          playerName={card.player_name}
-                          position={card.position}
-                          jerseyNumber={card.jersey_number}
-                          teamName={card.team_name}
-                          flagEmoji={card.flag_emoji}
-                          size="sm"
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+            <div key={card.id} className="relative">
+              {isOwned ? (
+                <PlayerCard
+                  card={card}
+                  size="sm"
+                  showStats={false}
+                  onClick={() => onCardClick?.(card)}
+                />
+              ) : (
+                <MissingCard
+                  playerName={card.player_name}
+                  position={card.position}
+                  jerseyNumber={card.jersey_number}
+                  teamName={card.team_name}
+                  flagEmoji={card.flag_emoji}
+                  size="sm"
+                />
+              )}
             </div>
           );
         })}

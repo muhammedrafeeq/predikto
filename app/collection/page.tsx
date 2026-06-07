@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeftRight, Layers, Sparkles, Gamepad2 } from "lucide-react";
+import { ArrowLeftRight, Layers, Sparkles, Gamepad2, ChevronLeft } from "lucide-react";
 import CollectionGrid from "@/components/cards/CollectionGrid";
 import CardReveal from "@/components/cards/CardReveal";
 import { PlayerCardData } from "@/lib/cardDrop";
@@ -137,10 +137,15 @@ export default function MyCollectionPage() {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <div className="flex items-center gap-2">
-          <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-lg" />
-          <span className="text-lg font-black tracking-tighter" style={{ color: "#a855f7" }}>
-            SKO<span style={{ color: "#fff" }}>RIO</span>
+        <div className="flex items-center gap-1.5">
+          <Link
+            href="/games"
+            className="p-1.5 -ml-1 rounded-xl text-neutral-400 hover:text-white hover:bg-neutral-900/60 transition-all flex items-center justify-center cursor-pointer"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </Link>
+          <span className="text-sm font-black uppercase tracking-tight text-white select-none">
+            Cards Collection
           </span>
         </div>
         
@@ -232,18 +237,27 @@ export default function MyCollectionPage() {
 
         {/* Collected Cards Section Header */}
         {activeTeam && (
-          <div className="flex items-center gap-3.5 mb-5 bg-neutral-900/40 border border-neutral-850 rounded-2xl p-4">
-            <span className="text-3.5xl filter drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)] leading-none">
-              {activeTeam.flag_emoji}
-            </span>
-            <div className="flex-1">
-              <span className="text-[9px] bg-indigo-950/60 border border-indigo-900 text-indigo-400 px-2.5 py-0.5 rounded-full font-black tracking-widest uppercase">
-                Collected Cards Section
+          <div className="flex items-center justify-between gap-3 mb-5 bg-neutral-900/40 border border-neutral-850 rounded-2xl p-4">
+            <div className="flex items-center gap-3.5">
+              <span className="text-3.5xl filter drop-shadow-[0_2px_8px_rgba(255,255,255,0.15)] leading-none">
+                {activeTeam.flag_emoji}
               </span>
-              <h3 className="text-md font-black uppercase tracking-tight text-white mt-1.5">
-                {activeTeam.name}
-              </h3>
+              <div>
+                <span className="text-[9px] bg-indigo-950/60 border border-indigo-900 text-indigo-400 px-2.5 py-0.5 rounded-full font-black tracking-widest uppercase">
+                  Collected Cards Section
+                </span>
+                <h3 className="text-md font-black uppercase tracking-tight text-white mt-1.5">
+                  {activeTeam.name}
+                </h3>
+              </div>
             </div>
+
+            <Link
+              href="/onboarding/team"
+              className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-neutral-800 border border-neutral-700 hover:border-neutral-600 transition-all text-neutral-300 hover:text-white shrink-0"
+            >
+              Change Team
+            </Link>
           </div>
         )}
 

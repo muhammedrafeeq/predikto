@@ -18,6 +18,9 @@ import {
   Loader2,
   Tag,
   CalendarDays,
+  Pencil,
+  ChevronLeft,
+  Save,
 } from "lucide-react";
 
 interface Contest {
@@ -54,6 +57,20 @@ interface AllUser {
   phone: string;
 }
 
+interface Question {
+  id: number;
+  type: string;
+  label: string;
+  points: number;
+}
+
+interface MatchInfo {
+  id: number;
+  teamHome: string;
+  teamAway: string;
+  matchTime: string;
+}
+
 const GAME_TYPE_META: Record<string, { label: string; color: string }> = {
   match_prediction: { label: "Match Prediction", color: "bg-primary/15 text-primary" },
   first_goal: { label: "First Goal", color: "bg-secondary/15 text-secondary" },
@@ -71,7 +88,6 @@ export default function AdminContestsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [newName, setNewName] = useState("");
-  const [newTournamentId, setNewTournamentId] = useState<number | "">("");
   const [newGameType, setNewGameType] = useState("match_prediction");
   const [newIsPublic, setNewIsPublic] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -86,7 +102,18 @@ export default function AdminContestsPage() {
   const [addingUserId, setAddingUserId] = useState<number | null>(null);
   const [removingUserId, setRemovingUserId] = useState<number | null>(null);
   const [entriesData, setEntriesData] = useState<any>(null);
-  const [expandedMemberId, setExpandedMemberId] = useState<number | null>(null);
+
+  // Remove member confirmation
+  const [removeMemberConfirm, setRemoveMemberConfirm] = useState<Member | null>(null);
+
+  // Predict on behalf of member
+  const [predictingMember, setPredictingMember] = useState<Member | null>(null);
+  const [predictMatch, setPredictMatch] = useState<MatchInfo | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [predictAnswers, setPredictAnswers] = useState<Record<number, string>>({});
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Delete modal
   const [deleteContest, setDeleteContest] = useState<Contest | null>(null);
@@ -113,11 +140,9 @@ export default function AdminContestsPage() {
     loadContests();
   }, [loadContests]);
 
-  // Load tournaments for create modal
   const openCreate = async () => {
     setShowCreate(true);
     setNewName("");
-    setNewTournamentId("");
     setNewGameType("match_prediction");
     setNewIsPublic(false);
     setCreateError("");
@@ -144,11 +169,11 @@ export default function AdminContestsPage() {
       const res = await fetch("/api/admin/contests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          name: newName.trim(), 
-          tournamentId: 1, 
+        body: JSON.stringify({
+          name: newName.trim(),
+          tournamentId: 1,
           gameType: newGameType,
-          isPublic: newIsPublic
+          isPublic: newIsPublic,
         }),
       });
       const data = await res.json();
@@ -165,13 +190,13 @@ export default function AdminContestsPage() {
     }
   };
 
-  // Open members panel
   const openMembers = async (contest: Contest) => {
     setMembersContest(contest);
     setMembersLoading(true);
     setAddUserSearch("");
     setEntriesData(null);
-    setExpandedMemberId(null);
+    setPredictingMember(null);
+    setPredictMatch(null);
     try {
       const [membersRes, usersRes, entriesRes] = await Promise.all([
         fetch(`/api/admin/contests/${contest.id}`),
@@ -184,17 +209,17 @@ export default function AdminContestsPage() {
       }
       if (usersRes.ok) {
         const d = await usersRes.json();
-        setAllUsers((d.users ?? []).map((u: { id: number; name: string; phone: string }) => ({
-          id: u.id,
-          name: u.name,
-          phone: u.phone,
-        })));
+        setAllUsers(
+          (d.users ?? []).map((u: { id: number; name: string; phone: string }) => ({
+            id: u.id,
+            name: u.name,
+            phone: u.phone,
+          }))
+        );
       }
       if (entriesRes.ok) {
         const d = await entriesRes.json();
-        if (d.success) {
-          setEntriesData(d);
-        }
+        if (d.success) setEntriesData(d);
       }
     } catch {
       setMembers([]);
@@ -213,15 +238,24 @@ export default function AdminContestsPage() {
         body: JSON.stringify({ action: "add", userId }),
       });
       if (res.ok) {
-        // Refresh members
         const user = allUsers.find((u) => u.id === userId);
         if (user) {
           setMembers((prev) => [
             ...prev,
-            { id: user.id, name: user.name, phone: user.phone, role: "user", isActive: true, joinedAt: new Date().toISOString(), predictionsCount: 0 },
+            {
+              id: user.id,
+              name: user.name,
+              phone: user.phone,
+              role: "user",
+              isActive: true,
+              joinedAt: new Date().toISOString(),
+              predictionsCount: 0,
+            },
           ]);
           setContests((prev) =>
-            prev.map((c) => (c.id === membersContest.id ? { ...c, memberCount: c.memberCount + 1 } : c))
+            prev.map((c) =>
+              c.id === membersContest.id ? { ...c, memberCount: c.memberCount + 1 } : c
+            )
           );
         }
       }
@@ -232,9 +266,15 @@ export default function AdminContestsPage() {
     }
   };
 
-  const handleRemoveMember = async (userId: number) => {
-    if (!membersContest) return;
+  const confirmRemoveMember = (member: Member) => {
+    setRemoveMemberConfirm(member);
+  };
+
+  const handleRemoveMember = async () => {
+    if (!membersContest || !removeMemberConfirm) return;
+    const userId = removeMemberConfirm.id;
     setRemovingUserId(userId);
+    setRemoveMemberConfirm(null);
     try {
       const res = await fetch(`/api/admin/contests/${membersContest.id}`, {
         method: "PATCH",
@@ -244,13 +284,94 @@ export default function AdminContestsPage() {
       if (res.ok) {
         setMembers((prev) => prev.filter((m) => m.id !== userId));
         setContests((prev) =>
-          prev.map((c) => (c.id === membersContest.id ? { ...c, memberCount: Math.max(0, c.memberCount - 1) } : c))
+          prev.map((c) =>
+            c.id === membersContest.id
+              ? { ...c, memberCount: Math.max(0, c.memberCount - 1) }
+              : c
+          )
         );
       }
     } catch {
       console.error("Failed to remove member");
     } finally {
       setRemovingUserId(null);
+    }
+  };
+
+  const openPredictForMember = (member: Member) => {
+    setPredictingMember(member);
+    setPredictMatch(null);
+    setQuestions([]);
+    setPredictAnswers({});
+    setSaveSuccess(false);
+  };
+
+  const selectMatchForPrediction = async (match: MatchInfo) => {
+    if (!membersContest || !predictingMember) return;
+    setPredictMatch(match);
+    setQuestionsLoading(true);
+    setSaveSuccess(false);
+    try {
+      const res = await fetch(`/api/admin/matches/${match.id}/questions`);
+      if (res.ok) {
+        const d = await res.json();
+        setQuestions(d.questions ?? []);
+        // Pre-fill existing answers for this user/match
+        const existingEntry = entriesData?.userEntries?.[predictingMember.id]?.[match.id];
+        const prefilled: Record<number, string> = {};
+        if (existingEntry?.predictions && d.questions) {
+          for (const q of d.questions) {
+            const pred = existingEntry.predictions[q.type];
+            if (pred?.answer) prefilled[q.id] = pred.answer;
+          }
+        }
+        setPredictAnswers(prefilled);
+      }
+    } catch {
+      setQuestions([]);
+    } finally {
+      setQuestionsLoading(false);
+    }
+  };
+
+  const handleSavePredictions = async () => {
+    if (!membersContest || !predictingMember || !predictMatch) return;
+    setSaving(true);
+    try {
+      const predictions = Object.entries(predictAnswers)
+        .filter(([, answer]) => answer.trim() !== "")
+        .map(([qId, answer]) => ({ questionId: parseInt(qId, 10), answer }));
+
+      const res = await fetch(`/api/admin/contests/${membersContest.id}/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: predictingMember.id,
+          matchId: predictMatch.id,
+          predictions,
+        }),
+      });
+      if (res.ok) {
+        setSaveSuccess(true);
+        // Update predictionsCount in members list
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.id === predictingMember.id
+              ? { ...m, predictionsCount: m.predictionsCount + predictions.length }
+              : m
+          )
+        );
+        // Refresh entries data
+        const entriesRes = await fetch(`/api/admin/contests/${membersContest.id}/entries`);
+        if (entriesRes.ok) {
+          const d = await entriesRes.json();
+          if (d.success) setEntriesData(d);
+        }
+      }
+    } catch {
+      console.error("Failed to save predictions");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -317,7 +438,6 @@ export default function AdminContestsPage() {
           </div>
         </div>
         <button
-          id="create-contest-btn"
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2.5 bg-secondary text-on-secondary label-md font-bold rounded-lg active:scale-95 transition-all shadow-lg shadow-secondary/20"
         >
@@ -346,7 +466,6 @@ export default function AdminContestsPage() {
         <div className="surface-glass-1 rounded-xl p-3 flex items-center gap-3 flex-1">
           <Search className="w-5 h-5 text-on-surface-variant shrink-0" />
           <input
-            id="contest-search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, tournament or join code..."
@@ -388,12 +507,12 @@ export default function AdminContestsPage() {
             return (
               <div
                 key={contest.id}
-                className="surface-glass-1 rounded-xl p-5 flex flex-col gap-4 hover:bg-white/5 transition-all duration-300 group"
+                className="surface-glass-1 rounded-xl p-4 flex flex-col gap-3 hover:bg-white/5 transition-all duration-300"
               >
-                {/* Top row */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                    <h3 className="label-md font-bold text-white text-base truncate">{contest.name}</h3>
+                {/* Top row: title + game type + delete */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <h3 className="font-bold text-white text-base truncate">{contest.name}</h3>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${meta.color}`}>
                         {meta.label}
@@ -403,78 +522,54 @@ export default function AdminContestsPage() {
                           Public
                         </span>
                       )}
-                      <span className="text-[10px] text-on-surface-variant font-mono flex items-center gap-1">
-                        <Tag className="w-3 h-3" />
-                        {contest.tournamentName}
-                      </span>
                     </div>
                   </div>
-                </div>
-
-                {/* Join code */}
-                <div className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-lg px-4 py-2.5">
-                  <div className="flex-1">
-                    <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold mb-0.5">Join Code</p>
-                    <p className="font-mono font-bold text-primary text-lg tracking-widest">{contest.joinCode}</p>
-                  </div>
-                  <button
-                    onClick={() => copyCode(contest.joinCode)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors text-on-surface-variant hover:text-primary"
-                    title="Copy join code"
-                  >
-                    {copiedCode === contest.joinCode ? (
-                      <Check className="w-4 h-4 text-secondary" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-
-                {/* Stats row */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white/5 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <Users className="w-4 h-4 text-primary" />
-                    <div>
-                      <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Members</p>
-                      <p className="font-mono font-bold text-white">{contest.memberCount}</p>
-                    </div>
-                  </div>
-                  <div className="bg-white/5 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-secondary" />
-                    <div>
-                      <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">Created</p>
-                      <p className="font-mono font-bold text-white text-xs">
-                        {new Date(contest.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Creator */}
-                {contest.creatorName && (
-                  <p className="text-[11px] text-on-surface-variant">
-                    Created by <span className="text-on-surface font-semibold">{contest.creatorName}</span>
-                  </p>
-                )}
-
-                {/* Actions */}
-                <div className="flex gap-2 pt-2 border-t border-white/5">
-                  <button
-                    onClick={() => openMembers(contest)}
-                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/30 rounded-lg label-md text-on-surface hover:text-primary transition-all"
-                  >
-                    <Users className="w-4 h-4" />
-                    Manage Members
-                    <ChevronRight className="w-3 h-3 ml-auto" />
-                  </button>
                   <button
                     onClick={() => setDeleteContest(contest)}
-                    className="p-2.5 bg-white/5 border border-white/10 hover:bg-error/10 hover:border-error/30 rounded-lg text-on-surface-variant hover:text-error transition-all"
+                    className="p-2 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-all shrink-0"
                     title="Delete contest"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
+
+                {/* Info row: code + members + created */}
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="flex items-center gap-1.5 text-on-surface-variant">
+                    <Tag className="w-3.5 h-3.5 shrink-0" />
+                    <span className="font-mono text-on-surface font-semibold">{contest.joinCode}</span>
+                    <button
+                      onClick={() => copyCode(contest.joinCode)}
+                      className="ml-0.5 p-1 hover:bg-white/10 rounded text-on-surface-variant hover:text-white transition-colors"
+                      title="Copy join code"
+                    >
+                      {copiedCode === contest.joinCode ? (
+                        <Check className="w-3 h-3 text-secondary" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-1 text-on-surface-variant">
+                    <Users className="w-3.5 h-3.5" />
+                    <span className="font-mono text-white font-semibold">{contest.memberCount}</span>
+                    <span className="text-xs">members</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-on-surface-variant ml-auto">
+                    <CalendarDays className="w-3 h-3" />
+                    <span className="text-xs font-mono">{new Date(contest.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                {/* Manage members button */}
+                <button
+                  onClick={() => openMembers(contest)}
+                  className="flex items-center justify-center gap-2 py-2 bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/30 rounded-lg text-sm text-on-surface hover:text-primary transition-all"
+                >
+                  <Users className="w-4 h-4" />
+                  Manage Members
+                  <ChevronRight className="w-3 h-3 ml-auto" />
+                </button>
               </div>
             );
           })}
@@ -482,7 +577,7 @@ export default function AdminContestsPage() {
           {/* Add card */}
           <button
             onClick={openCreate}
-            className="rounded-xl border-2 border-dashed border-white/10 hover:border-secondary/40 flex flex-col items-center justify-center gap-3 p-8 group transition-all duration-300 min-h-[240px] hover:bg-white/5"
+            className="rounded-xl border-2 border-dashed border-white/10 hover:border-secondary/40 flex flex-col items-center justify-center gap-3 p-8 group transition-all duration-300 min-h-[160px] hover:bg-white/5"
           >
             <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:scale-110 transition-transform border border-white/5 group-hover:border-secondary/30">
               <Plus className="w-6 h-6 text-secondary" />
@@ -519,7 +614,6 @@ export default function AdminContestsPage() {
               <div>
                 <label className="block label-md text-on-surface-variant mb-1.5">Contest Name</label>
                 <input
-                  id="contest-name-input"
                   required
                   autoFocus
                   value={newName}
@@ -528,8 +622,6 @@ export default function AdminContestsPage() {
                   className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary/20 focus:outline-none"
                 />
               </div>
-
-
 
               <div>
                 <label className="block label-md text-on-surface-variant mb-1.5">Game Type</label>
@@ -551,7 +643,6 @@ export default function AdminContestsPage() {
                 </div>
               </div>
 
-              {/* Contest Type Selection */}
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-black uppercase tracking-wider text-white/60">Contest Type</label>
                 <div className="grid grid-cols-2 gap-3">
@@ -560,7 +651,7 @@ export default function AdminContestsPage() {
                     onClick={() => setNewIsPublic(false)}
                     className={`p-3 rounded-xl cursor-pointer border flex flex-col gap-1 transition-all duration-300 text-left ${
                       !newIsPublic
-                        ? "border-secondary bg-secondary/10 shadow-[0_0_15px_rgba(245,166,35,0.05)]"
+                        ? "border-secondary bg-secondary/10"
                         : "border-white/10 bg-white/5 hover:bg-white/10"
                     }`}
                   >
@@ -572,7 +663,7 @@ export default function AdminContestsPage() {
                     onClick={() => setNewIsPublic(true)}
                     className={`p-3 rounded-xl cursor-pointer border flex flex-col gap-1 transition-all duration-300 text-left ${
                       newIsPublic
-                        ? "border-secondary bg-secondary/10 shadow-[0_0_15px_rgba(245,166,35,0.05)]"
+                        ? "border-secondary bg-secondary/10"
                         : "border-white/10 bg-white/5 hover:bg-white/10"
                     }`}
                   >
@@ -596,7 +687,6 @@ export default function AdminContestsPage() {
                 </button>
                 <button
                   type="submit"
-                  id="contest-create-submit"
                   disabled={creating}
                   className="flex-1 py-3 bg-secondary text-on-secondary rounded-lg font-bold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
@@ -611,237 +701,302 @@ export default function AdminContestsPage() {
       {/* ── Members Panel ── */}
       {membersContest && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-end bg-black/70 backdrop-blur-sm">
-          <div className="w-full sm:w-[480px] h-full sm:h-auto sm:max-h-[90vh] bg-surface-container-lowest border-l border-white/10 flex flex-col shadow-2xl overflow-hidden sm:rounded-l-2xl">
+          <div className="w-full sm:w-[500px] h-full sm:h-auto sm:max-h-[90vh] bg-surface-container-lowest border-l border-white/10 flex flex-col shadow-2xl overflow-hidden sm:rounded-l-2xl">
+
             {/* Panel header */}
             <div className="flex items-center justify-between p-5 border-b border-white/10 shrink-0">
-              <div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold text-white text-base">Members</h3>
+              {predictingMember ? (
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <button
+                    onClick={() => { setPredictingMember(null); setPredictMatch(null); }}
+                    className="p-1.5 hover:bg-white/10 rounded-full text-on-surface-variant hover:text-white transition-colors shrink-0"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <div className="min-w-0">
+                    <p className="font-bold text-white text-sm truncate">
+                      Predictions for {predictingMember.name}
+                    </p>
+                    <p className="text-xs text-on-surface-variant font-mono truncate">{membersContest.name}</p>
+                  </div>
                 </div>
-                <p className="text-xs text-on-surface-variant mt-0.5 font-mono">{membersContest.name}</p>
-              </div>
+              ) : (
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-5 h-5 text-primary" />
+                    <h3 className="font-bold text-white text-base">Members</h3>
+                  </div>
+                  <p className="text-xs text-on-surface-variant mt-0.5 font-mono">{membersContest.name}</p>
+                </div>
+              )}
               <button
                 onClick={() => setMembersContest(null)}
-                className="p-2 hover:bg-white/10 rounded-full text-on-surface-variant hover:text-white transition-colors"
+                className="p-2 hover:bg-white/10 rounded-full text-on-surface-variant hover:text-white transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
+            {/* Panel body */}
             <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
-              {/* Add member */}
-              <div className="flex flex-col gap-3">
-                <p className="label-md font-bold text-on-surface-variant uppercase tracking-wider text-xs">Add User</p>
-                <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
-                  <Search className="w-4 h-4 text-on-surface-variant shrink-0" />
-                  <input
-                    value={addUserSearch}
-                    onChange={(e) => setAddUserSearch(e.target.value)}
-                    placeholder="Search users to add..."
-                    className="bg-transparent focus:outline-none text-sm flex-1 text-on-surface placeholder:text-on-surface-variant/40"
-                  />
-                </div>
-                {addUserSearch && nonMembers.slice(0, 6).map((u) => (
-                  <div key={u.id} className="flex items-center justify-between bg-white/5 border border-white/5 rounded-lg px-3 py-2">
-                    <div>
-                      <p className="text-sm font-semibold text-white">{u.name}</p>
-                      <p className="text-xs text-on-surface-variant font-mono">{u.phone}</p>
-                    </div>
-                    <button
-                      onClick={() => handleAddMember(u.id)}
-                      disabled={addingUserId === u.id}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-lg text-primary text-xs font-bold transition-all disabled:opacity-50"
-                    >
-                      {addingUserId === u.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
-                      Add
-                    </button>
-                  </div>
-                ))}
-              </div>
 
-              {/* Current members */}
-              <div className="flex flex-col gap-3">
-                <p className="label-md font-bold text-on-surface-variant uppercase tracking-wider text-xs">
-                  Current Members ({members.length})
-                </p>
-                {membersLoading ? (
-                  <div className="flex justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
-                ) : members.length === 0 ? (
-                  <p className="text-sm text-on-surface-variant text-center py-6">No members yet</p>
-                ) : (
-                  members.map((m) => (
-                    <div
-                      key={m.id}
-                      className="flex flex-col bg-white/5 border border-white/5 rounded-xl px-3 py-3 hover:bg-white/[0.08] transition-all cursor-pointer"
-                      onClick={() => setExpandedMemberId(expandedMemberId === m.id ? null : m.id)}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm select-none">
-                            {m.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-white">{m.name}</p>
-                              {m.role === "admin" && (
-                                <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase">Admin</span>
-                              )}
-                            </div>
-                            <p className="text-xs text-on-surface-variant font-mono">{m.phone}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <span className="text-xs text-on-surface-variant font-mono">{m.predictionsCount} picks</span>
-                          <button
-                            onClick={() => handleRemoveMember(m.id)}
-                            disabled={removingUserId === m.id}
-                            className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-all disabled:opacity-50"
-                            title="Remove from contest"
-                          >
-                            {removingUserId === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <UserMinus className="w-3 h-3" />}
-                          </button>
-                        </div>
+              {/* ── Predict on behalf view ── */}
+              {predictingMember ? (
+                <div className="flex flex-col gap-4">
+                  {membersContest.gameType !== "match_prediction" ? (
+                    <p className="text-sm text-on-surface-variant text-center py-8">
+                      Admin prediction entry is only supported for Match Prediction contests.
+                    </p>
+                  ) : !predictMatch ? (
+                    <>
+                      <p className="text-xs text-on-surface-variant uppercase tracking-wider font-bold">
+                        Select a match to enter predictions
+                      </p>
+                      {!entriesData?.matches || entriesData.matches.length === 0 ? (
+                        <p className="text-sm text-on-surface-variant text-center py-6">No matches available</p>
+                      ) : (
+                        entriesData.matches.map((match: MatchInfo) => {
+                          const entry = entriesData.userEntries?.[predictingMember.id]?.[match.id];
+                          const hasPreds = entry && Object.keys(entry.predictions || {}).length > 0;
+                          const isPast = new Date(match.matchTime) < new Date();
+                          return (
+                            <button
+                              key={match.id}
+                              onClick={() => selectMatchForPrediction(match)}
+                              className="flex items-center justify-between bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl px-4 py-3 text-left transition-all group"
+                            >
+                              <div>
+                                <p className="text-sm font-semibold text-white">
+                                  {match.teamHome} vs {match.teamAway}
+                                </p>
+                                <p className="text-xs text-on-surface-variant font-mono mt-0.5">
+                                  {new Date(match.matchTime).toLocaleString()}
+                                  {isPast && <span className="ml-2 text-amber-400/60">(past)</span>}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {hasPreds && (
+                                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
+                                    Saved
+                                  </span>
+                                )}
+                                <Pencil className="w-4 h-4 text-on-surface-variant group-hover:text-primary transition-colors" />
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => { setPredictMatch(null); setSaveSuccess(false); }}
+                        className="flex items-center gap-1.5 text-xs text-on-surface-variant hover:text-white transition-colors w-fit"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" /> Back to matches
+                      </button>
+
+                      <div className="bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                        <p className="text-sm font-bold text-white">{predictMatch.teamHome} vs {predictMatch.teamAway}</p>
+                        <p className="text-xs text-on-surface-variant font-mono mt-0.5">
+                          {new Date(predictMatch.matchTime).toLocaleString()}
+                        </p>
                       </div>
 
-                      {expandedMemberId === m.id && entriesData && (
-                        <div className="mt-3 pt-3 border-t border-white/5 space-y-2.5 text-xs text-left w-full">
-                          {entriesData.gameType === "match_prediction" && (
-                            <div className="space-y-2">
-                              <p className="text-[10px] font-bold text-violet-400 uppercase tracking-wide">Match Predictions</p>
-                              {entriesData.matches?.map((match: any) => {
-                                const entry = entriesData.userEntries?.[m.id]?.[match.id];
-                                const preds = entry?.predictions || {};
-                                const hasPreds = Object.keys(preds).length > 0;
-                                return (
-                                  <div key={match.id} className="bg-white/5 rounded-lg p-2.5 border border-white/5">
-                                    <div className="flex justify-between items-center font-bold text-white mb-1 text-[11px]">
-                                      <span>{match.teamHome} vs {match.teamAway}</span>
-                                      {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
-                                        <span className="text-amber-400">+{entry.pointsEarned} pts</span>
-                                      )}
-                                    </div>
-                                    {hasPreds ? (
-                                      <div className="grid grid-cols-3 gap-1.5 text-[10px] text-white/60">
-                                        <div>
-                                          <span className="text-white/30 block">Winner</span>
-                                          <span className={`font-medium ${preds.winner?.isCorrect ? "text-emerald-400" : preds.winner?.isCorrect === false ? "text-red-400" : ""}`}>
-                                            {preds.winner?.answer || "—"}
-                                          </span>
-                                        </div>
-                                        <div>
-                                          <span className="text-white/30 block">Score</span>
-                                          <span className={`font-medium ${preds.score?.isCorrect ? "text-emerald-400" : preds.score?.isCorrect === false ? "text-red-400" : ""}`}>
-                                            {preds.score?.answer || "—"}
-                                          </span>
-                                        </div>
-                                        <div>
-                                          <span className="text-white/30 block">MOTM</span>
-                                          <span className={`font-medium ${preds.scorer?.isCorrect ? "text-emerald-400" : preds.scorer?.isCorrect === false ? "text-red-400" : ""}`}>
-                                            {preds.scorer?.answer || "—"}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <p className="text-white/20 text-[10px] italic">No predictions submitted</p>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {entriesData.gameType === "first_goal" && (
-                            <div className="space-y-2">
-                              <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">First Goal Predictions</p>
-                              {entriesData.matches?.map((match: any) => {
-                                const entry = entriesData.userEntries?.[m.id]?.[match.id];
-                                return (
-                                  <div key={match.id} className="flex justify-between items-center bg-white/5 rounded-lg p-2.5 border border-white/5 text-[11px]">
-                                    <span className="text-white/70">{match.teamHome} vs {match.teamAway}</span>
-                                    <div className="text-right">
-                                      <span className="font-mono text-white font-bold block">
-                                        {entry?.predictedMinute ? `${entry.predictedMinute} Min` : "No pick"}
-                                      </span>
-                                      {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
-                                        <span className="text-amber-400 text-[10px] font-bold block">+{entry.pointsEarned} pts</span>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {entriesData.gameType === "formation" && (
-                            <div className="space-y-2">
-                              <p className="text-[10px] font-bold text-purple-400 uppercase tracking-wide">Formation Projections</p>
-                              {entriesData.matches?.map((match: any) => {
-                                const entry = entriesData.userEntries?.[m.id]?.[match.id];
-                                return (
-                                  <div key={match.id} className="bg-white/5 rounded-lg p-2.5 border border-white/5 space-y-1">
-                                    <div className="flex justify-between items-center text-white/70 font-semibold text-[11px]">
-                                      <span>{match.teamHome} vs {match.teamAway}</span>
-                                      {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
-                                        <span className="text-amber-400 text-[10px] font-bold">+{entry.pointsEarned} pts</span>
-                                      )}
-                                    </div>
-                                    {entry?.homeFormation || entry?.awayFormation ? (
-                                      <div className="flex justify-between text-[10px] text-white/40">
-                                        <span>Home: <strong className="text-white/70">{entry.homeFormation || "—"}</strong></span>
-                                        <span>Away: <strong className="text-white/70">{entry.awayFormation || "—"}</strong></span>
-                                      </div>
-                                    ) : (
-                                      <p className="text-white/20 text-[10px] italic">No formations projected</p>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-
-                          {entriesData.gameType === "bracket" && (
-                            <div className="space-y-2">
-                              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-wide">Tournament Bracket Predictions</p>
-                              {(() => {
-                                const entry = entriesData.userEntries?.[m.id];
-                                const preds = entry?.predictions || {};
-                                const keys = Object.keys(preds);
-                                if (keys.length === 0) {
-                                  return <p className="text-white/20 text-[10px] italic p-2.5 bg-white/5 rounded-lg border border-white/5">No bracket picks submitted</p>;
+                      {questionsLoading ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                        </div>
+                      ) : questions.length === 0 ? (
+                        <p className="text-sm text-on-surface-variant text-center py-6">No questions set for this match yet</p>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {questions.map((q) => (
+                            <div key={q.id} className="flex flex-col gap-1.5">
+                              <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wide">
+                                {q.label}
+                                <span className="ml-2 text-[10px] text-primary/60 normal-case">{q.points} pts</span>
+                              </label>
+                              <input
+                                value={predictAnswers[q.id] ?? ""}
+                                onChange={(e) =>
+                                  setPredictAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
                                 }
-                                return (
-                                  <div className="bg-white/5 rounded-lg p-2.5 border border-white/5 space-y-1.5 max-h-40 overflow-y-auto">
-                                    {keys.map((k) => (
-                                      <div key={k} className="flex justify-between text-[10px] border-b border-white/5 pb-1 last:border-0 last:pb-0">
-                                        <span className="text-white/40 capitalize">{k.replace(/_/g, " ")}</span>
-                                        <span className="text-white font-bold">{preds[k]}</span>
-                                      </div>
-                                    ))}
-                                    {entry?.pointsEarned !== null && entry?.pointsEarned !== undefined && (
-                                      <div className="text-right pt-1.5 text-amber-400 font-bold text-[11px]">
-                                        Total: +{entry.pointsEarned} pts
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })()}
+                                placeholder={`Enter ${q.label.toLowerCase()}...`}
+                                className="w-full bg-white/5 border border-white/10 focus:border-primary/50 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary/20 transition-all"
+                              />
+                            </div>
+                          ))}
+
+                          {saveSuccess && (
+                            <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-lg text-sm">
+                              <Check className="w-4 h-4 shrink-0" />
+                              Predictions saved successfully!
                             </div>
                           )}
+
+                          <button
+                            onClick={handleSavePredictions}
+                            disabled={saving}
+                            className="flex items-center justify-center gap-2 py-3 bg-primary text-on-primary rounded-xl font-bold text-sm transition-all disabled:opacity-50 mt-1"
+                          >
+                            {saving ? (
+                              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                            ) : (
+                              <><Save className="w-4 h-4" /> Save Predictions</>
+                            )}
+                          </button>
                         </div>
                       )}
+                    </>
+                  )}
+                </div>
+              ) : (
+                <>
+                  {/* Add member */}
+                  <div className="flex flex-col gap-3">
+                    <p className="label-md font-bold text-on-surface-variant uppercase tracking-wider text-xs">Add User</p>
+                    <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                      <Search className="w-4 h-4 text-on-surface-variant shrink-0" />
+                      <input
+                        value={addUserSearch}
+                        onChange={(e) => setAddUserSearch(e.target.value)}
+                        placeholder="Search users to add..."
+                        className="bg-transparent focus:outline-none text-sm flex-1 text-on-surface placeholder:text-on-surface-variant/40"
+                      />
                     </div>
-                  ))
-                )}
-              </div>
+                    {addUserSearch &&
+                      nonMembers.slice(0, 6).map((u) => (
+                        <div
+                          key={u.id}
+                          className="flex items-center justify-between bg-white/5 border border-white/5 rounded-lg px-3 py-2"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-white">{u.name}</p>
+                            <p className="text-xs text-on-surface-variant font-mono">{u.phone}</p>
+                          </div>
+                          <button
+                            onClick={() => handleAddMember(u.id)}
+                            disabled={addingUserId === u.id}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-lg text-primary text-xs font-bold transition-all disabled:opacity-50"
+                          >
+                            {addingUserId === u.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <UserPlus className="w-3 h-3" />
+                            )}
+                            Add
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Current members */}
+                  <div className="flex flex-col gap-3">
+                    <p className="label-md font-bold text-on-surface-variant uppercase tracking-wider text-xs">
+                      Current Members ({members.length})
+                    </p>
+                    {membersLoading ? (
+                      <div className="flex justify-center py-8">
+                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      </div>
+                    ) : members.length === 0 ? (
+                      <p className="text-sm text-on-surface-variant text-center py-6">No members yet</p>
+                    ) : (
+                      members.map((m) => (
+                        <div
+                          key={m.id}
+                          className="flex items-center justify-between bg-white/5 border border-white/5 rounded-xl px-3 py-3 hover:bg-white/[0.08] transition-all"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm select-none shrink-0">
+                              {m.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-white truncate">{m.name}</p>
+                                {m.role === "admin" && (
+                                  <span className="text-[9px] bg-primary/20 text-primary px-1.5 py-0.5 rounded-full font-bold uppercase shrink-0">
+                                    Admin
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-on-surface-variant font-mono">{m.phone}</p>
+                              <p className="text-[10px] text-on-surface-variant/60 mt-0.5">{m.predictionsCount} picks</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {membersContest.gameType === "match_prediction" && (
+                              <button
+                                onClick={() => openPredictForMember(m)}
+                                className="flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-lg text-primary text-xs font-bold transition-all"
+                                title="Enter predictions"
+                              >
+                                <Pencil className="w-3 h-3" />
+                                Predict
+                              </button>
+                            )}
+                            <button
+                              onClick={() => confirmRemoveMember(m)}
+                              disabled={removingUserId === m.id}
+                              className="p-1.5 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-all disabled:opacity-50"
+                              title="Remove from contest"
+                            >
+                              {removingUserId === m.id ? (
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                              ) : (
+                                <UserMinus className="w-3 h-3" />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Delete Confirmation Modal ── */}
+      {/* ── Remove Member Confirmation ── */}
+      {removeMemberConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-sm surface-glass-1 rounded-2xl p-6 flex flex-col gap-5 border border-error/20 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-error/10 border border-error/20 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-error" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-base">Remove Member?</h3>
+                <p className="text-xs text-white/50 mt-0.5">This will remove them from the contest.</p>
+              </div>
+            </div>
+            <div className="bg-white/5 border border-white/5 rounded-lg p-3">
+              <p className="text-sm text-white font-semibold">{removeMemberConfirm.name}</p>
+              <p className="text-xs text-on-surface-variant mt-0.5 font-mono">{removeMemberConfirm.phone}</p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRemoveMemberConfirm(null)}
+                className="flex-1 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-bold text-white/70 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRemoveMember}
+                className="flex-1 py-3 rounded-xl bg-error/80 hover:bg-error text-white text-sm font-bold transition-all flex items-center justify-center gap-2"
+              >
+                <UserMinus className="w-4 h-4" />
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Contest Confirmation ── */}
       {deleteContest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
           <div className="w-full max-w-sm surface-glass-1 rounded-2xl p-6 flex flex-col gap-5 border border-error/20 shadow-2xl">
@@ -857,7 +1012,9 @@ export default function AdminContestsPage() {
 
             <div className="bg-white/5 border border-white/5 rounded-lg p-3">
               <p className="text-sm text-white font-semibold">{deleteContest.name}</p>
-              <p className="text-xs text-on-surface-variant mt-0.5 font-mono">{deleteContest.joinCode} · {deleteContest.memberCount} members</p>
+              <p className="text-xs text-on-surface-variant mt-0.5 font-mono">
+                {deleteContest.joinCode} · {deleteContest.memberCount} members
+              </p>
             </div>
 
             <p className="text-sm text-white/60 leading-relaxed">

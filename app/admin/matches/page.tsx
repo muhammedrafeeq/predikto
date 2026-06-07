@@ -18,6 +18,20 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+async function shareOrCopy(text: string, setToast: (msg: string | null) => void) {
+  if (navigator.share) {
+    try { await navigator.share({ text }); return; } catch { /* user cancelled or not supported */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    setToast("✅ Copied! Paste in WhatsApp");
+    setTimeout(() => setToast(null), 3000);
+  } catch {
+    // last resort
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  }
+}
+
 interface Match {
   id: number;
   teamHome: string;
@@ -107,6 +121,7 @@ export default function MatchManager() {
   const [submitting, setSubmitting] = useState(false);
   const [sharingId, setSharingId] = useState<number | null>(null);
   const [sharingQuestionsId, setSharingQuestionsId] = useState<number | null>(null);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
   const [shareData, setShareData] = useState<Record<number, any>>({});
   const shareCardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -144,12 +159,12 @@ export default function MatchManager() {
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text });
       } else {
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+        await shareOrCopy(text, setCopyToast);
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
-        const text = `⚽ ${match.teamHome} vs ${match.teamAway} — Results are in on Skorio FIFA WC 2026 🏆`;
-        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+        const fallback = `⚽ ${match.teamHome} vs ${match.teamAway} — Results are in on Skorio FIFA WC 2026 🏆`;
+        await shareOrCopy(fallback, setCopyToast);
       }
     } finally {
       setSharingId(null);
@@ -186,9 +201,9 @@ export default function MatchManager() {
       ).join("\n\n");
 
       const text = `🏟️ *ഇന്നത്തെ മത്സരം* 🏟️\n\n⚽ *${match.teamHome} vs ${match.teamAway}*\n📅 ${dateStr} | ${timeStr}\n⏰ Deadline: ${dlStr}\n\n🎯 *ഇന്നത്തെ ചോദ്യങ്ങൾ*\n\n${qLines}\n\n🔗 *Skorio* ൽ Predict ചെയ്ത് Points നേടൂ! 🏆`;
-      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+      await shareOrCopy(text, setCopyToast);
     } catch {
-      window.open(`https://wa.me/?text=${encodeURIComponent(`⚽ ${match.teamHome} vs ${match.teamAway} - Predict now on Skorio!`)}`, "_blank");
+      await shareOrCopy(`⚽ ${match.teamHome} vs ${match.teamAway} - Predict now on Skorio!`, setCopyToast);
     } finally {
       setSharingQuestionsId(null);
     }
@@ -316,6 +331,11 @@ export default function MatchManager() {
 
   return (
     <div className="space-y-6">
+      {copyToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-green-600 text-white text-sm font-bold px-5 py-3 rounded-full shadow-xl animate-fade-in">
+          {copyToast}
+        </div>
+      )}
       {/* Header section */}
       <header className="flex justify-between items-center">
         <div>

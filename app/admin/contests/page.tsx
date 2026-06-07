@@ -25,6 +25,19 @@ import {
   Share2,
 } from "lucide-react";
 
+async function shareOrCopy(text: string, setToast: (msg: string | null) => void) {
+  if (navigator.share) {
+    try { await navigator.share({ text }); return; } catch { /* cancelled or unsupported */ }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    setToast("✅ Copied! Paste in WhatsApp");
+    setTimeout(() => setToast(null), 3000);
+  } catch {
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  }
+}
+
 interface Contest {
   id: number;
   name: string;
@@ -121,6 +134,7 @@ export default function AdminContestsPage() {
   const [adminScoreAway, setAdminScoreAway] = useState(0);
   const [adminWinner, setAdminWinner] = useState<"home" | "draw" | "away" | null>(null);
   const [adminScorer, setAdminScorer] = useState("");
+  const [copyToast, setCopyToast] = useState<string | null>(null);
   const [adminScorerOpen, setAdminScorerOpen] = useState(false);
   const [adminPlayers, setAdminPlayers] = useState<{ id: number; name: string }[]>([]);
   const [adminPlayerQuery, setAdminPlayerQuery] = useState("");
@@ -432,7 +446,7 @@ export default function AdminContestsPage() {
     if (preds.scorer?.answer) lines.push(`🌟 Man of the Match: *${preds.scorer.answer}*`);
     const matchTimeStr = new Date(match.matchTime).toLocaleString("ml-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" });
     const text = `🔮 *${member.name}-ന്റെ Predictions*\n\n⚽ *${match.teamHome} vs ${match.teamAway}*\n📅 ${matchTimeStr} IST\n\n${lines.join("\n")}\n\n🏟️ *Skorio WC 2026*`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    shareOrCopy(text, setCopyToast);
   };
 
   const handleDelete = async () => {
@@ -486,6 +500,11 @@ export default function AdminContestsPage() {
 
   return (
     <div className="space-y-6">
+      {copyToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-200 bg-green-600 text-white text-sm font-bold px-5 py-3 rounded-full shadow-xl">
+          {copyToast}
+        </div>
+      )}
       {/* Header */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

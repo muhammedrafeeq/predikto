@@ -102,9 +102,11 @@ export async function POST() {
         playersByTeam[row.team_name].push(row.name);
       }
 
-      // 4. Seed cards for each player inside a transaction
+      // 4. Seed cards for each player inside a transaction using a single bulk insert
       let cardCount = 0;
-      await client.query("BEGIN");
+      const values: any[] = [];
+      const valueStrings: string[] = [];
+      let paramIndex = 1;
 
       for (const [teamName, squad] of Object.entries(playersByTeam)) {
         const teamId = teamIdMap[teamName];
@@ -154,16 +156,22 @@ export async function POST() {
             defending: getRandomStat(minStat, maxStat),
           };
 
-          await client.query(
-            `INSERT INTO player_cards (team_id, player_name, position, jersey_number, rarity, overall_rating, stats)
-             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-            [teamId, playerName, position, jerseyNumber, rarity, overallRating, JSON.stringify(stats)]
-          );
+          valueStrings.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6})`);
+          values.push(teamId, playerName, position, jerseyNumber, rarity, overallRating, JSON.stringify(stats));
+          paramIndex += 7;
           cardCount++;
         }
       }
 
-      await client.query("COMMIT");
+      if (valueStrings.length > 0) {
+        await client.query("BEGIN");
+        const bulkInsertQuery = `
+          INSERT INTO player_cards (team_id, player_name, position, jersey_number, rarity, overall_rating, stats)
+          VALUES ${valueStrings.join(", ")}
+        `;
+        await client.query(bulkInsertQuery, values);
+        await client.query("COMMIT");
+      }
       return NextResponse.json({
         success: true,
         message: `Successfully seeded ${cardCount} player cards and ${Object.keys(teamIdMap).length} teams.`,

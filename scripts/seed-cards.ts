@@ -133,11 +133,12 @@ async function runSeed() {
       playersByTeam[row.team_name].push(row.name);
     }
 
-    // 4. Seed cards for each player
-    console.log("🏷️ Seeding player card definitions (in a single transaction)...");
+    // 4. Seed cards for each player inside a transaction using a single bulk insert
+    console.log("🏷️ Seeding player card definitions (in a single bulk query)...");
     let cardCount = 0;
-
-    await client.query("BEGIN");
+    const values: any[] = [];
+    const valueStrings: string[] = [];
+    let paramIndex = 1;
 
     for (const [teamName, squad] of Object.entries(playersByTeam)) {
       const teamId = teamIdMap[teamName];
@@ -151,10 +152,6 @@ async function runSeed() {
         const jerseyNumber = i + 1;
 
         // Position breakdown (exactly 26 players per squad, indexes 0 to 25)
-        // 0-1: GK (2)
-        // 2-9: DEF (8)
-        // 10-17: MID (8)
-        // 18-25: FWD (8)
         let position: "GK" | "DEF" | "MID" | "FWD" = "MID";
         if (i < 2) position = "GK";
         else if (i < 10) position = "DEF";
@@ -162,10 +159,6 @@ async function runSeed() {
         else position = "FWD";
 
         // Rarity tier breakdown: 14 Common, 8 Rare, 3 Epic, 1 Legendary
-        // 0-13: common
-        // 14-21: rare
-        // 22-24: epic
-        // 25: legendary
         let rarity: "common" | "rare" | "epic" | "legendary" = "common";
         let minRating = 60, maxRating = 74;
         let minStat = 45, maxStat = 74;
@@ -196,16 +189,22 @@ async function runSeed() {
           defending: getRandomStat(minStat, maxStat),
         };
 
-        await client.query(
-          `INSERT INTO player_cards (team_id, player_name, position, jersey_number, rarity, overall_rating, stats)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [teamId, playerName, position, jerseyNumber, rarity, overallRating, JSON.stringify(stats)]
-        );
+        valueStrings.push(`($${paramIndex}, $${paramIndex + 1}, $${paramIndex + 2}, $${paramIndex + 3}, $${paramIndex + 4}, $${paramIndex + 5}, $${paramIndex + 6})`);
+        values.push(teamId, playerName, position, jerseyNumber, rarity, overallRating, JSON.stringify(stats));
+        paramIndex += 7;
         cardCount++;
       }
     }
 
-    await client.query("COMMIT");
+    if (valueStrings.length > 0) {
+      await client.query("BEGIN");
+      const bulkInsertQuery = `
+        INSERT INTO player_cards (team_id, player_name, position, jersey_number, rarity, overall_rating, stats)
+        VALUES ${valueStrings.join(", ")}
+      `;
+      await client.query(bulkInsertQuery, values);
+      await client.query("COMMIT");
+    }
 
     console.log(`🎉 Seeding completed. Successfully created ${cardCount} player cards.`);
   } catch (error) {

@@ -87,7 +87,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div dangerouslySetInnerHTML={{ __html: "<!-- EZMob Site Validation Code: EZMYY87P4QHDLTVJR4F -->" }} />
         <Script id="json-ld" type="application/ld+json" strategy="beforeInteractive">{`
           {
             "@context": "https://schema.org",

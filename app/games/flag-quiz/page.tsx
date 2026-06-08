@@ -304,7 +304,7 @@ export default function FlagQuizPage() {
                   key={option}
                   onClick={() => handleAnswer(option)}
                   disabled={selected !== null}
-                  className={`p-4 rounded-2xl border font-bold text-sm transition-all ${btnClass}`}
+                  className={`py-3.5 px-2 rounded-2xl border font-bold text-xs sm:text-sm transition-all ${btnClass}`}
                 >
                   {option}
                 </button>

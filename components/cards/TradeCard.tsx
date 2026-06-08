@@ -120,9 +120,9 @@ export default function TradeCard({
       </div>
 
       {/* Cards side by side */}
-      <div className="flex items-center justify-around gap-4 py-2">
+      <div className="flex flex-col sm:flex-row items-center justify-around gap-4 py-2">
         {/* Left Side: Offered Card */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
           <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
             {isSender ? "You Offer" : "They Offer"}
           </span>
@@ -130,7 +130,7 @@ export default function TradeCard({
         </div>
 
         {/* Swap Icon */}
-        <div className="flex flex-col items-center justify-center bg-neutral-900 border border-neutral-800 w-10 h-10 rounded-full text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)]">
+        <div className="flex flex-col items-center justify-center bg-neutral-900 border border-neutral-800 w-10 h-10 rounded-full text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.2)] rotate-90 sm:rotate-0 shrink-0">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -148,7 +148,7 @@ export default function TradeCard({
         </div>
 
         {/* Right Side: Requested or Countered Card */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
           <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
             {isSender 
               ? (isCountered ? "They Propose" : "You Request") 

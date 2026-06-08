@@ -78,12 +78,12 @@ export default function PlayerCard({
   // Dimensions based on size prop
   const sizeClasses = {
     sm: {
-      container: "w-44 h-64 text-xs",
-      avatar: "w-14 h-14 text-sm",
-      rating: "text-xl",
-      name: "text-sm",
-      header: "mb-1",
-      statsGap: "gap-1",
+      container: "w-full max-w-[11rem] aspect-[11/16] text-[10px] sm:text-xs",
+      avatar: "w-12 h-12 sm:w-14 sm:h-14 text-[10px] sm:text-sm",
+      rating: "text-base sm:text-xl",
+      name: "text-xs sm:text-sm",
+      header: "mb-0.5 sm:mb-1",
+      statsGap: "gap-0.5 sm:gap-1",
     },
     md: {
       container: "w-64 h-96 text-sm",

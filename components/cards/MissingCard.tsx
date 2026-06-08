@@ -22,9 +22,9 @@ export default function MissingCard({
   // Dimensions based on size prop
   const sizeClasses = {
     sm: {
-      container: "w-44 h-64 text-xs",
-      icon: "text-3xl",
-      hintText: "text-[10px]",
+      container: "w-full max-w-[11rem] aspect-[11/16] text-[10px] sm:text-xs",
+      icon: "text-2xl sm:text-3xl",
+      hintText: "text-[9px] sm:text-[10px]",
     },
     md: {
       container: "w-64 h-96 text-sm",

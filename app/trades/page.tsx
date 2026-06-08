@@ -167,10 +167,10 @@ export default function TradesHubPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-neutral-800 mb-6 gap-2">
+      <div className="flex border-b border-neutral-800 mb-6 gap-2 overflow-x-auto whitespace-nowrap scrollbar-thin">
         <button
           onClick={() => setActiveTab("incoming")}
-          className={`px-4 py-3 text-xs uppercase tracking-widest font-black transition-all cursor-pointer ${
+          className={`px-4 py-3 text-xs uppercase tracking-widest font-black transition-all cursor-pointer shrink-0 ${
             activeTab === "incoming"
               ? "border-b-2 border-indigo-500 text-white"
               : "text-neutral-500 hover:text-neutral-300"
@@ -180,7 +180,7 @@ export default function TradesHubPage() {
         </button>
         <button
           onClick={() => setActiveTab("outgoing")}
-          className={`px-4 py-3 text-xs uppercase tracking-widest font-black transition-all cursor-pointer ${
+          className={`px-4 py-3 text-xs uppercase tracking-widest font-black transition-all cursor-pointer shrink-0 ${
             activeTab === "outgoing"
               ? "border-b-2 border-indigo-500 text-white"
               : "text-neutral-500 hover:text-neutral-300"

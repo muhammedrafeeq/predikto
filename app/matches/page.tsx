@@ -212,6 +212,18 @@ const MatchCard = ({
       }) + " IST"
     : "—";
 
+  const unlockTimestamp = match.matchTimestamp - 24 * 60 * 60 * 1000;
+  const unlockDate = tsValid
+    ? new Date(unlockTimestamp).toLocaleDateString("en-IN", {
+        day: "numeric", month: "short", timeZone: "Asia/Kolkata",
+      })
+    : "—";
+  const unlockTimeStr = tsValid
+    ? new Date(unlockTimestamp).toLocaleTimeString("en-IN", {
+        hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata",
+      }) + " IST"
+    : "—";
+
   const getTimerColour = (secs: number) => {
     if (secs < 300) return "text-red-400 animate-pulse";
     if (secs < 3600) return "text-amber-400";
@@ -259,7 +271,7 @@ const MatchCard = ({
               {locked && (
                 <div className="flex items-center gap-1.5 text-white/25">
                   <Lock className="w-3 h-3" />
-                  <span className="font-medium">Unlocks {kickoffDate}</span>
+                  <span className="font-medium">Unlocks {unlockDate} · {unlockTimeStr}</span>
                 </div>
               )}
 

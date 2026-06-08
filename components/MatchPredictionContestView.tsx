@@ -327,6 +327,14 @@ export default function MatchPredictionContestView({
             ? new Date(match.matchTimestamp).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" })
             : "—";
 
+          const unlockTimestamp = match.matchTimestamp - 24 * 60 * 60 * 1000;
+          const unlockDate = tsValid
+            ? new Date(unlockTimestamp).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", timeZone: "Asia/Kolkata" })
+            : "—";
+          const unlockTimeStr = tsValid
+            ? new Date(unlockTimestamp).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Kolkata" }) + " IST"
+            : "—";
+
           return (
             <React.Fragment key={match.id}>
             <div
@@ -356,8 +364,8 @@ export default function MatchPredictionContestView({
 
                     <div className="flex items-center gap-2 text-xs font-bold font-mono">
                       {locked && (
-                        <span className="text-white/20 text-[10px] uppercase font-bold flex items-center gap-1 font-sans">
-                          Unlocks {kickoffDate}
+                        <span className="text-white/20 text-[10px] uppercase font-bold flex items-center gap-1 font-sans text-right">
+                          Unlocks {unlockDate} · {unlockTimeStr}
                         </span>
                       )}
 

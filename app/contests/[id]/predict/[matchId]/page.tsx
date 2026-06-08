@@ -127,6 +127,18 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
     return () => clearInterval(interval);
   }, [countdown]);
 
+  // Auto-select winner based on scores
+  useEffect(() => {
+    if (loading) return;
+    if (scoreHome > scoreAway) {
+      setWinner("home");
+    } else if (scoreHome < scoreAway) {
+      setWinner("away");
+    } else {
+      setWinner("draw");
+    }
+  }, [scoreHome, scoreAway, loading]);
+
   const formatCountdown = (secs: number): string => {
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);

@@ -180,6 +180,18 @@ export default function PredictPage({ params }: PredictPageProps) {
     return () => clearInterval(interval);
   }, [countdown]);
 
+  // Auto-select winner based on scores
+  useEffect(() => {
+    if (loading) return;
+    if (scoreHome > scoreAway) {
+      setWinner("home");
+    } else if (scoreHome < scoreAway) {
+      setWinner("away");
+    } else {
+      setWinner("draw");
+    }
+  }, [scoreHome, scoreAway, loading]);
+
   // Format countdown into HH:MM:SS
   const formatCountdown = (secs: number): string => {
     const h = Math.floor(secs / 3600);

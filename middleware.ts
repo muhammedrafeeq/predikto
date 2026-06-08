@@ -44,13 +44,13 @@ export function middleware(request: NextRequest) {
   // Protected user routes (sub-routes only — base paths excluded)
   const isUserRoute =
     pathname.startsWith("/contests/") ||
-    pathname.startsWith("/matches") ||
+    pathname.startsWith("/matches/") ||
     pathname.startsWith("/leaderboard") ||
     pathname.startsWith("/history") ||
-    pathname.startsWith("/games") ||
+    pathname.startsWith("/games/") ||
     pathname.startsWith("/collection") ||
     pathname.startsWith("/trades") ||
-    pathname.startsWith("/onboarding");
+    pathname.startsWith("/onboarding/");
 
   if (isUserRoute && !isLoggedIn) {
     return NextResponse.redirect(new URL("/login", request.url));

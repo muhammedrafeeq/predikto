@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, LogOut, ShieldAlert, FileText, Mail, Trophy, User, UserPlus } from "lucide-react";
+import { Menu, X, LogOut, LogIn, ShieldAlert, FileText, Mail, Trophy, User, UserPlus } from "lucide-react";
 import NotificationBar from "./NotificationBar";
 
 interface TopBarProps {
@@ -231,22 +231,34 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
 
             {/* Logout / Create Account Footer */}
             <div className="border-t border-white/10 pt-4 mt-auto shrink-0 flex flex-col gap-2">
-              {userRole === "guest" && (
+              {userName ? (
+                <>
+                  {userRole === "guest" && (
+                    <button
+                      onClick={() => { setMenuOpen(false); router.push("/login"); }}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Create Real Account
+                    </button>
+                  )}
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </>
+              ) : (
                 <button
                   onClick={() => { setMenuOpen(false); router.push("/login"); }}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-primary text-on-primary hover:brightness-110 active:scale-[0.97] transition-all duration-200 cursor-pointer"
                 >
-                  <UserPlus className="w-4 h-4" />
-                  Create Real Account
+                  <LogIn className="w-4 h-4" />
+                  Sign In
                 </button>
               )}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
-              >
-                <LogOut className="w-4 h-4" />
-                Sign Out
-              </button>
             </div>
           </div>
         </div>

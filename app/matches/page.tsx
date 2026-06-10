@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   Timer, CheckCircle2, ChevronRight, Trophy, User,
   Shield, Zap, Star, Lock, Calendar, Download, History, Gamepad2,
 } from "lucide-react";
 import TopBar from "@/components/TopBar";
+import AuthModal from "@/components/AuthModal";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Match {
@@ -410,6 +411,24 @@ export default function MatchCenter() {
   const [user, setUser] = useState<{ name: string; points: number; role?: string } | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authHint, setAuthHint] = useState("");
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+
+  const gateAction = useCallback((hint: string, action: () => void) => {
+    if (!user) {
+      setAuthHint(hint);
+      setPendingAction(() => action);
+      setShowAuthModal(true);
+    } else {
+      action();
+    }
+  }, [user]);
+
+  const handleAuthSuccess = useCallback(() => {
+    setShowAuthModal(false);
+    window.location.reload();
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -654,7 +673,12 @@ export default function MatchCenter() {
                   key={match.id}
                   match={match}
                   index={idx}
-                  onNavigate={(path) => router.push(path)}
+                  onNavigate={(path) => {
+                    const hint = path.endsWith("/result")
+                      ? "Sign in to view match results"
+                      : "Sign in to predict this match";
+                    gateAction(hint, () => router.push(path));
+                  }}
                 />
               ))}
             </div>
@@ -689,6 +713,13 @@ export default function MatchCenter() {
             </a>
           )}
         </nav>
+
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => { setShowAuthModal(false); setPendingAction(null); }}
+          onSuccess={handleAuthSuccess}
+          hint={authHint}
+        />
       </div>
     </>
   );

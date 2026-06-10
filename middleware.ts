@@ -45,7 +45,7 @@ export function middleware(request: NextRequest) {
   const isUserRoute =
     pathname.startsWith("/contests/") ||
     pathname.startsWith("/matches/") ||
-    pathname.startsWith("/leaderboard") ||
+    pathname.startsWith("/leaderboard/") ||
     pathname.startsWith("/history") ||
     pathname.startsWith("/games/") ||
     pathname.startsWith("/collection") ||

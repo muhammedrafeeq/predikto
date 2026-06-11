@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Timer, CheckCircle2, Search, Minus, Send, Check, User, Trophy } from "lucide-react";
+import { ArrowLeft, Timer, CheckCircle2, Search, Minus, Plus, Send, Check, User, Trophy } from "lucide-react";
 import { useLang } from "@/components/LanguageProvider";
 
 interface PredictPageProps {
@@ -513,13 +513,19 @@ export default function PredictPage({ params }: PredictPageProps) {
 
               {/* Star player cards */}
               {(() => {
-                const stars = squadPlayers.filter(p => p.isStar);
-                if (stars.length === 0) return null;
+                const homePlayers = squadPlayers
+                  .filter(p => p.teamName.toLowerCase() === match.teamHome.toLowerCase())
+                  .slice(0, 4);
+                const awayPlayers = squadPlayers
+                  .filter(p => p.teamName.toLowerCase() === match.teamAway.toLowerCase())
+                  .slice(0, 4);
+                const displayPlayers = [...homePlayers, ...awayPlayers];
+                if (displayPlayers.length === 0) return null;
                 return (
                   <div className="flex flex-col gap-2">
                     <span className="text-[9px] font-black uppercase tracking-widest text-amber-400/70 flex items-center gap-1">⭐ Key Players</span>
                     <div className="grid grid-cols-2 gap-2">
-                      {stars.map((player) => {
+                      {displayPlayers.map((player) => {
                         const flag = getFlag(player.teamName);
                         const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
                         const isSelected = topScorer === player.name;

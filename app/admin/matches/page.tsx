@@ -238,20 +238,13 @@ export default function MatchManager() {
     setErrorMsg("");
     setSubmitting(true);
 
-    if (!teamHome.trim() || !teamAway.trim() || !matchTime || !deadline) {
+    if (!teamHome.trim() || !teamAway.trim() || !matchTime) {
       setErrorMsg("All fields are required");
       setSubmitting(false);
       return;
     }
 
     const kickoffDate = new Date(matchTime);
-    const deadlineDate = new Date(deadline);
-
-    if (deadlineDate >= kickoffDate) {
-      setErrorMsg("Prediction deadline must be set before the kickoff time");
-      setSubmitting(false);
-      return;
-    }
 
     try {
       const res = await fetch("/api/admin/matches", {
@@ -263,7 +256,7 @@ export default function MatchManager() {
           teamHomeMl: teamHomeMl.trim(),
           teamAwayMl: teamAwayMl.trim(),
           matchTime: kickoffDate.toISOString(),
-          deadline: deadlineDate.toISOString(),
+          deadline: kickoffDate.toISOString(),
         }),
       });
 
@@ -751,19 +744,6 @@ export default function MatchManager() {
                   required
                   value={matchTime}
                   onChange={(e) => setMatchTime(e.target.value)}
-                  className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none font-mono"
-                  type="datetime-local"
-                />
-              </div>
-
-              <div>
-                <label className="block label-md text-on-surface-variant mb-1">
-                  Prediction Deadline
-                </label>
-                <input
-                  required
-                  value={deadline}
-                  onChange={(e) => setDeadline(e.target.value)}
                   className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none font-mono"
                   type="datetime-local"
                 />

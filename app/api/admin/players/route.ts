@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     let res;
     if (team) {
       res = await query(
-        `SELECT DISTINCT name, name_ml AS "nameMl", team_name AS "teamName", is_star
+        `SELECT DISTINCT name, team_name AS "teamName", is_star
          FROM players
          WHERE LOWER(team_name) = LOWER($1)
          ORDER BY name ASC`,
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       );
     } else if (q.length >= 2) {
       res = await query(
-        `SELECT DISTINCT name, name_ml AS "nameMl", team_name AS "teamName", is_star
+        `SELECT DISTINCT name, team_name AS "teamName", is_star
          FROM players
          WHERE name ILIKE $1
          ORDER BY name ASC
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       );
     } else {
       res = await query(
-        `SELECT DISTINCT name, name_ml AS "nameMl", team_name AS "teamName", is_star
+        `SELECT DISTINCT name, team_name AS "teamName", is_star
          FROM players
          ORDER BY name ASC
          LIMIT 50`
@@ -48,13 +48,13 @@ export async function GET(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     await requireAdmin();
-    const { name, teamName, nameMl, is_star } = await req.json();
+    const { name, teamName, is_star } = await req.json();
     if (!name || !teamName) {
       return NextResponse.json({ error: "name and teamName are required" }, { status: 400 });
     }
     await query(
-      `UPDATE players SET name_ml = $1, is_star = COALESCE($2, is_star) WHERE name = $3 AND LOWER(team_name) = LOWER($4)`,
-      [nameMl ?? '', is_star ?? null, name, teamName]
+      `UPDATE players SET is_star = COALESCE($1, is_star) WHERE name = $2 AND LOWER(team_name) = LOWER($3)`,
+      [is_star ?? null, name, teamName]
     );
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -67,15 +67,15 @@ export async function PUT(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();
-    const { name, teamName, nameMl } = await req.json();
+    const { name, teamName } = await req.json();
     if (!name || !teamName) {
       return NextResponse.json({ error: "name and teamName are required" }, { status: 400 });
     }
     await query(
-      `INSERT INTO players (name, team_name, name_ml)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (team_name, name) DO UPDATE SET name_ml = EXCLUDED.name_ml`,
-      [name, teamName, nameMl ?? '']
+      `INSERT INTO players (name, team_name)
+       VALUES ($1, $2)
+       ON CONFLICT (team_name, name) DO NOTHING`,
+      [name, teamName]
     );
     return NextResponse.json({ success: true });
   } catch (error) {

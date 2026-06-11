@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Timer, CheckCircle2, Search, Minus, Plus, Send, Check, User, Trophy } from "lucide-react";
-import { useLang } from "@/components/LanguageProvider";
+
 
 interface PredictPageProps {
   params: Promise<{ id: string }>;
@@ -86,46 +86,24 @@ const getFlag = (name: string) => {
 
 
 const T = {
-  en: {
-    matchWinner: "MATCH WINNER",
-    optional: "(Optional)",
-    draw: "Draw",
-    motm: "MAN OF THE MATCH",
-    typeOrSelect: "Type or select player...",
-    typeAnyPlayer: "Type any player name directly if they aren't shown in suggestions.",
-    noMatchingPlayers: 'No matching squad players. Click "Use" above to submit this name.',
-    predictCustom: "Predict custom player name",
-    use: "Use",
-    exactScoreline: "EXACT SCORELINE",
-    submitPrediction: "Submit Prediction",
-    submitting: "Submitting...",
-    predictionsClosedBanner: "Predictions closed for this fixture",
-    predictionsClosedTimer: "Predictions Closed",
-    closesIn: "Closes in",
-    loadingText: "Loading Fixture Setup...",
-    fixtureNotFound: "Fixture not found or invalid ID.",
-    returnToArena: "Return to Arena",
-  },
-  ml: {
-    matchWinner: "മത്സര വിജയി",
-    optional: "(ഐച്ഛിക)",
-    draw: "സമനില",
-    motm: "മാൻ ഓഫ് ദ മാച്ച്",
-    typeOrSelect: "കളിക്കാരൻ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ തിരഞ്ഞെടുക്കുക...",
-    typeAnyPlayer: "നിർദ്ദേശങ്ങളിൽ ഇല്ലെങ്കിൽ, പേര് നേരിട്ട് ടൈപ്പ് ചെയ്യുക.",
-    noMatchingPlayers: "കളിക്കാരനെ കണ്ടെത്തിയില്ല. മുകളിൽ \"ഉപയോഗിക്കുക\" ക്ലിക്ക് ചെയ്യുക.",
-    predictCustom: "കസ്‌റ്റം കളിക്കാരൻ",
-    use: "ഉപയോഗിക്കുക",
-    exactScoreline: "കൃത്യമായ സ്കോർ",
-    submitPrediction: "പ്രവചനം സമർപ്പിക്കുക",
-    submitting: "സമർപ്പിക്കുന്നു...",
-    predictionsClosedBanner: "ഈ മത്സരത്തിനുള്ള പ്രവചനം അടഞ്ഞു",
-    predictionsClosedTimer: "പ്രവചനം അടഞ്ഞു",
-    closesIn: "ഇതിൽ അടയ്ക്കുന്നു",
-    loadingText: "ലോഡ് ചെയ്യുന്നു...",
-    fixtureNotFound: "ഫിക്‌ചർ കണ്ടെത്തിയില്ല.",
-    returnToArena: "മത്സരങ്ങളിലേക്ക് മടങ്ങുക",
-  },
+  matchWinner: "MATCH WINNER",
+  optional: "(Optional)",
+  draw: "Draw",
+  motm: "MAN OF THE MATCH",
+  typeOrSelect: "Type or select player...",
+  typeAnyPlayer: "Type any player name directly if they aren't shown in suggestions.",
+  noMatchingPlayers: 'No matching squad players. Click "Use" above to submit this name.',
+  predictCustom: "Predict custom player name",
+  use: "Use",
+  exactScoreline: "EXACT SCORELINE",
+  submitPrediction: "Submit Prediction",
+  submitting: "Submitting...",
+  predictionsClosedBanner: "Predictions closed for this fixture",
+  predictionsClosedTimer: "Predictions Closed",
+  closesIn: "Closes in",
+  loadingText: "Loading Fixture Setup...",
+  fixtureNotFound: "Fixture not found or invalid ID.",
+  returnToArena: "Return to Arena",
 } as const;
 
 interface Question {
@@ -139,8 +117,7 @@ export default function PredictPage({ params }: PredictPageProps) {
   const router = useRouter();
   const { id } = use(params);
 
-  const { lang } = useLang();
-  const t = T[lang];
+  const t = T;
   const motmInputRef = useRef<HTMLInputElement>(null);
 
   // Loaded states
@@ -148,7 +125,7 @@ export default function PredictPage({ params }: PredictPageProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<{ name: string; points: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [squadPlayers, setSquadPlayers] = useState<{ name: string; nameMl: string; teamName: string; is_star: boolean }[]>([]);
+  const [squadPlayers, setSquadPlayers] = useState<{ name: string; teamName: string; is_star: boolean }[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Form selections and counters states
@@ -334,7 +311,7 @@ export default function PredictPage({ params }: PredictPageProps) {
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-base-bg text-on-surface bg-pitch">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <p className="text-sm text-on-surface-variant animate-pulse font-mono">
-          {T.en.loadingText}
+          {t.loadingText}
         </p>
       </div>
     );
@@ -343,9 +320,9 @@ export default function PredictPage({ params }: PredictPageProps) {
   if (!match) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-base-bg text-on-surface bg-pitch p-6 text-center">
-        <p className="text-lg text-error font-semibold">{T.en.fixtureNotFound}</p>
+        <p className="text-lg text-error font-semibold">{t.fixtureNotFound}</p>
         <button onClick={() => router.push("/matches")} className="bg-primary text-on-primary px-6 py-2 rounded-full font-bold">
-          {T.en.returnToArena}
+          {t.returnToArena}
         </button>
       </div>
     );
@@ -353,8 +330,8 @@ export default function PredictPage({ params }: PredictPageProps) {
 
   const homeStyle = getTeamStyle(match.teamHome);
   const awayStyle = getTeamStyle(match.teamAway);
-  const homeLabel = (lang === "ml" && match.teamHomeMl) ? match.teamHomeMl : match.teamHome;
-  const awayLabel = (lang === "ml" && match.teamAwayMl) ? match.teamAwayMl : match.teamAway;
+  const homeLabel = match.teamHome;
+  const awayLabel = match.teamAway;
   const kickoff = new Date(match.matchTime);
   const kickoffText =
     kickoff.toLocaleDateString("en-IN", { month: "short", day: "numeric", timeZone: "Asia/Kolkata" }) +
@@ -527,7 +504,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     <div className="grid grid-cols-2 gap-2">
                       {displayPlayers.map((player) => {
                         const flag = getFlag(player.teamName);
-                        const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
+                        const displayName = player.name;
                         const isSelected = topScorer === player.name;
                         return (
                           <button
@@ -618,12 +595,8 @@ export default function PredictPage({ params }: PredictPageProps) {
                       .map((player) => {
                         const is_star = player.is_star;
                         const flag = getFlag(player.teamName);
-                        const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
-                        const teamDisplay = (lang === "ml" && match.teamHomeMl && player.teamName.toLowerCase() === match.teamHome.toLowerCase())
-                          ? match.teamHomeMl
-                          : (lang === "ml" && match.teamAwayMl && player.teamName.toLowerCase() === match.teamAway.toLowerCase())
-                          ? match.teamAwayMl
-                          : player.teamName;
+                        const displayName = player.name;
+                        const teamDisplay = player.teamName;
                         return (
                           <div
                             key={player.name}

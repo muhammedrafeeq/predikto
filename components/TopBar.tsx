@@ -94,19 +94,6 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
           )}
 
           <NotificationBar />
-          <button
-            onClick={toggleLang}
-            aria-label="Toggle language"
-            className="px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all duration-200 cursor-pointer select-none"
-            style={{
-              color: "var(--color-primary)",
-              borderColor: "color-mix(in srgb, var(--color-primary) 30%, transparent)",
-              background: "color-mix(in srgb, var(--color-primary) 8%, transparent)",
-            }}
-          >
-            {lang === "en" ? "മലയാളം" : "EN"}
-          </button>
-          <ThemeToggle />
 
           {/* Avatar */}
           <div
@@ -222,26 +209,6 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
               ))}
 
               <div className="h-px my-4" style={{ background: "var(--glass-border)" }} />
-
-              {/* Theme & Language Toggle Row */}
-              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg" style={{ background: "var(--glass-bg-1)", border: "1px solid var(--glass-border)" }}>
-                <span className="text-xs font-semibold" style={{ color: "var(--nav-link-color)" }}>Appearance</span>
-                <ThemeToggle />
-              </div>
-              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg" style={{ background: "var(--glass-bg-1)", border: "1px solid var(--glass-border)" }}>
-                <span className="text-xs font-semibold" style={{ color: "var(--nav-link-color)" }}>Language</span>
-                <button
-                  onClick={toggleLang}
-                  className="px-3 py-1 rounded-full text-[11px] font-bold border transition-all duration-200 cursor-pointer select-none"
-                  style={{
-                    color: "var(--color-primary)",
-                    borderColor: "color-mix(in srgb, var(--color-primary) 30%, transparent)",
-                    background: "color-mix(in srgb, var(--color-primary) 8%, transparent)",
-                  }}
-                >
-                  {lang === "en" ? "മലയാളം" : "English"}
-                </button>
-              </div>
 
               <div className="h-px my-2" style={{ background: "var(--glass-border)" }} />
 

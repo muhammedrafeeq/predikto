@@ -514,10 +514,10 @@ export default function PredictPage({ params }: PredictPageProps) {
               {/* Star player cards */}
               {(() => {
                 const homePlayers = squadPlayers
-                  .filter(p => p.teamName.toLowerCase() === match.teamHome.toLowerCase())
+                  .filter(p => p.teamName.toLowerCase() === match.teamHome.toLowerCase() && p.isStar)
                   .slice(0, 4);
                 const awayPlayers = squadPlayers
-                  .filter(p => p.teamName.toLowerCase() === match.teamAway.toLowerCase())
+                  .filter(p => p.teamName.toLowerCase() === match.teamAway.toLowerCase() && p.isStar)
                   .slice(0, 4);
                 const displayPlayers = [...homePlayers, ...awayPlayers];
                 if (displayPlayers.length === 0) return null;
@@ -535,14 +535,14 @@ export default function PredictPage({ params }: PredictPageProps) {
                             key={player.name}
                             disabled={hasClosed}
                             onPointerDown={(e) => { e.preventDefault(); handleScorerChipClick(player.name); setDropdownOpen(false); }}
-                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all active:scale-95 cursor-pointer ${
+                            className={`flex items-center gap-2 px-3.5 py-3 rounded-xl border text-left transition-all active:scale-95 cursor-pointer ${
                               isSelected
                                 ? "bg-amber-400/15 border-amber-400/40"
                                 : "bg-white/3 border-white/8 hover:border-amber-400/30 hover:bg-amber-400/8"
                             } ${hasClosed ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             {flag && <img src={flag} alt={player.teamName} className="w-6 h-4 object-cover rounded-sm shrink-0 opacity-80" />}
-                            <span className={`text-sm font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"}`}>
+                            <span className={`text-base font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"}`}>
                               {displayName}
                             </span>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-auto" />}

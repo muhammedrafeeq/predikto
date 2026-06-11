@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
 CREATE TABLE IF NOT EXISTS contests (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    name_ml VARCHAR(100) DEFAULT '',
     tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
     game_type VARCHAR(50) NOT NULL, -- 'match_prediction', 'first_goal', 'formation', 'bracket'
     join_code VARCHAR(10) UNIQUE NOT NULL,

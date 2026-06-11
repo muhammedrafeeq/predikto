@@ -268,7 +268,7 @@ export default function ContestDetailPage() {
 
         {/* Navigation Tabs */}
         <section className="mb-6 fade-up">
-          <div className="flex border-b border-white/5 text-center">
+          <div className="flex gap-2 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
             {[
               { id: "play", label: "Play Game", count: null },
               { id: "standings", label: "Standings", count: null },
@@ -279,9 +279,16 @@ export default function ContestDetailPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex-1 py-3 text-xs font-black uppercase tracking-wider border-b-2 transition-colors cursor-pointer ${
-                    isActive ? "text-primary border-primary" : "text-white/30 border-transparent hover:text-white/50"
-                  }`}
+                  className="flex-1 py-2.5 text-xs font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                  style={isActive ? {
+                    background: "linear-gradient(135deg, rgba(198,192,255,0.18), rgba(99,102,241,0.22))",
+                    border: "1px solid rgba(198,192,255,0.25)",
+                    color: "var(--color-primary)",
+                    boxShadow: "0 2px 12px rgba(198,192,255,0.12)",
+                  } : {
+                    color: "rgba(255,255,255,0.35)",
+                    border: "1px solid transparent",
+                  }}
                 >
                   {tab.label} {tab.count !== null && `(${tab.count})`}
                 </button>

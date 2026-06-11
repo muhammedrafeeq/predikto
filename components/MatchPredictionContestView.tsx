@@ -108,7 +108,7 @@ const TeamFlag = ({ name, locked = false }: { name: string; locked?: boolean }) 
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent pointer-events-none" />
       </div>
-      <span className={`text-center font-bold text-[11px] leading-tight tracking-wide max-w-[80px] ${locked ? "text-white/30" : "text-white/90"}`}>
+      <span className={`text-center font-black text-sm leading-tight tracking-wide max-w-20 ${locked ? "text-white/30" : "text-white"}`}>
         {name}
       </span>
     </div>
@@ -369,12 +369,6 @@ export default function MatchPredictionContestView({
                         </span>
                       )}
 
-                      {!locked && match.secondsLeft !== undefined && match.secondsLeft > 0 && (
-                        <span className={match.secondsLeft < 3600 ? "text-red-400 animate-pulse" : "text-primary"}>
-                          {formatCountdown(match.secondsLeft, match.matchTimestamp)}
-                        </span>
-                      )}
-
                       {match.status === "Resulted" && match.pointsEarned !== undefined && (
                         <span className="text-amber-400 font-bold flex items-center gap-0.5">
                           <Star className="w-3.5 h-3.5 fill-amber-400" /> +{match.pointsEarned} pts
@@ -388,6 +382,20 @@ export default function MatchPredictionContestView({
                       )}
                     </div>
                   </div>
+
+                  {/* Deadline + Countdown row */}
+                  {!locked && match.secondsLeft !== undefined && match.secondsLeft > 0 && (
+                    <div className="flex flex-col items-center gap-1 py-2 px-3 rounded-xl"
+                      style={{ background: match.secondsLeft < 3600 ? "rgba(239,68,68,0.08)" : "rgba(198,192,255,0.06)", border: match.secondsLeft < 3600 ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(198,192,255,0.12)" }}>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-white/30 flex items-center gap-1">
+                        <Timer className="w-2.5 h-2.5" /> Deadline · {match.kickoffTime}
+                      </span>
+                      <span className={`text-xl font-black font-mono tracking-tight ${match.secondsLeft < 3600 ? "text-red-400 animate-pulse" : "text-primary"}`}
+                        style={{ textShadow: match.secondsLeft < 3600 ? "0 0 12px rgba(239,68,68,0.4)" : "0 0 12px rgba(198,192,255,0.3)" }}>
+                        {formatCountdown(match.secondsLeft, match.matchTimestamp)}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Team grid */}
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">
@@ -440,9 +448,10 @@ export default function MatchPredictionContestView({
                       <div className="flex gap-2 w-full">
                         <button
                           onClick={() => onNavigate(`/contests/${contestId}/predict/${match.id}`)}
-                          className="flex-1 py-2 border border-white/10 hover:bg-white/5 text-white/50 hover:text-white rounded-xl text-xs font-bold transition-all"
+                          className="flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 hover:brightness-110"
+                          style={{ background: "linear-gradient(135deg, rgba(198,192,255,0.15), rgba(99,102,241,0.2))", border: "1px solid rgba(198,192,255,0.25)", color: "var(--color-primary)" }}
                         >
-                          Change
+                          Change Prediction
                         </button>
                         <button
                           onClick={() => handleShare(match)}

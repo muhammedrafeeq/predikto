@@ -360,7 +360,15 @@ export default function MatchPredictionContestView({
                 <div className="p-4 flex flex-col gap-4">
                   {/* Top Bar Status / Countdown */}
                   <div className="flex justify-between items-center">
-                    <StatusBadge status={match.status} />
+                    <div className="flex items-center gap-2">
+                      <StatusBadge status={match.status} />
+                      {!locked && match.secondsLeft !== undefined && match.secondsLeft > 0 && (
+                        <span className={`text-xs font-black font-mono flex items-center gap-1 ${match.secondsLeft < 3600 ? "text-red-400 animate-pulse" : "text-primary"}`}>
+                          <Timer className="w-3 h-3" />
+                          {formatCountdown(match.secondsLeft, match.matchTimestamp)}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex items-center gap-2 text-xs font-bold font-mono">
                       {locked && (
@@ -382,20 +390,6 @@ export default function MatchPredictionContestView({
                       )}
                     </div>
                   </div>
-
-                  {/* Deadline + Countdown row */}
-                  {!locked && match.secondsLeft !== undefined && match.secondsLeft > 0 && (
-                    <div className="flex flex-col items-center gap-1 py-2 px-3 rounded-xl"
-                      style={{ background: match.secondsLeft < 3600 ? "rgba(239,68,68,0.08)" : "rgba(198,192,255,0.06)", border: match.secondsLeft < 3600 ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(198,192,255,0.12)" }}>
-                      <span className="text-[9px] font-bold uppercase tracking-widest text-white/30 flex items-center gap-1">
-                        <Timer className="w-2.5 h-2.5" /> Deadline · {match.kickoffTime}
-                      </span>
-                      <span className={`text-xl font-black font-mono tracking-tight ${match.secondsLeft < 3600 ? "text-red-400 animate-pulse" : "text-primary"}`}
-                        style={{ textShadow: match.secondsLeft < 3600 ? "0 0 12px rgba(239,68,68,0.4)" : "0 0 12px rgba(198,192,255,0.3)" }}>
-                        {formatCountdown(match.secondsLeft, match.matchTimestamp)}
-                      </span>
-                    </div>
-                  )}
 
                   {/* Team grid */}
                   <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-1">

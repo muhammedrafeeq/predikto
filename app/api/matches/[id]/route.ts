@@ -36,7 +36,7 @@ export async function GET(
 
     // 3. Fetch Players for both teams
     const playersRes = await query(
-      `SELECT name, name_ml as "nameMl", team_name as "teamName", is_star as "isStar"
+      `SELECT name, name_ml as "nameMl", team_name as "teamName", is_star
        FROM players
        WHERE LOWER(team_name) = LOWER($1) OR LOWER(team_name) = LOWER($2)
        ORDER BY is_star DESC NULLS LAST, name ASC`,

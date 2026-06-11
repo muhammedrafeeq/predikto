@@ -148,7 +148,7 @@ export default function PredictPage({ params }: PredictPageProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<{ name: string; points: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [squadPlayers, setSquadPlayers] = useState<{ name: string; nameMl: string; teamName: string; isStar: boolean }[]>([]);
+  const [squadPlayers, setSquadPlayers] = useState<{ name: string; nameMl: string; teamName: string; is_star: boolean }[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Form selections and counters states
@@ -543,7 +543,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                           >
                             {flag && <img src={flag} alt={player.teamName} className="w-6 h-4 object-cover rounded-sm shrink-0 opacity-80" />}
                             <span className={`text-base font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"} flex items-center gap-1`}>
-                              {player.isStar && <span className="text-amber-400 text-xs shrink-0">⭐</span>}
+                              {player.is_star && <span className="text-amber-400 text-xs shrink-0">⭐</span>}
                               <span className="truncate">{displayName}</span>
                             </span>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-auto" />}
@@ -616,7 +616,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     squadPlayers
                       .filter(p => p.name.toLowerCase().includes(topScorer.toLowerCase()))
                       .map((player) => {
-                        const isStar = player.isStar;
+                        const is_star = player.is_star;
                         const flag = getFlag(player.teamName);
                         const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
                         const teamDisplay = (lang === "ml" && match.teamHomeMl && player.teamName.toLowerCase() === match.teamHome.toLowerCase())
@@ -635,7 +635,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                             className="flex items-center justify-between px-5 py-3.5 hover:bg-white/5 cursor-pointer transition-colors text-left"
                           >
                             <div className="flex items-center gap-2">
-                              {isStar && <span className="text-amber-400 text-xs">⭐</span>}
+                              {is_star && <span className="text-amber-400 text-xs">⭐</span>}
                               <span className="text-[15px] font-semibold text-white/95">{displayName}</span>
                             </div>
                             <div className="flex items-center gap-2">

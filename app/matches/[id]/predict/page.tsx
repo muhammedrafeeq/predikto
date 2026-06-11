@@ -542,8 +542,9 @@ export default function PredictPage({ params }: PredictPageProps) {
                             } ${hasClosed ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             {flag && <img src={flag} alt={player.teamName} className="w-6 h-4 object-cover rounded-sm shrink-0 opacity-80" />}
-                            <span className={`text-base font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"}`}>
-                              {displayName}
+                            <span className={`text-base font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"} flex items-center gap-1`}>
+                              {player.isStar && <span className="text-amber-400 text-xs shrink-0">⭐</span>}
+                              <span className="truncate">{displayName}</span>
                             </span>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-auto" />}
                           </button>

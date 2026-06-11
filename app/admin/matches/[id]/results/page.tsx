@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -17,6 +17,8 @@ import {
   ShieldAlert,
   Clock,
   Users,
+  Share2,
+  Loader2,
 } from "lucide-react";
 
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -93,6 +95,9 @@ export default function ResultEntry({
   const [awayFormation, setAwayFormation] = useState("");
   const [entries, setEntries] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sharingImage, setSharingImage] = useState(false);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadData() {
@@ -296,6 +301,89 @@ export default function ResultEntry({
     e.userPhone.includes(searchQuery)
   );
 
+  const handleSharePredictionsImage = async () => {
+    if (sharingImage || !match) return;
+    setSharingImage(true);
+    setCopyToast(null);
+
+    try {
+      const el = shareCardRef.current;
+      if (!el) throw new Error("Share card element not found");
+
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(el, {
+        backgroundColor: "#0e0c1a",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+      });
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (b) => {
+            if (b) resolve(b);
+            else reject(new Error("Canvas toBlob failed"));
+          },
+          "image/png",
+          0.95
+        );
+      });
+
+      const file = new File([blob], "skorio-predictions.png", { type: "image/png" });
+      const shareText = `⚽ ${match.teamHome} vs ${match.teamAway} — All user predictions on Skorio! 🏆`;
+
+      // 1. Try native mobile share
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          text: shareText,
+        });
+        return;
+      }
+
+      // 2. Try copying image to clipboard
+      if (typeof window !== "undefined" && "ClipboardItem" in window) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({
+              "image/png": blob,
+            }),
+          ]);
+          setCopyToast("📋 Image copied to clipboard! Paste in WhatsApp");
+          setTimeout(() => setCopyToast(null), 4000);
+          return;
+        } catch (clipErr) {
+          console.warn("Clipboard image write failed, falling back", clipErr);
+        }
+      }
+
+      // 3. Last resort: Download image file and open WhatsApp link
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${match.teamHome}-vs-${match.teamAway}-predictions.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      setCopyToast("💾 Image downloaded! Share it to WhatsApp");
+      setTimeout(() => setCopyToast(null), 4000);
+
+      // Open WhatsApp Web/App
+      window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, "_blank");
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        console.error("Failed to share predictions image:", err);
+        setCopyToast("❌ Failed to generate share image");
+        setTimeout(() => setCopyToast(null), 3000);
+      }
+    } finally {
+      setSharingImage(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
@@ -308,7 +396,12 @@ export default function ResultEntry({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {copyToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] bg-green-600 text-white text-sm font-bold px-5 py-3 rounded-full shadow-xl select-none">
+          {copyToast}
+        </div>
+      )}
       {/* Back CTA */}
       <button
         onClick={() => router.push("/admin/matches")}
@@ -676,7 +769,7 @@ export default function ResultEntry({
           {/* User Predictions List */}
           <section className="surface-glass-1 rounded-xl p-6 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div>
+              <div className="flex flex-col gap-1">
                 <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2 select-none">
                   <Users className="w-4 h-4 text-primary" /> User Predictions ({entries.length})
                 </h3>
@@ -684,15 +777,31 @@ export default function ResultEntry({
                   All submitted tips for this fixture before result computation
                 </p>
               </div>
-              <div className="relative w-full sm:w-48">
-                <input
-                  type="text"
-                  placeholder="Search user..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#050507] border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary placeholder:text-white/20"
-                />
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSharePredictionsImage}
+                  disabled={sharingImage || entries.length === 0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366]/10 border border-[#25D366]/25 hover:bg-[#25D366]/20 text-[#25D366] text-xs font-bold rounded-lg cursor-pointer transition-all disabled:opacity-50 shrink-0"
+                  title="Share predictions image to WhatsApp"
+                >
+                  {sharingImage ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Share2 className="w-3.5 h-3.5" />
+                  )}
+                  Share Image
+                </button>
+                <div className="relative w-full sm:w-48">
+                  <input
+                    type="text"
+                    placeholder="Search user..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-[#050507] border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary placeholder:text-white/20"
+                  />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
+                </div>
               </div>
             </div>
 
@@ -823,6 +932,97 @@ export default function ResultEntry({
           </div>
         </div>
       </div>
+
+      {/* Hidden predictions share card - captured by html2canvas */}
+      {match && (
+        <div
+          ref={shareCardRef}
+          style={{
+            position: "fixed",
+            left: "-9999px",
+            top: 0,
+            width: "420px",
+            background: "#0e0c1a",
+            borderRadius: "16px",
+            padding: "20px",
+            fontFamily: "Arial, sans-serif",
+            color: "#fff",
+            border: "1px solid rgba(168,85,247,0.25)",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Header */}
+          <div style={{ display: "table", width: "100%", marginBottom: "16px" }}>
+            <div style={{ display: "table-row" }}>
+              <div style={{ display: "table-cell", fontSize: "16px", fontWeight: 900, color: "#a855f7" }}>
+                SKO<span style={{ color: "#fff" }}>RIO</span>
+              </div>
+              <div style={{ display: "table-cell", textAlign: "right", fontSize: "9px", fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                FIFA WC 2026 · Predictions
+              </div>
+            </div>
+          </div>
+
+          {/* Teams Header */}
+          <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "12px", marginBottom: "16px", padding: "12px 16px" }}>
+            <div style={{ fontSize: "10px", fontWeight: 800, color: "#a855f7", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "6px", textAlign: "center" }}>
+              Upcoming Fixture
+            </div>
+            <div style={{ fontSize: "16px", fontWeight: 900, textTransform: "uppercase", textAlign: "center", letterSpacing: "0.02em" }}>
+              {match.teamHome} <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>vs</span> {match.teamAway}
+            </div>
+            <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", textAlign: "center", marginTop: "4px", fontFamily: "monospace" }}>
+              {new Date(match.matchTime).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })} IST
+            </div>
+          </div>
+
+          {/* Predictions Table */}
+          <div style={{ marginBottom: "12px" }}>
+            <div style={{ fontSize: "9px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)", marginBottom: "8px" }}>
+              User Tips ({entries.length} total)
+            </div>
+
+            <div style={{ display: "table", width: "100%", borderCollapse: "collapse" }}>
+              {/* Table Header */}
+              <div style={{ display: "table-row", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+                <div style={{ display: "table-cell", padding: "6px 4px", fontSize: "8px", fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>User</div>
+                <div style={{ display: "table-cell", padding: "6px 4px", fontSize: "8px", fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Winner</div>
+                <div style={{ display: "table-cell", padding: "6px 4px", fontSize: "8px", fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Score</div>
+                <div style={{ display: "table-cell", padding: "6px 4px", fontSize: "8px", fontWeight: 800, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>MOTM</div>
+              </div>
+
+              {/* Table Rows (Max 15 for image layout) */}
+              {entries.slice(0, 15).map((entry, idx) => (
+                <div key={entry.userId} style={{ display: "table-row", background: idx % 2 === 0 ? "rgba(255,255,255,0.01)" : "transparent" }}>
+                  <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "10px", fontWeight: 700 }}>
+                    {entry.userName.split(" ").slice(0, 2).join(" ")}
+                  </div>
+                  <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "9px", color: "rgba(255,255,255,0.7)" }}>
+                    {entry.predictions.winner?.answer || "-"}
+                  </div>
+                  <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "9px", fontWeight: "bold", color: "#a855f7", fontFamily: "monospace" }}>
+                    {entry.predictions.score?.answer || "-"}
+                  </div>
+                  <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "9px", color: "rgba(255,255,255,0.7)" }}>
+                    {entry.predictions.scorer?.answer || "-"}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {entries.length > 15 && (
+              <div style={{ textAlign: "center", fontSize: "9px", color: "rgba(255,255,255,0.4)", marginTop: "8px", fontStyle: "italic" }}>
+                + {entries.length - 15} more user predictions on Skorio
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{ textAlign: "center", fontSize: "10px", color: "rgba(255,255,255,0.2)", letterSpacing: "0.04em", paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            skorio.app · Predict & Win 🏆
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Timer, CheckCircle2, Search, Plus, Minus, Send, Check, User, Trophy } from "lucide-react";
+import { ArrowLeft, Timer, CheckCircle2, Search, Minus, Send, Check, User, Trophy } from "lucide-react";
 import { useLang } from "@/components/LanguageProvider";
 
 interface PredictPageProps {
@@ -601,24 +601,6 @@ export default function PredictPage({ params }: PredictPageProps) {
                   onPointerDown={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
                 >
-                  {/* Option to use custom typed text if not empty */}
-                  {topScorer.trim() !== "" && (
-                    <div
-                      onPointerDown={(e) => {
-                        e.preventDefault();
-                        setTopScorer(topScorer.trim());
-                        setDropdownOpen(false);
-                      }}
-                      className="flex items-center gap-3 px-5 py-4 hover:bg-white/10 border-b border-white/5 cursor-pointer transition-colors text-left"
-                    >
-                      <Plus className="w-5 h-5 text-primary shrink-0" />
-                      <div className="flex flex-col">
-                        <span className="text-base font-semibold text-white/95">{t.use} "{topScorer.trim()}"</span>
-                        <span className="text-xs text-white/40 font-medium">{t.predictCustom}</span>
-                      </div>
-                    </div>
-                  )}
-
                   {squadPlayers.filter(p => p.name.toLowerCase().includes(topScorer.toLowerCase())).length === 0 ? (
                     <div className="p-4 text-sm text-white/40 text-center select-none">
                       {t.noMatchingPlayers}

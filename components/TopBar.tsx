@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, LogOut, LogIn, ShieldAlert, FileText, Mail, Trophy, User, UserPlus } from "lucide-react";
 import NotificationBar from "./NotificationBar";
+import ThemeToggle from "./ThemeToggle";
 
 interface TopBarProps {
   userName?: string;
@@ -28,9 +29,7 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
   const getInitials = (name?: string) => {
     if (!name) return "U";
     const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return name.substring(0, 2).toUpperCase();
   };
 
@@ -39,83 +38,75 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
       <header
         className="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-3 h-16"
         style={{
-          background: "rgba(10,10,15,0.85)",
+          background: "var(--header-bg)",
           backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          borderBottom: "1px solid var(--header-border)",
         }}
       >
-        {/* Left Side: Logo & App Title */}
+        {/* Logo */}
         <div className="flex items-center gap-2 cursor-pointer select-none" onClick={() => router.push("/")}>
           <img src="/skorio-logo.png" alt="Skorio Logo" className="w-8 h-8 object-contain rounded-lg" />
           <h1 className="text-xl font-extrabold tracking-tighter text-primary">
-            SKO<span className="text-white">RIO</span>
+            SKO<span style={{ color: "var(--nav-link-active)" }}>RIO</span>
           </h1>
         </div>
 
-        {/* Center: Desktop-only Navigation Links */}
+        {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
-          <button
-            onClick={() => router.push("/")}
-            className={`label-md transition-colors cursor-pointer ${
-              activeTab === "contests" ? "text-primary font-black" : "text-white/60 hover:text-white"
-            }`}
-          >
-            Contests
-          </button>
-          <button
-            onClick={() => router.push("/matches")}
-            className={`label-md transition-colors cursor-pointer ${
-              activeTab === "matches" ? "text-primary font-black" : "text-white/60 hover:text-white"
-            }`}
-          >
-            Matches
-          </button>
-          <button
-            onClick={() => router.push("/leaderboard")}
-            className={`label-md transition-colors cursor-pointer ${
-              activeTab === "rankings" ? "text-primary font-black" : "text-white/60 hover:text-white"
-            }`}
-          >
-            Rankings
-          </button>
-          <button
-            onClick={() => router.push("/history")}
-            className={`label-md transition-colors cursor-pointer ${
-              activeTab === "history" ? "text-primary font-black" : "text-white/60 hover:text-white"
-            }`}
-          >
-            History
-          </button>
+          {(["contests", "matches", "rankings", "history"] as const).map((tab) => {
+            const labels: Record<string, string> = {
+              contests: "Contests", matches: "Matches", rankings: "Rankings", history: "History",
+            };
+            const routes: Record<string, string> = {
+              contests: "/", matches: "/matches", rankings: "/leaderboard", history: "/history",
+            };
+            return (
+              <button
+                key={tab}
+                onClick={() => router.push(routes[tab])}
+                className="label-md transition-colors cursor-pointer"
+                style={{
+                  color: activeTab === tab ? "var(--color-primary)" : "var(--nav-link-color)",
+                  fontWeight: activeTab === tab ? 900 : undefined,
+                }}
+              >
+                {labels[tab]}
+              </button>
+            );
+          })}
         </nav>
 
-        {/* Right Side: User stats & Menu trigger */}
-        <div className="flex items-center gap-3">
+        {/* Right Side */}
+        <div className="flex items-center gap-2">
           {userName && (
             <div className="hidden sm:flex flex-col items-end text-right select-none">
-              <span className="text-white/90 text-xs font-bold leading-tight">{userName}</span>
+              <span className="text-xs font-bold leading-tight" style={{ color: "var(--nav-link-active)" }}>
+                {userName}
+              </span>
               {typeof userPoints === "number" && (
-                <span className="text-amber-400 font-extrabold text-[10px] tracking-wide leading-none mt-0.5">
+                <span className="text-amber-500 font-extrabold text-[10px] tracking-wide leading-none mt-0.5">
                   {userPoints} PTS
                 </span>
               )}
             </div>
           )}
 
-          {/* Bell Icon for match notifications */}
           <NotificationBar />
+          <ThemeToggle />
 
-          {/* User Initials Avatar Icon */}
+          {/* Avatar */}
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-xs select-none shadow-[0_0_12px_rgba(168,85,247,0.3)] border border-white/10"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white font-black text-xs select-none border border-white/10"
             style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)" }}
           >
             {getInitials(userName)}
           </div>
 
-          {/* Premium Hamburger Menu Trigger Button */}
+          {/* Hamburger */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200 active:scale-95 cursor-pointer"
+            className="p-1.5 rounded-lg transition-all duration-200 active:scale-95 cursor-pointer"
+            style={{ color: "var(--nav-icon-color)" }}
             title="Open Menu"
           >
             <Menu className="w-5 h-5" />
@@ -123,20 +114,20 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
         </div>
       </header>
 
-      {/* ── Slide-in Navigation Menu Drawer ── */}
+      {/* Slide-in Drawer */}
       {menuOpen && (
         <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Backdrop Blur Overlay */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            className="absolute inset-0 backdrop-blur-sm transition-opacity duration-300"
+            style={{ background: "var(--overlay-bg)" }}
             onClick={() => setMenuOpen(false)}
           />
 
-          {/* Drawer Panel content */}
           <div
-            className="relative w-64 h-full bg-slate-950/95 border-l border-white/10 flex flex-col shadow-2xl p-6 z-10 animate-slide-in-right"
+            className="relative w-64 h-full flex flex-col shadow-2xl p-6 z-10 animate-slide-in-right"
             style={{
-              background: "linear-gradient(180deg, rgba(15,15,25,0.98) 0%, rgba(5,5,10,0.99) 100%)",
+              background: "var(--drawer-bg)",
+              borderLeft: "1px solid var(--drawer-border)",
             }}
           >
             <style>{`
@@ -149,23 +140,29 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
               }
             `}</style>
 
-            {/* Header: Logo & Close */}
+            {/* Drawer Header */}
             <div className="flex justify-between items-center mb-8 shrink-0">
               <div className="flex items-center gap-2">
                 <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-md" />
-                <span className="font-extrabold text-white text-base tracking-tight">SKORIO</span>
+                <span className="font-extrabold text-base tracking-tight" style={{ color: "var(--nav-link-active)" }}>
+                  SKORIO
+                </span>
               </div>
               <button
                 onClick={() => setMenuOpen(false)}
-                className="p-1.5 hover:bg-white/10 rounded-full text-white/50 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-full transition-colors cursor-pointer"
+                style={{ color: "var(--nav-icon-color)" }}
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* User Profile Info section */}
+            {/* User Profile */}
             {userName && (
-              <div className="flex items-center gap-3 p-3 bg-white/[0.03] border border-white/5 rounded-xl mb-6 shrink-0">
+              <div
+                className="flex items-center gap-3 p-3 rounded-xl mb-6 shrink-0"
+                style={{ background: "var(--glass-bg-1)", border: "1px solid var(--glass-border)" }}
+              >
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black text-sm select-none border border-white/10"
                   style={{ background: "linear-gradient(135deg, #a855f7, #6366f1)" }}
@@ -173,70 +170,89 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
                   {getInitials(userName)}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-white font-bold text-sm truncate leading-tight">{userName}</p>
-                  <p className="text-white/40 text-[10px] mt-0.5 font-bold uppercase tracking-wider">
+                  <p className="font-bold text-sm truncate leading-tight" style={{ color: "var(--nav-link-active)" }}>
+                    {userName}
+                  </p>
+                  <p className="text-[10px] mt-0.5 font-bold uppercase tracking-wider" style={{ color: "var(--nav-link-color)" }}>
                     {userRole === "admin" ? "Admin Staff" : userRole === "guest" ? "Guest Player" : "Competitor"}
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Menu Links navigation list */}
+            {/* Nav Links */}
             <div className="flex-1 flex flex-col gap-2 overflow-y-auto">
-              <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest px-2 mb-1">Navigation</span>
-              <button
-                onClick={() => { setMenuOpen(false); router.push("/"); }}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all hover:bg-white/5 text-left cursor-pointer ${
-                  activeTab === "contests" ? "text-primary bg-primary/5" : "text-white/70 hover:text-white"
-                }`}
-              >
-                <Trophy className="w-4 h-4" />
-                Contests Dashboard
-              </button>
-              <button
-                onClick={() => { setMenuOpen(false); router.push("/matches"); }}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all hover:bg-white/5 text-left cursor-pointer ${
-                  activeTab === "matches" ? "text-primary bg-primary/5" : "text-white/70 hover:text-white"
-                }`}
-              >
-                <User className="w-4 h-4" />
-                Matches Predictor
-              </button>
+              <span className="text-[9px] font-bold uppercase tracking-widest px-2 mb-1" style={{ color: "var(--nav-link-color)", opacity: 0.5 }}>
+                Navigation
+              </span>
 
-              <div className="h-px bg-white/10 my-4" />
+              {[
+                { tab: "contests", label: "Contests Dashboard", route: "/", Icon: Trophy },
+                { tab: "matches", label: "Matches Predictor", route: "/matches", Icon: User },
+              ].map(({ tab, label, route, Icon }) => (
+                <button
+                  key={tab}
+                  onClick={() => { setMenuOpen(false); router.push(route); }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all text-left cursor-pointer"
+                  style={{
+                    color: activeTab === tab ? "var(--color-primary)" : "var(--nav-link-color)",
+                    background: activeTab === tab ? "color-mix(in srgb, var(--color-primary) 8%, transparent)" : undefined,
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "var(--nav-hover-bg)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = activeTab === tab
+                    ? "color-mix(in srgb, var(--color-primary) 8%, transparent)" : "transparent")}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </button>
+              ))}
 
-              <span className="text-[9px] font-bold text-white/20 uppercase tracking-widest px-2 mb-1">Information</span>
-              <button
-                onClick={() => { setMenuOpen(false); router.push("/privacy-policy"); }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-white/70 hover:text-white hover:bg-white/5 transition-all text-left cursor-pointer"
-              >
-                <FileText className="w-4 h-4 text-violet-400" />
-                Privacy Policy
-              </button>
-              <button
-                onClick={() => { setMenuOpen(false); router.push("/terms-conditions"); }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-white/70 hover:text-white hover:bg-white/5 transition-all text-left cursor-pointer"
-              >
-                <ShieldAlert className="w-4 h-4 text-sky-400" />
-                Terms & Conditions
-              </button>
-              <button
-                onClick={() => { setMenuOpen(false); router.push("/contact-us"); }}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold text-white/70 hover:text-white hover:bg-white/5 transition-all text-left cursor-pointer"
-              >
-                <Mail className="w-4 h-4 text-amber-400" />
-                Contact Us
-              </button>
+              <div className="h-px my-4" style={{ background: "var(--glass-border)" }} />
+
+              {/* Theme Toggle Row */}
+              <div className="flex items-center justify-between px-3 py-2.5 rounded-lg" style={{ background: "var(--glass-bg-1)", border: "1px solid var(--glass-border)" }}>
+                <span className="text-xs font-semibold" style={{ color: "var(--nav-link-color)" }}>Appearance</span>
+                <ThemeToggle />
+              </div>
+
+              <div className="h-px my-2" style={{ background: "var(--glass-border)" }} />
+
+              <span className="text-[9px] font-bold uppercase tracking-widest px-2 mb-1" style={{ color: "var(--nav-link-color)", opacity: 0.5 }}>
+                Information
+              </span>
+
+              {[
+                { label: "Privacy Policy", route: "/privacy-policy", Icon: FileText, iconColor: "#a78bfa" },
+                { label: "Terms & Conditions", route: "/terms-conditions", Icon: ShieldAlert, iconColor: "#38bdf8" },
+                { label: "Contact Us", route: "/contact-us", Icon: Mail, iconColor: "#fbbf24" },
+              ].map(({ label, route, Icon, iconColor }) => (
+                <button
+                  key={route}
+                  onClick={() => { setMenuOpen(false); router.push(route); }}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all text-left cursor-pointer"
+                  style={{ color: "var(--nav-link-color)" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = "var(--nav-hover-bg)")}
+                  onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+                >
+                  <Icon className="w-4 h-4" style={{ color: iconColor }} />
+                  {label}
+                </button>
+              ))}
             </div>
 
-            {/* Logout / Create Account Footer */}
-            <div className="border-t border-white/10 pt-4 mt-auto shrink-0 flex flex-col gap-2">
+            {/* Footer */}
+            <div className="pt-4 mt-auto shrink-0 flex flex-col gap-2" style={{ borderTop: "1px solid var(--glass-border)" }}>
               {userName ? (
                 <>
                   {userRole === "guest" && (
                     <button
                       onClick={() => { setMenuOpen(false); router.push("/login"); }}
-                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-primary/10 border border-primary/30 text-primary hover:bg-primary hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold border transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                      style={{
+                        background: "color-mix(in srgb, var(--color-primary) 10%, transparent)",
+                        borderColor: "color-mix(in srgb, var(--color-primary) 30%, transparent)",
+                        color: "var(--color-primary)",
+                      }}
                     >
                       <UserPlus className="w-4 h-4" />
                       Create Real Account
@@ -244,7 +260,7 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
                   )}
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 active:scale-[0.97] cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign Out

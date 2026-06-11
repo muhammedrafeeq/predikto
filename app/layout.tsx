@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { AdProvider } from "@/lib/AdContext";
+import ThemeProvider from "@/components/ThemeProvider";
 import Script from "next/script";
 
 const geistSans = localFont({
@@ -99,10 +100,12 @@ export default function RootLayout({
             "author": { "@type": "Organization", "name": "Skorio" }
           }
         `}</Script>
-        <AdProvider>
-          {children}
-          <PwaInstallPrompt />
-        </AdProvider>
+        <ThemeProvider>
+          <AdProvider>
+            {children}
+            <PwaInstallPrompt />
+          </AdProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

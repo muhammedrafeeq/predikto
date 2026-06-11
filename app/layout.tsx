@@ -4,6 +4,7 @@ import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
 import { AdProvider } from "@/lib/AdContext";
 import ThemeProvider from "@/components/ThemeProvider";
+import LanguageProvider from "@/components/LanguageProvider";
 import Script from "next/script";
 
 const geistSans = localFont({
@@ -101,10 +102,12 @@ export default function RootLayout({
           }
         `}</Script>
         <ThemeProvider>
-          <AdProvider>
-            {children}
-            <PwaInstallPrompt />
-          </AdProvider>
+          <LanguageProvider>
+            <AdProvider>
+              {children}
+              <PwaInstallPrompt />
+            </AdProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

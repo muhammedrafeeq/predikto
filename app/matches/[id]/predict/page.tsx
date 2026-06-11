@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Timer, CheckCircle2, Search, Plus, Minus, Send, Check, User, Trophy, Languages } from "lucide-react";
+import { ArrowLeft, Timer, CheckCircle2, Search, Plus, Minus, Send, Check, User, Trophy } from "lucide-react";
+import { useLang } from "@/components/LanguageProvider";
 
 interface PredictPageProps {
   params: Promise<{ id: string }>;
@@ -125,7 +126,6 @@ const T = {
     returnToArena: "മത്സരങ്ങളിലേക്ക് മടങ്ങുക",
   },
 } as const;
-type Lang = keyof typeof T;
 
 interface Question {
   id: number;
@@ -138,7 +138,7 @@ export default function PredictPage({ params }: PredictPageProps) {
   const router = useRouter();
   const { id } = use(params);
 
-  const [lang, setLang] = useState<Lang>("en");
+  const { lang } = useLang();
   const t = T[lang];
   const motmInputRef = useRef<HTMLInputElement>(null);
 
@@ -382,14 +382,6 @@ export default function PredictPage({ params }: PredictPageProps) {
         </div>
         
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setLang(l => l === "en" ? "ml" : "en")}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-white/10 hover:border-primary/50 transition-colors text-xs font-bold text-on-surface-variant hover:text-primary cursor-pointer select-none"
-            aria-label="Toggle language"
-          >
-            <Languages className="w-3.5 h-3.5" />
-            {lang === "en" ? "മലയാളം" : "English"}
-          </button>
           {user && (
             <span className="text-xs text-on-surface-variant font-bold font-mono">{user.points} pts</span>
           )}
@@ -423,7 +415,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     {homeStyle.code}
                   </div>
                 )}
-                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 break-words w-full">{homeLabel}</span>
+                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 wrap-break-word w-full">{homeLabel}</span>
               </div>
 
               <div className="flex flex-col items-center gap-1 w-1/3">
@@ -443,7 +435,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     {awayStyle.code}
                   </div>
                 )}
-                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 break-words w-full">{awayLabel}</span>
+                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 wrap-break-word w-full">{awayLabel}</span>
               </div>
             </div>
 
@@ -645,7 +637,7 @@ export default function PredictPage({ params }: PredictPageProps) {
               <Trophy className="w-4 h-4 text-outline" />
               {t.exactScoreline} <span className="text-primary font-bold">*</span>
             </label>
-            <div className="surface-glass-1 rounded-lg p-4 flex items-center justify-center gap-6 h-full min-h-[160px]">
+            <div className="surface-glass-1 rounded-lg p-4 flex items-center justify-center gap-6 h-full min-h-40">
               
               {/* Home Team Score Counter */}
               <div className="flex flex-col items-center gap-3">
@@ -723,7 +715,7 @@ export default function PredictPage({ params }: PredictPageProps) {
             type="button"
             onClick={handleSubmit}
             disabled={submitStatus !== "idle"}
-            className={`group relative w-full max-w-md h-14 bg-gradient-to-r from-primary-container to-inverse-primary rounded-md overflow-hidden transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-lg select-none ${
+            className={`group relative w-full max-w-md h-14 bg-linear-to-r from-primary-container to-inverse-primary rounded-md overflow-hidden transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer shadow-lg select-none ${
               submitStatus !== "idle" ? "pointer-events-none" : "hover:brightness-105"
             }`}
           >

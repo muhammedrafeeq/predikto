@@ -58,7 +58,7 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
   const [match, setMatch] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [squadPlayers, setSquadPlayers] = useState<{ name: string; teamName: string }[]>([]);
+  const [squadPlayers, setSquadPlayers] = useState<{ name: string; teamName: string; is_star: boolean }[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Selections
@@ -418,7 +418,7 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
                     onMouseDown={() => { setTopScorer(p.name); setDropdownOpen(false); }}
                     className="px-4 py-2 hover:bg-white/5 cursor-pointer text-xs text-white/80 flex items-center justify-between"
                   >
-                    <span>{p.name}</span>
+                    <span className="flex items-center gap-1">{p.is_star && <span className="text-amber-400 text-[10px]">⭐</span>}{p.name}</span>
                     <span className="text-[8px] uppercase tracking-wider text-white/30">{p.teamName}</span>
                   </div>
                 ))}
@@ -435,7 +435,7 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
                   onClick={() => setTopScorer(p.name)}
                   className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/8 rounded-full text-[10px] text-white/60 hover:text-white transition-colors cursor-pointer"
                 >
-                  {p.name}
+                  {p.is_star && <span className="text-amber-400 mr-0.5">⭐</span>}{p.name}
                 </button>
               ))}
             </div>

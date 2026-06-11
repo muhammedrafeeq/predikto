@@ -48,10 +48,10 @@ export async function GET(
 
     // 4. Fetch Players for both teams (for first scorer option list)
     const playersRes = await query(
-      `SELECT name, team_name as "teamName"
+      `SELECT name, team_name as "teamName", is_star
        FROM players
        WHERE LOWER(team_name) = LOWER($1) OR LOWER(team_name) = LOWER($2)
-       ORDER BY name ASC`,
+       ORDER BY is_star DESC NULLS LAST, name ASC`,
       [match.teamHome, match.teamAway]
     );
 

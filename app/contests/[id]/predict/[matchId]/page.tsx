@@ -440,7 +440,6 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
                   <span className="text-[9px] font-black uppercase tracking-widest text-amber-400/70 flex items-center gap-1">⭐ Key Players</span>
                   <div className="grid grid-cols-2 gap-2">
                     {displayPlayers.map((player) => {
-                      const flag = getFlag(player.teamName);
                       const displayName = player.name;
                       const isSelected = topScorer === player.name;
                       return (
@@ -449,15 +448,13 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
                           key={player.name}
                           disabled={hasClosed}
                           onPointerDown={(e) => { e.preventDefault(); setTopScorer(player.name); setDropdownOpen(false); }}
-                          className={`flex items-center gap-2 px-3.5 py-3 rounded-xl border text-left transition-all active:scale-95 cursor-pointer ${
+                          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all active:scale-95 cursor-pointer ${
                             isSelected
                               ? "bg-amber-400/15 border-amber-400/40"
                               : "bg-white/3 border-white/8 hover:border-amber-400/30 hover:bg-amber-400/8"
                           } ${hasClosed ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
-                          {flag && <img src={flag} alt={player.teamName} className="w-6 h-4 object-cover rounded-sm shrink-0 opacity-80" />}
-                          <span className={`text-base font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"} flex items-center gap-1`}>
-                            {player.is_star && <span className="text-amber-400 text-xs shrink-0">⭐</span>}
+                          <span className={`text-xs font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"} flex items-center gap-1 w-full`}>
                             <span className="truncate">{displayName}</span>
                           </span>
                           {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-auto" />}

@@ -425,20 +425,49 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
               </div>
             )}
 
-            {/* Quick Star Suggestion Chips */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {squadPlayers.slice(0, 4).map((p) => (
-                <button
-                  type="button"
-                  key={p.name}
-                  disabled={hasClosed}
-                  onClick={() => setTopScorer(p.name)}
-                  className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/8 rounded-full text-[10px] text-white/60 hover:text-white transition-colors cursor-pointer"
-                >
-                  {p.is_star && <span className="text-amber-400 mr-0.5">⭐</span>}{p.name}
-                </button>
-              ))}
-            </div>
+            {/* Star player cards */}
+            {(() => {
+              const homePlayers = squadPlayers
+                .filter(p => p.teamName.toLowerCase() === match.teamHome.toLowerCase() && p.is_star)
+                .slice(0, 4);
+              const awayPlayers = squadPlayers
+                .filter(p => p.teamName.toLowerCase() === match.teamAway.toLowerCase() && p.is_star)
+                .slice(0, 4);
+              const displayPlayers = [...homePlayers, ...awayPlayers];
+              if (displayPlayers.length === 0) return null;
+              return (
+                <div className="flex flex-col gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-amber-400/70 flex items-center gap-1">⭐ Key Players</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {displayPlayers.map((player) => {
+                      const flag = getFlag(player.teamName);
+                      const displayName = player.name;
+                      const isSelected = topScorer === player.name;
+                      return (
+                        <button
+                          type="button"
+                          key={player.name}
+                          disabled={hasClosed}
+                          onPointerDown={(e) => { e.preventDefault(); setTopScorer(player.name); setDropdownOpen(false); }}
+                          className={`flex items-center gap-2 px-3.5 py-3 rounded-xl border text-left transition-all active:scale-95 cursor-pointer ${
+                            isSelected
+                              ? "bg-amber-400/15 border-amber-400/40"
+                              : "bg-white/3 border-white/8 hover:border-amber-400/30 hover:bg-amber-400/8"
+                          } ${hasClosed ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          {flag && <img src={flag} alt={player.teamName} className="w-6 h-4 object-cover rounded-sm shrink-0 opacity-80" />}
+                          <span className={`text-base font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"} flex items-center gap-1`}>
+                            {player.is_star && <span className="text-amber-400 text-xs shrink-0">⭐</span>}
+                            <span className="truncate">{displayName}</span>
+                          </span>
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-auto" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </section>
 

@@ -491,10 +491,10 @@ export default function PredictPage({ params }: PredictPageProps) {
               {/* Star player cards */}
               {(() => {
                 const homePlayers = squadPlayers
-                  .filter(p => p.teamName.toLowerCase() === match.teamHome.toLowerCase())
+                  .filter(p => p.teamName.toLowerCase() === match.teamHome.toLowerCase() && p.is_star)
                   .slice(0, 4);
                 const awayPlayers = squadPlayers
-                  .filter(p => p.teamName.toLowerCase() === match.teamAway.toLowerCase())
+                  .filter(p => p.teamName.toLowerCase() === match.teamAway.toLowerCase() && p.is_star)
                   .slice(0, 4);
                 const displayPlayers = [...homePlayers, ...awayPlayers];
                 if (displayPlayers.length === 0) return null;

@@ -41,6 +41,7 @@ async function shareOrCopy(text: string, setToast: (msg: string | null) => void)
 interface Contest {
   id: number;
   name: string;
+  nameMl?: string;
   gameType: string;
   joinCode: string;
   createdAt: string;
@@ -103,6 +104,7 @@ export default function AdminContestsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [newName, setNewName] = useState("");
+  const [newNameMl, setNewNameMl] = useState("");
   const [newGameTypes, setNewGameTypes] = useState<string[]>(["match_prediction"]);
   const [newIsPublic, setNewIsPublic] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -138,6 +140,13 @@ export default function AdminContestsPage() {
   const [adminScorerOpen, setAdminScorerOpen] = useState(false);
   const [adminPlayers, setAdminPlayers] = useState<{ id: number; name: string }[]>([]);
   const [adminPlayerQuery, setAdminPlayerQuery] = useState("");
+
+  // Rename modal
+  const [renameContest, setRenameContest] = useState<Contest | null>(null);
+  const [renameName, setRenameName] = useState("");
+  const [renameNameMl, setRenameNameMl] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [renameError, setRenameError] = useState("");
 
   // Delete modal
   const [deleteContest, setDeleteContest] = useState<Contest | null>(null);
@@ -179,6 +188,7 @@ export default function AdminContestsPage() {
   const openCreate = async () => {
     setShowCreate(true);
     setNewName("");
+    setNewNameMl("");
     setNewGameTypes(["match_prediction"]);
     setNewIsPublic(false);
     setCreateError("");
@@ -211,6 +221,7 @@ export default function AdminContestsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newName.trim(),
+          nameMl: newNameMl.trim(),
           tournamentId: 1,
           gameTypes: newGameTypes,
           isPublic: newIsPublic,
@@ -469,6 +480,44 @@ export default function AdminContestsPage() {
     }
   };
 
+  const openRename = (contest: Contest) => {
+    setRenameContest(contest);
+    setRenameName(contest.name);
+    setRenameNameMl(contest.nameMl ?? "");
+    setRenameError("");
+  };
+
+  const handleRename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renameContest) return;
+    if (!renameName.trim()) { setRenameError("Contest name is required"); return; }
+    setRenaming(true);
+    try {
+      const res = await fetch(`/api/admin/contests/${renameContest.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rename", name: renameName.trim(), nameMl: renameNameMl.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setContests((prev) =>
+          prev.map((c) =>
+            c.id === renameContest.id
+              ? { ...c, name: data.contest.name, nameMl: data.contest.nameMl }
+              : c
+          )
+        );
+        setRenameContest(null);
+      } else {
+        setRenameError(data.error || "Failed to rename contest");
+      }
+    } catch {
+      setRenameError("Network error. Please try again.");
+    } finally {
+      setRenaming(false);
+    }
+  };
+
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
@@ -596,6 +645,9 @@ export default function AdminContestsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-col gap-1 flex-1 min-w-0">
                     <h3 className="font-bold text-white text-base truncate">{contest.name}</h3>
+                    {contest.nameMl && (
+                      <p className="text-xs text-on-surface-variant/70 truncate" lang="ml">{contest.nameMl}</p>
+                    )}
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${meta.color}`}>
                         {meta.label}
@@ -607,6 +659,13 @@ export default function AdminContestsPage() {
                       )}
                     </div>
                   </div>
+                  <button
+                    onClick={() => openRename(contest)}
+                    className="p-2 hover:bg-primary/10 rounded-lg text-on-surface-variant hover:text-primary transition-all shrink-0"
+                    title="Rename contest"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
                   <button
                     onClick={() => setDeleteContest(contest)}
                     className="p-2 hover:bg-error/10 rounded-lg text-on-surface-variant hover:text-error transition-all shrink-0"
@@ -703,6 +762,19 @@ export default function AdminContestsPage() {
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Premier League Predictor"
                   className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary/20 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block label-md text-on-surface-variant mb-1.5">
+                  Contest Name (Malayalam) <span className="text-white/30 font-normal text-xs">optional</span>
+                </label>
+                <input
+                  value={newNameMl}
+                  onChange={(e) => setNewNameMl(e.target.value)}
+                  placeholder="ഉദാ. പ്രീമിയർ ലീഗ് പ്രെഡിക്ടർ"
+                  className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-on-surface focus:border-secondary focus:ring-1 focus:ring-secondary/20 focus:outline-none"
+                  lang="ml"
                 />
               </div>
 
@@ -1170,6 +1242,74 @@ export default function AdminContestsPage() {
                 Remove
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Rename Contest Modal ── */}
+      {renameContest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-md surface-glass-1 rounded-2xl p-6 flex flex-col gap-5 shadow-2xl border border-white/10">
+            <header className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-5 h-5 text-primary" />
+                <h3 className="headline-md font-bold text-white">Rename Contest</h3>
+              </div>
+              <button
+                onClick={() => setRenameContest(null)}
+                className="p-1.5 hover:bg-white/10 rounded-full text-on-surface-variant hover:text-white transition-colors"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </header>
+
+            {renameError && (
+              <div className="p-3 bg-error/10 border border-error/30 text-error rounded-lg text-sm">{renameError}</div>
+            )}
+
+            <form onSubmit={handleRename} className="flex flex-col gap-4">
+              <div>
+                <label className="block label-md text-on-surface-variant mb-1.5">Contest Name</label>
+                <input
+                  required
+                  autoFocus
+                  value={renameName}
+                  onChange={(e) => setRenameName(e.target.value)}
+                  placeholder="Contest name"
+                  className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block label-md text-on-surface-variant mb-1.5">
+                  Contest Name (Malayalam) <span className="text-white/30 font-normal text-xs">optional</span>
+                </label>
+                <input
+                  value={renameNameMl}
+                  onChange={(e) => setRenameNameMl(e.target.value)}
+                  placeholder="മലയാളം പേര്"
+                  className="w-full bg-surface-container-low border border-outline-variant rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary/20 focus:outline-none"
+                  lang="ml"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setRenameContest(null)}
+                  className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg font-bold text-sm text-on-surface transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={renaming}
+                  className="flex-1 py-3 bg-primary text-on-primary rounded-lg font-bold text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {renaming ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : <><Save className="w-4 h-4" /> Save</>}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

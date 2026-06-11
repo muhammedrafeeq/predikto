@@ -43,6 +43,9 @@ export async function POST() {
     await query(`CREATE INDEX IF NOT EXISTS idx_game_scores_user      ON game_scores(user_id)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_game_scores_game_type ON game_scores(game_type)`);
 
+    // Add name_ml column to contests if not exists
+    await query(`ALTER TABLE contests ADD COLUMN IF NOT EXISTS name_ml VARCHAR(100) DEFAULT ''`);
+
     return NextResponse.json({ success: true, message: "Tables created" });
   } catch (error) {
     console.error("Migration error:", error);

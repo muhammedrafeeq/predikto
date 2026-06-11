@@ -88,7 +88,7 @@ export async function DELETE(
   }
 }
 
-// PATCH /api/admin/contests/[id] — add or remove a member
+// PATCH /api/admin/contests/[id] — add or remove a member, or rename contest
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -96,11 +96,30 @@ export async function PATCH(
   try {
     await requireAdmin();
     const { id } = await params;
-    const body = await request.json() as { action: "add" | "remove"; userId: number };
+    const body = await request.json() as { action: "add" | "remove" | "rename"; userId?: number; name?: string; nameMl?: string };
     const { action, userId } = body;
 
-    if (!action || !userId) {
-      return NextResponse.json({ error: "action and userId are required" }, { status: 400 });
+    if (!action) {
+      return NextResponse.json({ error: "action is required" }, { status: 400 });
+    }
+
+    if (action === "rename") {
+      const { name, nameMl } = body;
+      if (!name || !name.trim()) {
+        return NextResponse.json({ error: "name is required" }, { status: 400 });
+      }
+      const res = await query(
+        `UPDATE contests SET name = $1, name_ml = $2 WHERE id = $3 RETURNING id, name, name_ml AS "nameMl"`,
+        [name.trim(), (nameMl ?? "").trim(), id]
+      );
+      if (res.rowCount === 0) {
+        return NextResponse.json({ error: "Contest not found" }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, contest: res.rows[0] });
+    }
+
+    if (!userId) {
+      return NextResponse.json({ error: "userId is required" }, { status: 400 });
     }
 
     if (action === "add") {

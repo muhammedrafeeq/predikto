@@ -26,6 +26,7 @@ export async function GET() {
       `SELECT
         c.id,
         c.name,
+        c.name_ml         AS "nameMl",
         c.game_type       AS "gameType",
         c.game_types      AS "gameTypes",
         c.join_code       AS "joinCode",
@@ -53,8 +54,9 @@ export async function POST(request: Request) {
   try {
     await requireAdmin();
     const body = await request.json();
-    const { name, tournamentId, gameType, gameTypes, isPublic } = body as {
+    const { name, nameMl, tournamentId, gameType, gameTypes, isPublic } = body as {
       name?: string;
+      nameMl?: string;
       tournamentId?: number;
       gameType?: string;
       gameTypes?: string[];
@@ -90,10 +92,10 @@ export async function POST(request: Request) {
     const joinCode = await generateUniqueJoinCode();
 
     const res = await query(
-      `INSERT INTO contests (name, tournament_id, game_type, game_types, join_code, is_public)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, name, game_type AS "gameType", game_types AS "gameTypes", join_code AS "joinCode", created_at AS "createdAt", is_public AS "isPublic"`,
-      [name.trim(), tId, primaryGameType, resolvedGameTypes, joinCode, !!isPublic]
+      `INSERT INTO contests (name, name_ml, tournament_id, game_type, game_types, join_code, is_public)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id, name, name_ml AS "nameMl", game_type AS "gameType", game_types AS "gameTypes", join_code AS "joinCode", created_at AS "createdAt", is_public AS "isPublic"`,
+      [name.trim(), (nameMl ?? "").trim(), tId, primaryGameType, resolvedGameTypes, joinCode, !!isPublic]
     );
 
     const contest = res.rows[0];

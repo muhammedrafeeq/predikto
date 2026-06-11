@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   try {
     await requireAdmin();
     const body = await request.json();
-    const { teamHome, teamAway, matchTime, deadline } = body;
+    const { teamHome, teamAway, teamHomeMl, teamAwayMl, matchTime, deadline } = body;
 
     if (!teamHome || !teamAway || !matchTime || !deadline) {
       return NextResponse.json(
@@ -57,10 +57,10 @@ export async function POST(request: Request) {
 
     // Insert match
     const matchRes = await query(
-      `INSERT INTO matches (team_home, team_away, match_time, deadline, status)
-       VALUES ($1, $2, $3, $4, 'upcoming')
+      `INSERT INTO matches (team_home, team_away, team_home_ml, team_away_ml, match_time, deadline, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'upcoming')
        RETURNING id, team_home as "teamHome", team_away as "teamAway", match_time as "matchTime", deadline, status`,
-      [teamHome, teamAway, new Date(matchTime), new Date(deadline)]
+      [teamHome, teamAway, teamHomeMl || '', teamAwayMl || '', new Date(matchTime), new Date(deadline)]
     );
 
     const match = matchRes.rows[0];

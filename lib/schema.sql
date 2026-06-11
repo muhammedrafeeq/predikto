@@ -47,6 +47,8 @@ CREATE TABLE IF NOT EXISTS matches (
     tournament_id INTEGER REFERENCES tournaments(id) ON DELETE CASCADE,
     team_home VARCHAR(100) NOT NULL,
     team_away VARCHAR(100) NOT NULL,
+    team_home_ml VARCHAR(100) DEFAULT '',
+    team_away_ml VARCHAR(100) DEFAULT '',
     match_time TIMESTAMP WITH TIME ZONE NOT NULL,
     deadline TIMESTAMP WITH TIME ZONE NOT NULL,
     status VARCHAR(20) DEFAULT 'upcoming', -- 'upcoming', 'live', 'predicted', 'resulted'
@@ -113,6 +115,7 @@ CREATE TABLE IF NOT EXISTS players (
     id SERIAL PRIMARY KEY,
     team_name VARCHAR(100) NOT NULL,
     name VARCHAR(100) NOT NULL,
+    name_ml VARCHAR(100) DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_team_player UNIQUE (team_name, name)
 );

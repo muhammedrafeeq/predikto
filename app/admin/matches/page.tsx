@@ -115,6 +115,8 @@ export default function MatchManager() {
   // Form states for scheduling a new match
   const [teamHome, setTeamHome] = useState("");
   const [teamAway, setTeamAway] = useState("");
+  const [teamHomeMl, setTeamHomeMl] = useState("");
+  const [teamAwayMl, setTeamAwayMl] = useState("");
   const [matchTime, setMatchTime] = useState("");
   const [deadline, setDeadline] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -258,6 +260,8 @@ export default function MatchManager() {
         body: JSON.stringify({
           teamHome: teamHome.trim(),
           teamAway: teamAway.trim(),
+          teamHomeMl: teamHomeMl.trim(),
+          teamAwayMl: teamAwayMl.trim(),
           matchTime: kickoffDate.toISOString(),
           deadline: deadlineDate.toISOString(),
         }),
@@ -269,6 +273,8 @@ export default function MatchManager() {
         setMatches((prev) => [data.match, ...prev]);
         setTeamHome("");
         setTeamAway("");
+        setTeamHomeMl("");
+        setTeamAwayMl("");
         setMatchTime("");
         setDeadline("");
         setIsModalOpen(false);
@@ -705,6 +711,32 @@ export default function MatchManager() {
                     value={teamAway}
                     onChange={(e) => setTeamAway(e.target.value)}
                     placeholder="e.g. Man City"
+                    className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                    type="text"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block label-md text-on-surface-variant mb-1">
+                    Home Team (മലയാളം)
+                  </label>
+                  <input
+                    value={teamHomeMl}
+                    onChange={(e) => setTeamHomeMl(e.target.value)}
+                    placeholder="e.g. മാൻ യുണൈറ്റഡ്"
+                    className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                    type="text"
+                  />
+                </div>
+                <div>
+                  <label className="block label-md text-on-surface-variant mb-1">
+                    Away Team (മലയാളം)
+                  </label>
+                  <input
+                    value={teamAwayMl}
+                    onChange={(e) => setTeamAwayMl(e.target.value)}
+                    placeholder="e.g. മാൻ സിറ്റി"
                     className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                     type="text"
                   />

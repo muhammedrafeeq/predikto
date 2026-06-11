@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Timer, CheckCircle2, Search, Plus, Minus, Send, Check, User, Trophy } from "lucide-react";
+import { ArrowLeft, Timer, CheckCircle2, Search, Plus, Minus, Send, Check, User, Trophy, Languages } from "lucide-react";
 
 interface PredictPageProps {
   params: Promise<{ id: string }>;
@@ -83,6 +83,50 @@ const getFlag = (name: string) => {
   return code ? `https://flagcdn.com/w80/${code}.png` : null;
 };
 
+const T = {
+  en: {
+    matchWinner: "MATCH WINNER",
+    optional: "(Optional)",
+    draw: "Draw",
+    motm: "MAN OF THE MATCH",
+    typeOrSelect: "Type or select player...",
+    typeAnyPlayer: "Type any player name directly if they aren't shown in suggestions.",
+    noMatchingPlayers: 'No matching squad players. Click "Use" above to submit this name.',
+    predictCustom: "Predict custom player name",
+    use: "Use",
+    exactScoreline: "EXACT SCORELINE",
+    submitPrediction: "Submit Prediction",
+    submitting: "Submitting...",
+    predictionsClosedBanner: "Predictions closed for this fixture",
+    predictionsClosedTimer: "Predictions Closed",
+    closesIn: "Closes in",
+    loadingText: "Loading Fixture Setup...",
+    fixtureNotFound: "Fixture not found or invalid ID.",
+    returnToArena: "Return to Arena",
+  },
+  ml: {
+    matchWinner: "മത്സര വിജയി",
+    optional: "(ഐച്ഛിക)",
+    draw: "സമനില",
+    motm: "മാൻ ഓഫ് ദ മാച്ച്",
+    typeOrSelect: "കളിക്കാരൻ ടൈപ്പ് ചെയ്യുക അല്ലെങ്കിൽ തിരഞ്ഞെടുക്കുക...",
+    typeAnyPlayer: "നിർദ്ദേശങ്ങളിൽ ഇല്ലെങ്കിൽ, പേര് നേരിട്ട് ടൈപ്പ് ചെയ്യുക.",
+    noMatchingPlayers: "കളിക്കാരനെ കണ്ടെത്തിയില്ല. മുകളിൽ \"ഉപയോഗിക്കുക\" ക്ലിക്ക് ചെയ്യുക.",
+    predictCustom: "കസ്‌റ്റം കളിക്കാരൻ",
+    use: "ഉപയോഗിക്കുക",
+    exactScoreline: "കൃത്യമായ സ്കോർ",
+    submitPrediction: "പ്രവചനം സമർപ്പിക്കുക",
+    submitting: "സമർപ്പിക്കുന്നു...",
+    predictionsClosedBanner: "ഈ മത്സരത്തിനുള്ള പ്രവചനം അടഞ്ഞു",
+    predictionsClosedTimer: "പ്രവചനം അടഞ്ഞു",
+    closesIn: "ഇതിൽ അടയ്ക്കുന്നു",
+    loadingText: "ലോഡ് ചെയ്യുന്നു...",
+    fixtureNotFound: "ഫിക്‌ചർ കണ്ടെത്തിയില്ല.",
+    returnToArena: "മത്സരങ്ങളിലേക്ക് മടങ്ങുക",
+  },
+} as const;
+type Lang = keyof typeof T;
+
 interface Question {
   id: number;
   type: "winner" | "score" | "scorer";
@@ -94,12 +138,16 @@ export default function PredictPage({ params }: PredictPageProps) {
   const router = useRouter();
   const { id } = use(params);
 
+  const [lang, setLang] = useState<Lang>("en");
+  const t = T[lang];
+  const motmInputRef = useRef<HTMLInputElement>(null);
+
   // Loaded states
   const [match, setMatch] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<{ name: string; points: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [squadPlayers, setSquadPlayers] = useState<{ name: string; teamName: string }[]>([]);
+  const [squadPlayers, setSquadPlayers] = useState<{ name: string; nameMl: string; teamName: string }[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Form selections and counters states
@@ -285,7 +333,7 @@ export default function PredictPage({ params }: PredictPageProps) {
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-base-bg text-on-surface bg-pitch">
         <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
         <p className="text-sm text-on-surface-variant animate-pulse font-mono">
-          Loading Fixture Setup...
+          {T.en.loadingText}
         </p>
       </div>
     );
@@ -294,9 +342,9 @@ export default function PredictPage({ params }: PredictPageProps) {
   if (!match) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-base-bg text-on-surface bg-pitch p-6 text-center">
-        <p className="text-lg text-error font-semibold">Fixture not found or invalid ID.</p>
+        <p className="text-lg text-error font-semibold">{T.en.fixtureNotFound}</p>
         <button onClick={() => router.push("/matches")} className="bg-primary text-on-primary px-6 py-2 rounded-full font-bold">
-          Return to Arena
+          {T.en.returnToArena}
         </button>
       </div>
     );
@@ -304,6 +352,8 @@ export default function PredictPage({ params }: PredictPageProps) {
 
   const homeStyle = getTeamStyle(match.teamHome);
   const awayStyle = getTeamStyle(match.teamAway);
+  const homeLabel = (lang === "ml" && match.teamHomeMl) ? match.teamHomeMl : match.teamHome;
+  const awayLabel = (lang === "ml" && match.teamAwayMl) ? match.teamAwayMl : match.teamAway;
   const kickoff = new Date(match.matchTime);
   const kickoffText =
     kickoff.toLocaleDateString("en-IN", { month: "short", day: "numeric", timeZone: "Asia/Kolkata" }) +
@@ -332,6 +382,14 @@ export default function PredictPage({ params }: PredictPageProps) {
         </div>
         
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setLang(l => l === "en" ? "ml" : "en")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container border border-white/10 hover:border-primary/50 transition-colors text-xs font-bold text-on-surface-variant hover:text-primary cursor-pointer select-none"
+            aria-label="Toggle language"
+          >
+            <Languages className="w-3.5 h-3.5" />
+            {lang === "en" ? "മലയാളം" : "English"}
+          </button>
           {user && (
             <span className="text-xs text-on-surface-variant font-bold font-mono">{user.points} pts</span>
           )}
@@ -365,7 +423,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     {homeStyle.code}
                   </div>
                 )}
-                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 break-words w-full">{match.teamHome}</span>
+                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 break-words w-full">{homeLabel}</span>
               </div>
 
               <div className="flex flex-col items-center gap-1 w-1/3">
@@ -385,7 +443,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     {awayStyle.code}
                   </div>
                 )}
-                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 break-words w-full">{match.teamAway}</span>
+                <span className="label-md uppercase tracking-wider text-white text-center mt-1.5 break-words w-full">{awayLabel}</span>
               </div>
             </div>
 
@@ -395,7 +453,7 @@ export default function PredictPage({ params }: PredictPageProps) {
             }`}>
               <span className={`font-label-md flex items-center gap-1.5 uppercase font-bold text-xs ${hasClosed ? "text-on-surface-variant" : "text-error"}`}>
                 <Timer className="w-4.5 h-4.5" />
-                {hasClosed ? "Predictions Closed" : "Closes in"}
+                {hasClosed ? t.predictionsClosedTimer : t.closesIn}
               </span>
               <span className={`headline-md font-bold font-mono tracking-wide ${hasClosed ? "text-on-surface-variant" : "text-error"}`}>
                 {hasClosed ? "00:00" : (countdown !== null ? formatCountdown(countdown) : "--:--")}
@@ -411,7 +469,7 @@ export default function PredictPage({ params }: PredictPageProps) {
           <div className="animate-fade-in stagger-2 md:col-span-12 lg:col-span-4 flex flex-col gap-2">
             <label className="text-label-md text-on-surface-variant px-1 flex items-center gap-1.5 font-semibold text-left select-none text-xs">
               <SoccerBallIcon className="w-4 h-4 text-outline" />
-              MATCH WINNER <span className="text-white/25 font-normal">(Optional)</span>
+              {t.matchWinner} <span className="text-white/25 font-normal">{t.optional}</span>
             </label>
             <div className="surface-glass-1 rounded-lg p-4 flex flex-col gap-3 h-full justify-between">
               <button
@@ -422,7 +480,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                   winner === "home" ? "bg-primary/10 border border-primary" : "surface-glass-1 hover:bg-surface-variant/40"
                 } ${hasClosed ? "opacity-60 cursor-not-allowed" : ""}`}
               >
-                <span className="headline-md font-semibold text-sm">{match.teamHome}</span>
+                <span className="headline-md font-semibold text-sm">{homeLabel}</span>
                 <CheckCircle2 className={`w-5 h-5 text-primary transition-opacity ${winner === "home" ? "opacity-100" : "opacity-0"}`} />
               </button>
 
@@ -434,7 +492,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                   winner === "draw" ? "bg-primary/10 border border-primary" : "surface-glass-1 hover:bg-surface-variant/40"
                 } ${hasClosed ? "opacity-60 cursor-not-allowed" : ""}`}
               >
-                <span className="headline-md font-semibold text-on-surface-variant text-sm">Draw</span>
+                <span className="headline-md font-semibold text-on-surface-variant text-sm">{t.draw}</span>
                 <CheckCircle2 className={`w-5 h-5 text-primary transition-opacity ${winner === "draw" ? "opacity-100" : "opacity-0"}`} />
               </button>
 
@@ -446,7 +504,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                   winner === "away" ? "bg-primary/10 border border-primary" : "surface-glass-1 hover:bg-surface-variant/40"
                 } ${hasClosed ? "opacity-60 cursor-not-allowed" : ""}`}
               >
-                <span className="headline-md font-semibold text-sm">{match.teamAway}</span>
+                <span className="headline-md font-semibold text-sm">{awayLabel}</span>
                 <CheckCircle2 className={`w-5 h-5 text-primary transition-opacity ${winner === "away" ? "opacity-100" : "opacity-0"}`} />
               </button>
             </div>
@@ -456,11 +514,12 @@ export default function PredictPage({ params }: PredictPageProps) {
           <div className={`animate-fade-in stagger-3 md:col-span-12 lg:col-span-4 flex flex-col gap-2 relative ${dropdownOpen ? "z-30" : "z-10"}`}>
             <label className="text-label-md text-on-surface-variant px-1 flex items-center gap-1.5 font-semibold text-left select-none text-xs">
               <User className="w-4 h-4 text-outline" />
-              MAN OF THE MATCH <span className="text-white/25 font-normal">(Optional)</span>
+              {t.motm} <span className="text-white/25 font-normal">{t.optional}</span>
             </label>
-            <div className="surface-glass-1 rounded-lg p-4 flex flex-col gap-4 h-full relative">
+            <div className="surface-glass-1 rounded-lg p-5 flex flex-col gap-4 h-full relative">
               <div className="relative">
                 <input
+                  ref={motmInputRef}
                   type="text"
                   disabled={hasClosed}
                   value={topScorer}
@@ -469,31 +528,35 @@ export default function PredictPage({ params }: PredictPageProps) {
                     setDropdownOpen(true);
                   }}
                   onFocus={() => {
-                    if (!hasClosed) setDropdownOpen(true);
+                    if (!hasClosed) {
+                      setDropdownOpen(true);
+                      setTimeout(() => {
+                        motmInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                      }, 300);
+                    }
                   }}
                   onBlur={() => {
-                    // Slight delay to allow clicking items in dropdown
                     setTimeout(() => setDropdownOpen(false), 200);
                   }}
-                  placeholder="Type or select player..."
-                  className={`w-full bg-surface-container-lowest border border-outline-variant rounded-md px-4 py-3 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary outline-none body-lg placeholder:text-on-surface-variant/40 transition-all text-left text-sm ${
+                  placeholder={t.typeOrSelect}
+                  className={`w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-5 py-4 text-base focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-on-surface-variant/40 transition-all text-left ${
                     hasClosed ? "opacity-60 cursor-not-allowed" : ""
                   }`}
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
+                <div className="absolute right-5 top-1/2 -translate-y-1/2 text-outline pointer-events-none">
                   <Search className="w-5 h-5" />
                 </div>
               </div>
               {/* Squad suggestion helper info */}
-              <p className="text-[10px] text-white/30 text-left -mt-2">
-                Type any player name directly if they aren't shown in the suggestions.
+              <p className="text-[11px] text-white/30 text-left -mt-2">
+                {t.typeAnyPlayer}
               </p>
 
               {/* Squad Dropdown Autocomplete */}
               {dropdownOpen && squadPlayers.length > 0 && !hasClosed && (
                 <div
-                  className="absolute left-4 right-4 top-[102px] bg-[#101015] border border-white/10 rounded-lg shadow-2xl z-50 max-h-60 overflow-y-auto"
-                  style={{ backdropFilter: "blur(20px)" }}
+                  className="absolute left-5 right-5 top-27.5 bg-[#101015] border border-white/10 rounded-xl shadow-2xl z-50 max-h-72 overflow-y-scroll"
+                  style={{ backdropFilter: "blur(20px)", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
                 >
                   {/* Option to use custom typed text if not empty */}
                   {topScorer.trim() !== "" && (
@@ -502,25 +565,31 @@ export default function PredictPage({ params }: PredictPageProps) {
                         setTopScorer(topScorer.trim());
                         setDropdownOpen(false);
                       }}
-                      className="flex items-center gap-2 px-4 py-2.5 hover:bg-white/10 border-b border-white/5 cursor-pointer transition-colors text-left"
+                      className="flex items-center gap-3 px-5 py-4 hover:bg-white/10 border-b border-white/5 cursor-pointer transition-colors text-left"
                     >
-                      <Plus className="w-4 h-4 text-primary shrink-0" />
+                      <Plus className="w-5 h-5 text-primary shrink-0" />
                       <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-white/95">Use "{topScorer.trim()}"</span>
-                        <span className="text-[10px] text-white/40 font-medium">Predict custom player name</span>
+                        <span className="text-base font-semibold text-white/95">{t.use} "{topScorer.trim()}"</span>
+                        <span className="text-xs text-white/40 font-medium">{t.predictCustom}</span>
                       </div>
                     </div>
                   )}
 
                   {squadPlayers.filter(p => p.name.toLowerCase().includes(topScorer.toLowerCase())).length === 0 ? (
-                    <div className="p-3 text-xs text-white/40 text-center select-none">
-                      No matching squad players. Press Enter or click the "Use" button above to submit this custom name.
+                    <div className="p-4 text-sm text-white/40 text-center select-none">
+                      {t.noMatchingPlayers}
                     </div>
                   ) : (
                     squadPlayers
                       .filter(p => p.name.toLowerCase().includes(topScorer.toLowerCase()))
                       .map((player) => {
                         const flag = getFlag(player.teamName);
+                        const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
+                        const teamDisplay = (lang === "ml" && match.teamHomeMl && player.teamName.toLowerCase() === match.teamHome.toLowerCase())
+                          ? match.teamHomeMl
+                          : (lang === "ml" && match.teamAwayMl && player.teamName.toLowerCase() === match.teamAway.toLowerCase())
+                          ? match.teamAwayMl
+                          : player.teamName;
                         return (
                           <div
                             key={player.name}
@@ -528,18 +597,18 @@ export default function PredictPage({ params }: PredictPageProps) {
                               setTopScorer(player.name);
                               setDropdownOpen(false);
                             }}
-                            className="flex items-center justify-between px-4 py-2.5 hover:bg-white/5 cursor-pointer transition-colors text-left"
+                            className="flex items-center justify-between px-5 py-4 hover:bg-white/5 cursor-pointer transition-colors text-left"
                           >
-                            <span className="text-sm font-semibold text-white/95">{player.name}</span>
-                            <div className="flex items-center gap-1.5">
+                            <span className="text-base font-semibold text-white/95">{displayName}</span>
+                            <div className="flex items-center gap-2">
                               {flag && (
                                 <img
                                   src={flag}
                                   alt={player.teamName}
-                                  className="w-4 h-3.5 object-cover rounded-sm opacity-80"
+                                  className="w-5 h-4 object-cover rounded-sm opacity-80"
                                 />
                               )}
-                              <span className="text-[10px] text-white/40 uppercase font-medium">{player.teamName}</span>
+                              <span className="text-xs text-white/40 uppercase font-medium">{teamDisplay}</span>
                             </div>
                           </div>
                         );
@@ -550,19 +619,22 @@ export default function PredictPage({ params }: PredictPageProps) {
 
               {/* Suggestions Chips (using top star players from the squad) */}
               <div className="flex flex-wrap gap-2 pt-1 select-none">
-                {squadPlayers.slice(0, 5).map((player) => (
-                  <button
-                    type="button"
-                    key={player.name}
-                    disabled={hasClosed}
-                    onClick={() => handleScorerChipClick(player.name)}
-                    className={`px-3 py-1 bg-surface-container rounded-full text-xs border border-outline-variant/30 cursor-pointer hover:border-primary hover:text-primary transition-all duration-base text-on-surface ${
-                      hasClosed ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {player.name}
-                  </button>
-                ))}
+                {squadPlayers.slice(0, 5).map((player) => {
+                  const chipLabel = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
+                  return (
+                    <button
+                      type="button"
+                      key={player.name}
+                      disabled={hasClosed}
+                      onClick={() => handleScorerChipClick(player.name)}
+                      className={`px-4 py-2 bg-surface-container rounded-full text-sm border border-outline-variant/30 cursor-pointer hover:border-primary hover:text-primary transition-all duration-base text-on-surface ${
+                        hasClosed ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      {chipLabel}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -571,7 +643,7 @@ export default function PredictPage({ params }: PredictPageProps) {
           <div className="animate-fade-in stagger-4 md:col-span-12 lg:col-span-4 flex flex-col gap-2">
             <label className="text-label-md text-on-surface-variant px-1 flex items-center gap-1.5 font-semibold text-left select-none text-xs">
               <Trophy className="w-4 h-4 text-outline" />
-              EXACT SCORELINE <span className="text-primary font-bold">*</span>
+              {t.exactScoreline} <span className="text-primary font-bold">*</span>
             </label>
             <div className="surface-glass-1 rounded-lg p-4 flex items-center justify-center gap-6 h-full min-h-[160px]">
               
@@ -588,7 +660,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                   <Plus className="w-5 h-5" />
                 </button>
                 <span className="font-display-lg text-display-lg tabular-nums text-white select-none text-3xl font-bold">{scoreHome}</span>
-                <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">{match.teamHome.substring(0, 3)}</span>
+                <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">{homeLabel.substring(0, 3)}</span>
                 <button
                   type="button"
                   disabled={hasClosed}
@@ -616,7 +688,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                   <Plus className="w-5 h-5" />
                 </button>
                 <span className="font-display-lg text-display-lg tabular-nums text-white select-none text-3xl font-bold">{scoreAway}</span>
-                <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">{match.teamAway.substring(0, 3)}</span>
+                <span className="text-[10px] text-white/40 uppercase font-bold tracking-wider mt-1">{awayLabel.substring(0, 3)}</span>
                 <button
                   type="button"
                   disabled={hasClosed}
@@ -644,7 +716,7 @@ export default function PredictPage({ params }: PredictPageProps) {
       <div className="fixed bottom-0 left-0 right-0 w-full z-50 bg-surface/80 backdrop-blur-xl border-t border-white/10 p-6 flex justify-center items-center h-24">
         {hasClosed ? (
           <div className="w-full max-w-md h-14 bg-white/5 border border-white/10 text-on-surface-variant rounded-md flex items-center justify-center font-bold text-sm">
-            Predictions closed for this fixture
+            {t.predictionsClosedBanner}
           </div>
         ) : (
           <button
@@ -657,14 +729,14 @@ export default function PredictPage({ params }: PredictPageProps) {
           >
             {submitStatus === "idle" && (
               <>
-                <span className="font-headline-md text-on-primary-container text-base font-bold">Submit Prediction</span>
+                <span className="font-headline-md text-on-primary-container text-base font-bold">{t.submitPrediction}</span>
                 <Send className="w-5 h-5 text-on-primary-container" />
               </>
             )}
 
             {submitStatus === "submitting" && (
               <div className="flex items-center gap-2">
-                <span className="font-headline-md text-on-primary-container text-base font-bold">Submitting...</span>
+                <span className="font-headline-md text-on-primary-container text-base font-bold">{t.submitting}</span>
                 <div className="w-5 h-5 border-2 border-on-primary-container border-t-transparent rounded-full animate-spin" />
               </div>
             )}

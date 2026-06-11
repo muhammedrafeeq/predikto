@@ -15,8 +15,9 @@ export async function GET(
 
     // 1. Fetch Match Info
     const matchRes = await query(
-      `SELECT id, team_home as "teamHome", team_away as "teamAway", 
-              match_time as "matchTime", deadline, status 
+      `SELECT id, team_home as "teamHome", team_away as "teamAway",
+              team_home_ml as "teamHomeMl", team_away_ml as "teamAwayMl",
+              match_time as "matchTime", deadline, status
        FROM matches WHERE id = $1`,
       [matchId]
     );
@@ -35,7 +36,7 @@ export async function GET(
 
     // 3. Fetch Players for both teams
     const playersRes = await query(
-      `SELECT name, team_name as "teamName"
+      `SELECT name, name_ml as "nameMl", team_name as "teamName"
        FROM players
        WHERE LOWER(team_name) = LOWER($1) OR LOWER(team_name) = LOWER($2)
        ORDER BY name ASC`,

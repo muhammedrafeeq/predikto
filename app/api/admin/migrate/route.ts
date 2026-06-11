@@ -48,6 +48,9 @@ export async function POST() {
     await query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS team_home_ml VARCHAR(100) DEFAULT ''`);
     await query(`ALTER TABLE matches ADD COLUMN IF NOT EXISTS team_away_ml VARCHAR(100) DEFAULT ''`);
 
+    // Star player flag
+    await query(`ALTER TABLE players ADD COLUMN IF NOT EXISTS is_star BOOLEAN DEFAULT false`);
+
     return NextResponse.json({ success: true, message: "Tables created" });
   } catch (error) {
     console.error("Migration error:", error);

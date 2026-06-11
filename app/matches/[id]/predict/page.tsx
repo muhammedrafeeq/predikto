@@ -84,58 +84,6 @@ const getFlag = (name: string) => {
   return code ? `https://flagcdn.com/w80/${code}.png` : null;
 };
 
-const STAR_PLAYERS = new Set([
-  // Argentina
-  "Lionel Messi", "Ángel Di María", "Lautaro Martínez", "Julián Álvarez", "Rodrigo De Paul",
-  // Portugal
-  "Cristiano Ronaldo", "Bruno Fernandes", "Bernardo Silva", "Rúben Dias", "Rafael Leão",
-  // France
-  "Kylian Mbappé", "Antoine Griezmann", "Aurélien Tchouaméni", "Marcus Thuram", "Eduardo Camavinga",
-  // Brazil
-  "Vinicius Junior", "Rodrygo", "Raphinha", "Lucas Paquetá", "Endrick",
-  // England
-  "Jude Bellingham", "Harry Kane", "Bukayo Saka", "Phil Foden", "Marcus Rashford",
-  // Spain
-  "Pedri", "Gavi", "Álvaro Morata", "Rodri", "Lamine Yamal",
-  // Germany
-  "Florian Wirtz", "Jamal Musiala", "Kai Havertz", "Leroy Sané", "Thomas Müller",
-  // Netherlands
-  "Virgil van Dijk", "Memphis Depay", "Cody Gakpo", "Frenkie de Jong", "Xavi Simons",
-  // Belgium
-  "Kevin De Bruyne", "Romelu Lukaku", "Thibaut Courtois", "Leandro Trossard",
-  // Croatia
-  "Luka Modrić", "Ivan Perišić", "Mateo Kovačić",
-  // Morocco
-  "Achraf Hakimi", "Hakim Ziyech", "Youssef En-Nesyri",
-  // Uruguay
-  "Darwin Núñez", "Federico Valverde", "Luis Suárez",
-  // USA
-  "Christian Pulisic", "Tyler Adams", "Weston McKennie",
-  // Mexico
-  "Hirving Lozano", "Raúl Jiménez", "Edson Álvarez",
-  // Colombia
-  "James Rodríguez", "Luis Díaz", "Falcao",
-  // Japan
-  "Takefusa Kubo", "Daichi Kamada",
-  // Senegal
-  "Sadio Mané", "Édouard Mendy", "Ismaïla Sarr",
-  // Egypt
-  "Mohamed Salah",
-  // Norway
-  "Erling Haaland", "Martin Ødegaard",
-  // Sweden
-  "Alexander Isak", "Dejan Kulusevski",
-  // Austria
-  "David Alaba", "Marcel Sabitzer",
-  // Serbia
-  "Aleksandar Mitrović", "Dušan Vlahović",
-  // Australia
-  "Mathew Leckie", "Aaron Mooy",
-  // Canada
-  "Alphonso Davies", "Jonathan David",
-  // South Korea
-  "Son Heung-min", "Lee Kang-in",
-]);
 
 const T = {
   en: {
@@ -200,7 +148,7 @@ export default function PredictPage({ params }: PredictPageProps) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [user, setUser] = useState<{ name: string; points: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [squadPlayers, setSquadPlayers] = useState<{ name: string; nameMl: string; teamName: string }[]>([]);
+  const [squadPlayers, setSquadPlayers] = useState<{ name: string; nameMl: string; teamName: string; isStar: boolean }[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Form selections and counters states
@@ -565,7 +513,7 @@ export default function PredictPage({ params }: PredictPageProps) {
 
               {/* Star player cards */}
               {(() => {
-                const stars = squadPlayers.filter(p => STAR_PLAYERS.has(p.name));
+                const stars = squadPlayers.filter(p => p.isStar);
                 if (stars.length === 0) return null;
                 return (
                   <div className="flex flex-col gap-2">
@@ -679,7 +627,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     squadPlayers
                       .filter(p => p.name.toLowerCase().includes(topScorer.toLowerCase()))
                       .map((player) => {
-                        const isStar = STAR_PLAYERS.has(player.name);
+                        const isStar = player.isStar;
                         const flag = getFlag(player.teamName);
                         const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
                         const teamDisplay = (lang === "ml" && match.teamHomeMl && player.teamName.toLowerCase() === match.teamHome.toLowerCase())

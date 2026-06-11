@@ -16,6 +16,7 @@ import {
   ChevronRight,
   ShieldAlert,
   Clock,
+  Users,
 } from "lucide-react";
 
 const COUNTRY_FLAGS: Record<string, string> = {
@@ -90,6 +91,8 @@ export default function ResultEntry({
   const [firstGoalMinute, setFirstGoalMinute] = useState<number | "">("");
   const [homeFormation, setHomeFormation] = useState("");
   const [awayFormation, setAwayFormation] = useState("");
+  const [entries, setEntries] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     async function loadData() {
@@ -101,6 +104,7 @@ export default function ResultEntry({
           if (data.success) {
             setMatch(data.match);
             setSquadPlayers(data.players || []);
+            setEntries(data.entries || []);
             if (data.firstGoalMinute !== null) setFirstGoalMinute(data.firstGoalMinute);
             if (data.homeFormation) setHomeFormation(data.homeFormation);
             if (data.awayFormation) setAwayFormation(data.awayFormation);
@@ -286,6 +290,11 @@ export default function ResultEntry({
   const getTeamInitials = (name: string) => {
     return name.substring(0, 3).toUpperCase();
   };
+
+  const filteredEntries = entries.filter((e) =>
+    e.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    e.userPhone.includes(searchQuery)
+  );
 
   if (loading) {
     return (
@@ -662,6 +671,72 @@ export default function ResultEntry({
               <Sparkles className="w-6 h-6 animate-pulse" />
               CALCULATE & PUBLISH
             </button>
+          </section>
+
+          {/* User Predictions List */}
+          <section className="surface-glass-1 rounded-xl p-6 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2 select-none">
+                  <Users className="w-4 h-4 text-primary" /> User Predictions ({entries.length})
+                </h3>
+                <p className="text-[10px] text-on-surface-variant/60 font-mono">
+                  All submitted tips for this fixture before result computation
+                </p>
+              </div>
+              <div className="relative w-full sm:w-48">
+                <input
+                  type="text"
+                  placeholder="Search user..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#050507] border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-primary placeholder:text-white/20"
+                />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
+              </div>
+            </div>
+
+            {filteredEntries.length === 0 ? (
+              <p className="text-xs text-white/40 italic py-6 text-center">No predictions found.</p>
+            ) : (
+              <div className="overflow-x-auto max-h-80 overflow-y-auto pr-1">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/10 text-white/40 uppercase tracking-widest text-[9px] font-bold">
+                      <th className="py-2.5 px-3">User</th>
+                      <th className="py-2.5 px-3">Winner Tip</th>
+                      <th className="py-2.5 px-3">Score Tip</th>
+                      <th className="py-2.5 px-3">MOTM Tip</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {filteredEntries.map((entry) => (
+                      <tr key={entry.userId} className="hover:bg-white/2 transition-colors">
+                        <td className="py-2.5 px-3 font-semibold text-white">
+                          <div>{entry.userName}</div>
+                          <div className="text-[9px] text-white/30 font-mono">{entry.userPhone}</div>
+                        </td>
+                        <td className="py-2.5 px-3">
+                          {entry.predictions.winner ? (
+                            <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-white/80 font-medium text-[10px]">
+                              {entry.predictions.winner.answer}
+                            </span>
+                          ) : (
+                            <span className="text-white/20 italic text-[10px]">-</span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-primary">
+                          {entry.predictions.score ? entry.predictions.score.answer : "-"}
+                        </td>
+                        <td className="py-2.5 px-3 text-white/70">
+                          {entry.predictions.scorer ? entry.predictions.scorer.answer : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
         </div>
 

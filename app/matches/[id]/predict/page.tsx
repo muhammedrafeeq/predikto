@@ -84,6 +84,59 @@ const getFlag = (name: string) => {
   return code ? `https://flagcdn.com/w80/${code}.png` : null;
 };
 
+const STAR_PLAYERS = new Set([
+  // Argentina
+  "Lionel Messi", "Ángel Di María", "Lautaro Martínez", "Julián Álvarez", "Rodrigo De Paul",
+  // Portugal
+  "Cristiano Ronaldo", "Bruno Fernandes", "Bernardo Silva", "Rúben Dias", "Rafael Leão",
+  // France
+  "Kylian Mbappé", "Antoine Griezmann", "Aurélien Tchouaméni", "Marcus Thuram", "Eduardo Camavinga",
+  // Brazil
+  "Vinicius Junior", "Rodrygo", "Raphinha", "Lucas Paquetá", "Endrick",
+  // England
+  "Jude Bellingham", "Harry Kane", "Bukayo Saka", "Phil Foden", "Marcus Rashford",
+  // Spain
+  "Pedri", "Gavi", "Álvaro Morata", "Rodri", "Lamine Yamal",
+  // Germany
+  "Florian Wirtz", "Jamal Musiala", "Kai Havertz", "Leroy Sané", "Thomas Müller",
+  // Netherlands
+  "Virgil van Dijk", "Memphis Depay", "Cody Gakpo", "Frenkie de Jong", "Xavi Simons",
+  // Belgium
+  "Kevin De Bruyne", "Romelu Lukaku", "Thibaut Courtois", "Leandro Trossard",
+  // Croatia
+  "Luka Modrić", "Ivan Perišić", "Mateo Kovačić",
+  // Morocco
+  "Achraf Hakimi", "Hakim Ziyech", "Youssef En-Nesyri",
+  // Uruguay
+  "Darwin Núñez", "Federico Valverde", "Luis Suárez",
+  // USA
+  "Christian Pulisic", "Tyler Adams", "Weston McKennie",
+  // Mexico
+  "Hirving Lozano", "Raúl Jiménez", "Edson Álvarez",
+  // Colombia
+  "James Rodríguez", "Luis Díaz", "Falcao",
+  // Japan
+  "Takefusa Kubo", "Daichi Kamada",
+  // Senegal
+  "Sadio Mané", "Édouard Mendy", "Ismaïla Sarr",
+  // Egypt
+  "Mohamed Salah",
+  // Norway
+  "Erling Haaland", "Martin Ødegaard",
+  // Sweden
+  "Alexander Isak", "Dejan Kulusevski",
+  // Austria
+  "David Alaba", "Marcel Sabitzer",
+  // Serbia
+  "Aleksandar Mitrović", "Dušan Vlahović",
+  // Australia
+  "Mathew Leckie", "Aaron Mooy",
+  // Canada
+  "Alphonso Davies", "Jonathan David",
+  // South Korea
+  "Son Heung-min", "Lee Kang-in",
+]);
+
 const T = {
   en: {
     matchWinner: "MATCH WINNER",
@@ -509,6 +562,44 @@ export default function PredictPage({ params }: PredictPageProps) {
               {t.motm} <span className="text-white/25 font-normal">{t.optional}</span>
             </label>
             <div className="surface-glass-1 rounded-lg p-5 flex flex-col gap-4 h-full relative">
+
+              {/* Star player cards */}
+              {(() => {
+                const stars = squadPlayers.filter(p => STAR_PLAYERS.has(p.name));
+                if (stars.length === 0) return null;
+                return (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-400/70 flex items-center gap-1">⭐ Key Players</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {stars.map((player) => {
+                        const flag = getFlag(player.teamName);
+                        const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
+                        const isSelected = topScorer === player.name;
+                        return (
+                          <button
+                            type="button"
+                            key={player.name}
+                            disabled={hasClosed}
+                            onPointerDown={(e) => { e.preventDefault(); handleScorerChipClick(player.name); setDropdownOpen(false); }}
+                            className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-left transition-all active:scale-95 cursor-pointer ${
+                              isSelected
+                                ? "bg-amber-400/15 border-amber-400/40"
+                                : "bg-white/3 border-white/8 hover:border-amber-400/30 hover:bg-amber-400/8"
+                            } ${hasClosed ? "opacity-50 cursor-not-allowed" : ""}`}
+                          >
+                            {flag && <img src={flag} alt={player.teamName} className="w-6 h-4 object-cover rounded-sm shrink-0 opacity-80" />}
+                            <span className={`text-sm font-bold leading-tight truncate ${isSelected ? "text-amber-300" : "text-white/90"}`}>
+                              {displayName}
+                            </span>
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0 ml-auto" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="relative">
                 <input
                   ref={motmInputRef}
@@ -522,13 +613,22 @@ export default function PredictPage({ params }: PredictPageProps) {
                   onFocus={() => {
                     if (!hasClosed) {
                       setDropdownOpen(true);
+                      // Scroll after keyboard opens (visualViewport fires resize when keyboard appears)
+                      const scrollToInput = () => {
+                        setTimeout(() => {
+                          motmInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }, 50);
+                      };
+                      if (window.visualViewport) {
+                        window.visualViewport.addEventListener("resize", scrollToInput, { once: true });
+                      }
                       setTimeout(() => {
                         motmInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-                      }, 300);
+                      }, 350);
                     }
                   }}
                   onBlur={() => {
-                    setTimeout(() => setDropdownOpen(false), 200);
+                    setTimeout(() => setDropdownOpen(false), 150);
                   }}
                   placeholder={t.typeOrSelect}
                   className={`w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-5 py-4 text-base focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-on-surface-variant/40 transition-all text-left ${
@@ -539,6 +639,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                   <Search className="w-5 h-5" />
                 </div>
               </div>
+
               {/* Squad suggestion helper info */}
               <p className="text-[11px] text-white/30 text-left -mt-2">
                 {t.typeAnyPlayer}
@@ -547,13 +648,16 @@ export default function PredictPage({ params }: PredictPageProps) {
               {/* Squad Dropdown Autocomplete */}
               {dropdownOpen && squadPlayers.length > 0 && !hasClosed && (
                 <div
-                  className="absolute left-5 right-5 top-27.5 bg-[#101015] border border-white/10 rounded-xl shadow-2xl z-50 max-h-72 overflow-y-scroll"
-                  style={{ backdropFilter: "blur(20px)", WebkitOverflowScrolling: "touch" } as React.CSSProperties}
+                  className="absolute left-5 right-5 top-[calc(100%-180px)] bg-[#101015] border border-white/10 rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto"
+                  style={{ backdropFilter: "blur(20px)", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" } as React.CSSProperties}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
                 >
                   {/* Option to use custom typed text if not empty */}
                   {topScorer.trim() !== "" && (
                     <div
-                      onMouseDown={() => {
+                      onPointerDown={(e) => {
+                        e.preventDefault();
                         setTopScorer(topScorer.trim());
                         setDropdownOpen(false);
                       }}
@@ -575,6 +679,7 @@ export default function PredictPage({ params }: PredictPageProps) {
                     squadPlayers
                       .filter(p => p.name.toLowerCase().includes(topScorer.toLowerCase()))
                       .map((player) => {
+                        const isStar = STAR_PLAYERS.has(player.name);
                         const flag = getFlag(player.teamName);
                         const displayName = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
                         const teamDisplay = (lang === "ml" && match.teamHomeMl && player.teamName.toLowerCase() === match.teamHome.toLowerCase())
@@ -585,13 +690,17 @@ export default function PredictPage({ params }: PredictPageProps) {
                         return (
                           <div
                             key={player.name}
-                            onMouseDown={() => {
+                            onPointerDown={(e) => {
+                              e.preventDefault();
                               setTopScorer(player.name);
                               setDropdownOpen(false);
                             }}
-                            className="flex items-center justify-between px-5 py-4 hover:bg-white/5 cursor-pointer transition-colors text-left"
+                            className="flex items-center justify-between px-5 py-3.5 hover:bg-white/5 cursor-pointer transition-colors text-left"
                           >
-                            <span className="text-base font-semibold text-white/95">{displayName}</span>
+                            <div className="flex items-center gap-2">
+                              {isStar && <span className="text-amber-400 text-xs">⭐</span>}
+                              <span className="text-[15px] font-semibold text-white/95">{displayName}</span>
+                            </div>
                             <div className="flex items-center gap-2">
                               {flag && (
                                 <img
@@ -608,26 +717,6 @@ export default function PredictPage({ params }: PredictPageProps) {
                   )}
                 </div>
               )}
-
-              {/* Suggestions Chips (using top star players from the squad) */}
-              <div className="flex flex-wrap gap-2 pt-1 select-none">
-                {squadPlayers.slice(0, 5).map((player) => {
-                  const chipLabel = (lang === "ml" && player.nameMl) ? player.nameMl : player.name;
-                  return (
-                    <button
-                      type="button"
-                      key={player.name}
-                      disabled={hasClosed}
-                      onClick={() => handleScorerChipClick(player.name)}
-                      className={`px-4 py-2 bg-surface-container rounded-full text-sm border border-outline-variant/30 cursor-pointer hover:border-primary hover:text-primary transition-all duration-base text-on-surface ${
-                        hasClosed ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      {chipLabel}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
           </div>
 

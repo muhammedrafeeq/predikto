@@ -50,6 +50,17 @@ export async function GET(
     );
 
     const entriesMap = new Map();
+    const teamHome = match.teamHome || "";
+    const teamAway = match.teamAway || "";
+
+    const resolveWinner = (answer: string) => {
+      const a = answer.trim().toLowerCase();
+      if (a === "home") return teamHome;
+      if (a === "away") return teamAway;
+      return answer;
+    };
+
+    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s*-\s*/g, "-");
 
     for (const row of entriesRes.rows) {
       const uId = row.user_id;
@@ -64,10 +75,16 @@ export async function GET(
       }
 
       const userEntry = entriesMap.get(uId);
+      const isWinnerQ = row.question_type === "winner";
+      const predAnswer = isWinnerQ ? resolveWinner(row.predicted_answer) : row.predicted_answer;
+      const isCorrect = row.correct_answer !== null
+        ? normalize(predAnswer) === normalize(row.correct_answer)
+        : null;
+
       userEntry.predictions[row.question_type] = {
         answer: row.predicted_answer,
         correctAnswer: row.correct_answer,
-        isCorrect: row.correct_answer !== null ? row.predicted_answer === row.correct_answer : null,
+        isCorrect,
       };
     }
 

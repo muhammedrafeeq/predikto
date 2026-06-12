@@ -754,17 +754,35 @@ export default function ResultEntry({
                         </td>
                         <td className="py-2.5 px-3">
                           {entry.predictions.winner ? (
-                            <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-white/80 font-medium text-[10px]">
+                            <span className={`px-2 py-0.5 rounded-full font-medium text-[10px] border ${
+                              entry.predictions.winner.isCorrect === true
+                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-extrabold"
+                                : entry.predictions.winner.isCorrect === false
+                                ? "bg-red-500/5 border-red-500/20 text-red-400/60 line-through"
+                                : "bg-white/5 border-white/5 text-white/80"
+                            }`}>
                               {entry.predictions.winner.answer}
                             </span>
                           ) : (
                             <span className="text-white/20 italic text-[10px]">-</span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 font-mono font-bold text-primary">
+                        <td className={`py-2.5 px-3 font-mono font-bold ${
+                          entry.predictions.score?.isCorrect === true
+                            ? "text-emerald-400"
+                            : entry.predictions.score?.isCorrect === false
+                            ? "text-red-400/60 line-through"
+                            : "text-primary"
+                        }`}>
                           {entry.predictions.score ? entry.predictions.score.answer : "-"}
                         </td>
-                        <td className="py-2.5 px-3 text-white/70">
+                        <td className={`py-2.5 px-3 ${
+                          entry.predictions.scorer?.isCorrect === true
+                            ? "text-emerald-400 font-bold"
+                            : entry.predictions.scorer?.isCorrect === false
+                            ? "text-red-400/60 line-through"
+                            : "text-white/70"
+                        }`}>
                           {entry.predictions.scorer ? entry.predictions.scorer.answer : "-"}
                         </td>
                       </tr>
@@ -924,14 +942,63 @@ export default function ResultEntry({
                   <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "10px", fontWeight: 700 }}>
                     {entry.userName.split(" ").slice(0, 2).join(" ")}
                   </div>
-                  <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "9px", color: "rgba(255,255,255,0.7)" }}>
-                    {entry.predictions.winner?.answer || "-"}
+                  <div
+                    style={{
+                      display: "table-cell",
+                      padding: "6px 4px",
+                      borderBottom: "1px solid rgba(255,255,255,0.04)",
+                      fontSize: "9px",
+                      color: entry.predictions.winner?.isCorrect === true
+                        ? "#4ade80"
+                        : entry.predictions.winner?.isCorrect === false
+                        ? "rgba(239, 68, 68, 0.6)"
+                        : "rgba(255,255,255,0.7)",
+                      textDecoration: entry.predictions.winner?.isCorrect === false ? "line-through" : "none",
+                      fontWeight: entry.predictions.winner?.isCorrect === true ? "bold" : "normal",
+                    }}
+                  >
+                    {entry.predictions.winner?.answer
+                      ? `${entry.predictions.winner.answer}${entry.predictions.winner.isCorrect === true ? " ✓" : ""}`
+                      : "-"}
                   </div>
-                  <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "9px", fontWeight: "bold", color: "#a855f7", fontFamily: "monospace" }}>
-                    {entry.predictions.score?.answer || "-"}
+                  <div
+                    style={{
+                      display: "table-cell",
+                      padding: "6px 4px",
+                      borderBottom: "1px solid rgba(255,255,255,0.04)",
+                      fontSize: "9px",
+                      fontWeight: "bold",
+                      color: entry.predictions.score?.isCorrect === true
+                        ? "#4ade80"
+                        : entry.predictions.score?.isCorrect === false
+                        ? "rgba(239, 68, 68, 0.6)"
+                        : "#a855f7",
+                      textDecoration: entry.predictions.score?.isCorrect === false ? "line-through" : "none",
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    {entry.predictions.score?.answer
+                      ? `${entry.predictions.score.answer}${entry.predictions.score.isCorrect === true ? " ✓" : ""}`
+                      : "-"}
                   </div>
-                  <div style={{ display: "table-cell", padding: "6px 4px", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: "9px", color: "rgba(255,255,255,0.7)" }}>
-                    {entry.predictions.scorer?.answer || "-"}
+                  <div
+                    style={{
+                      display: "table-cell",
+                      padding: "6px 4px",
+                      borderBottom: "1px solid rgba(255,255,255,0.04)",
+                      fontSize: "9px",
+                      color: entry.predictions.scorer?.isCorrect === true
+                        ? "#4ade80"
+                        : entry.predictions.scorer?.isCorrect === false
+                        ? "rgba(239, 68, 68, 0.6)"
+                        : "rgba(255,255,255,0.7)",
+                      textDecoration: entry.predictions.scorer?.isCorrect === false ? "line-through" : "none",
+                      fontWeight: entry.predictions.scorer?.isCorrect === true ? "bold" : "normal",
+                    }}
+                  >
+                    {entry.predictions.scorer?.answer
+                      ? `${entry.predictions.scorer.answer}${entry.predictions.scorer.isCorrect === true ? " ✓" : ""}`
+                      : "-"}
                   </div>
                 </div>
               ))}

@@ -14,12 +14,21 @@ export async function GET() {
       ORDER BY "totalPoints" DESC, u.name ASC`
     );
 
-    const rankings = leaderboardRes.rows.map((row, idx) => ({
-      rank: idx + 1,
-      id: row.id,
-      name: row.name,
-      points: parseInt(row.totalPoints, 10),
-    }));
+    let currentRank = 1;
+    let prevPoints: number | null = null;
+    const rankings = leaderboardRes.rows.map((row) => {
+      const points = parseInt(row.totalPoints, 10) || 0;
+      if (prevPoints !== null && points < prevPoints) {
+        currentRank++;
+      }
+      prevPoints = points;
+      return {
+        rank: currentRank,
+        id: row.id,
+        name: row.name,
+        points,
+      };
+    });
 
     return NextResponse.json({
       success: true,

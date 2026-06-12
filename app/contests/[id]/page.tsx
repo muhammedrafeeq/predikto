@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { 
   Trophy, Users, Calendar, LayoutGrid, ArrowLeft, 
   Copy, Check, Shield, ShieldAlert, Sparkles, UserPlus,
-  Crown, Star, Award
+  Crown, Star, Award, Share2
 } from "lucide-react";
 import MatchPredictionContestView from "@/components/MatchPredictionContestView";
 import FirstGoalContestView from "@/components/FirstGoalContestView";
@@ -37,6 +37,7 @@ interface RankMember {
   id: number;
   name: string;
   points: number;
+  rank?: number;
 }
 
 type TabType = "play" | "standings" | "members";
@@ -148,6 +149,24 @@ export default function ContestDetailPage() {
     navigator.clipboard.writeText(contest.joinCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShareStandings = () => {
+    if (!contest || rankings.length === 0) return;
+    
+    // Malayalam WhatsApp message
+    let text = `🏆 *${contest.name} ലീഡർബോർഡ് നില* ⚽\n\n`;
+    text += "നിലവിലെ സ്ഥാനങ്ങൾ താഴെ നൽകുന്നു:\n\n";
+    
+    rankings.forEach((player) => {
+      const r = player.rank ?? 1;
+      text += `#${r} ${player.name} - ${player.points} pts\n`;
+    });
+    
+    text += "\n*Skorio ആപ്പിൽ പ്രവചിക്കൂ, പോയിന്റുകൾ സ്വന്തമാക്കൂ!* 🏆";
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const handleRemoveMember = async (memberId: number) => {
@@ -376,6 +395,17 @@ export default function ContestDetailPage() {
                 </div>
               ) : (
                 <div className="space-y-6">
+                  {/* Share Leaderboard Button */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleShareStandings}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#25D366]/15 border border-[#25D366]/30 hover:bg-[#25D366]/25 transition-all active:scale-95 cursor-pointer"
+                    >
+                      <Share2 className="w-3.5 h-3.5 text-[#25D366]" />
+                      ലീഡർബോർഡ് ഷെയർ ചെയ്യാം
+                    </button>
+                  </div>
+
                   {/* Standings Podium for Top 3 */}
                   <div className="flex items-end justify-center gap-3 mb-10 h-[240px] select-none px-2 pt-6">
                     {/* Rank 2 (Silver) */}
@@ -386,7 +416,9 @@ export default function ContestDetailPage() {
                           <div className="w-14 h-14 rounded-full border-2 border-slate-400 flex items-center justify-center font-black text-lg bg-slate-900 text-slate-300 relative"
                             style={{ boxShadow: "0 0 15px rgba(148,163,184,0.15)" }}>
                             {getInitials(rankings[1].name)}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-400 border border-slate-900 flex items-center justify-center text-slate-950 font-black text-[10px]">2</div>
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-slate-400 border border-slate-900 flex items-center justify-center text-slate-950 font-black text-[10px]">
+                              {rankings[1].rank ?? 2}
+                            </div>
                           </div>
                         </div>
                         <div className="w-full bg-gradient-to-t from-slate-950/80 to-slate-800/40 border-t border-x border-slate-500/20 rounded-t-xl h-[80px] flex flex-col items-center justify-center relative shimmer-e overflow-hidden"
@@ -405,7 +437,9 @@ export default function ContestDetailPage() {
                           <div className="w-16 h-16 rounded-full border-[3px] border-amber-400 flex items-center justify-center font-black text-xl bg-amber-950/50 text-amber-300 relative"
                             style={{ boxShadow: "0 0 25px rgba(245,158,11,0.3)" }}>
                             {getInitials(rankings[0].name)}
-                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-400 border border-amber-950 flex items-center justify-center text-amber-950 font-black text-[11px] shimmer-e overflow-hidden">1</div>
+                            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-400 border border-amber-950 flex items-center justify-center text-amber-950 font-black text-[11px] shimmer-e overflow-hidden">
+                              {rankings[0].rank ?? 1}
+                            </div>
                           </div>
                         </div>
                         <div className="w-full bg-gradient-to-t from-amber-950/80 to-amber-800/40 border-t-2 border-x border-amber-500/40 rounded-t-xl h-[110px] flex flex-col items-center justify-center relative shimmer-e overflow-hidden"
@@ -426,7 +460,9 @@ export default function ContestDetailPage() {
                           <div className="w-14 h-14 rounded-full border-2 border-amber-700 flex items-center justify-center font-black text-lg bg-amber-950/30 text-amber-600 relative"
                             style={{ boxShadow: "0 0 12px rgba(180,83,9,0.15)" }}>
                             {getInitials(rankings[2].name)}
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-700 border border-amber-950 flex items-center justify-center text-white font-black text-[10px]">3</div>
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-700 border border-amber-950 flex items-center justify-center text-white font-black text-[10px]">
+                              {rankings[2].rank ?? 3}
+                            </div>
                           </div>
                         </div>
                         <div className="w-full bg-gradient-to-t from-amber-950/40 to-amber-900/10 border-t border-x border-amber-700/20 rounded-t-xl h-[65px] flex flex-col items-center justify-center relative shimmer-e overflow-hidden">
@@ -446,7 +482,7 @@ export default function ContestDetailPage() {
                     </div>
 
                     {rankings.map((player, idx) => {
-                      const rank = idx + 1;
+                      const rank = player.rank ?? (idx + 1);
                       const isMe = currentUser?.id === player.id;
                       return (
                         <div

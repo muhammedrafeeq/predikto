@@ -472,9 +472,9 @@ export default function Leaderboard() {
 
           {/* Top players */}
           <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {rankings.slice(0, 10).map((player, i) => {
+            {rankings.slice(0, 10).map((player) => {
               const isMe = currentUser?.id === player.id;
-              const medal = i === 0 ? "#f59e0b" : i === 1 ? "#94a3b8" : i === 2 ? "#b45309" : null;
+              const medal = player.rank === 1 ? "#f59e0b" : player.rank === 2 ? "#94a3b8" : player.rank === 3 ? "#b45309" : null;
               return (
                 <div key={player.id} style={{
                   display: "flex", alignItems: "center", gap: "10px",
@@ -491,7 +491,7 @@ export default function Leaderboard() {
                     color: medal ?? "rgba(255,255,255,0.35)",
                     flexShrink: 0,
                   }}>
-                    {i + 1}
+                    {player.rank}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{

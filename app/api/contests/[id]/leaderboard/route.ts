@@ -67,7 +67,23 @@ export async function GET(
       rankings = scoreRes.rows;
     }
 
-    return NextResponse.json({ success: true, rankings });
+    // Assign dense rank
+    let currentRank = 1;
+    let prevPoints: number | null = null;
+    const ranked = rankings.map((row) => {
+      const pts = typeof row.points === "string" ? parseInt(row.points, 10) : row.points;
+      if (prevPoints !== null && pts < prevPoints) {
+        currentRank++;
+      }
+      prevPoints = pts;
+      return {
+        ...row,
+        points: pts,
+        rank: currentRank
+      };
+    });
+
+    return NextResponse.json({ success: true, rankings: ranked });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });

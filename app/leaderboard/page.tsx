@@ -147,6 +147,46 @@ export default function Leaderboard() {
     return () => clearTimeout(delay);
   }, [loading, rankings]);
 
+  const getPodiumTheme = (rank: number) => {
+    if (rank === 1) {
+      return {
+        icon: <Crown className="w-6 h-6 text-amber-400 mb-1 animate-sparkle" />,
+        avatarContainer: "w-18 h-18 rounded-full border-[3px] border-amber-400 flex items-center justify-center font-black text-xl bg-amber-950/50 text-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.3)] relative",
+        badge: "absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-400 border border-amber-950 flex items-center justify-center text-amber-950 font-black text-[11px] shimmer-effect overflow-hidden",
+        pedestal: "w-full bg-gradient-to-t from-amber-950/80 to-amber-800/40 border-t-2 border-x border-amber-500/40 rounded-t-xl h-[160px] flex flex-col items-center justify-center shadow-2xl hover:scale-[1.03] hover:border-amber-400/60 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden",
+        points: "text-2xl font-black text-amber-400 font-mono mt-1",
+        pointsStyle: { textShadow: "0 0 15px rgba(245,158,11,0.4)" },
+        tierBadge: "text-[8px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full mt-2.5",
+        floatClass: "animate-float",
+        hoverText: "group-hover:text-amber-300"
+      };
+    }
+    if (rank === 2) {
+      return {
+        icon: <Star className="w-5 h-5 text-slate-400 mb-1" />,
+        avatarContainer: "w-15 h-15 rounded-full border-2 border-slate-400 flex items-center justify-center font-black text-lg bg-slate-900 text-slate-300 shadow-[0_0_15px_rgba(148,163,184,0.15)] relative",
+        badge: "absolute -bottom-1 -right-1 w-5.5 h-5.5 rounded-full bg-slate-400 border border-slate-900 flex items-center justify-center text-slate-950 font-black text-[10px]",
+        pedestal: "w-full bg-gradient-to-t from-slate-950/80 to-slate-800/40 border-t border-x border-slate-500/20 rounded-t-xl h-[120px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-slate-400/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden",
+        points: "text-lg font-black text-white font-mono mt-1",
+        pointsStyle: {},
+        tierBadge: "text-[8px] font-black uppercase tracking-wider text-slate-400 bg-slate-400/10 border border-slate-400/20 px-2 py-0.5 rounded-full mt-2",
+        floatClass: "animate-float-delayed",
+        hoverText: "group-hover:text-slate-300"
+      };
+    }
+    return {
+      icon: <Sparkles className="w-4 h-4 text-amber-700 mb-1.5" />,
+      avatarContainer: "w-15 h-15 rounded-full border-2 border-amber-700 flex items-center justify-center font-black text-lg bg-amber-950/30 text-amber-600 shadow-[0_0_15px_rgba(180,83,9,0.15)] relative",
+      badge: "absolute -bottom-1 -right-1 w-5.5 h-5.5 rounded-full bg-amber-700 border border-amber-950 flex items-center justify-center text-white font-black text-[10px]",
+      pedestal: "w-full bg-gradient-to-t from-amber-950/40 to-amber-900/10 border-t border-x border-amber-700/20 rounded-t-xl h-[100px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-amber-600/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden",
+      points: "text-lg font-black text-white font-mono mt-1",
+      pointsStyle: {},
+      tierBadge: "text-[8px] font-black uppercase tracking-wider text-amber-600 bg-amber-600/10 border border-amber-600/20 px-2 py-0.5 rounded-full mt-2",
+      floatClass: "animate-float-delayed-more",
+      hoverText: "group-hover:text-amber-600"
+    };
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-base-bg text-on-surface bg-pitch">
@@ -346,92 +386,100 @@ export default function Leaderboard() {
         <section className="flex items-end justify-center gap-3.5 md:gap-6 mb-14 max-w-xl mx-auto h-[320px] select-none px-2">
           
           {/* 2nd Place */}
-          {second && (
-            <div className="podium-rise flex flex-col items-center w-1/3" style={{ animationDelay: "0.2s" }}>
-              <div className="relative mb-3.5 flex flex-col items-center animate-float-delayed">
-                <Star className="w-5 h-5 text-slate-400 mb-1" />
-                <div className="w-15 h-15 rounded-full border-2 border-slate-400 flex items-center justify-center font-black text-lg bg-slate-900 text-slate-300 shadow-[0_0_15px_rgba(148,163,184,0.15)] relative">
-                  {getInitials(second.name)}
-                  <div className="absolute -bottom-1 -right-1 w-5.5 h-5.5 rounded-full bg-slate-400 border border-slate-900 flex items-center justify-center text-slate-950 font-black text-[10px]">
-                    2
+          {second && (() => {
+            const theme = getPodiumTheme(second.rank ?? 2);
+            return (
+              <div className="podium-rise flex flex-col items-center w-1/3" style={{ animationDelay: "0.2s" }}>
+                <div className={`relative mb-3.5 flex flex-col items-center ${theme.floatClass}`}>
+                  {theme.icon}
+                  <div className={theme.avatarContainer}>
+                    {getInitials(second.name)}
+                    <div className={theme.badge}>
+                      {second.rank ?? 2}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Pedestal block */}
-              <div
-                onClick={() => router.push(currentUser && currentUser.id === second.id ? "/collection" : `/users/${second.id}/collection`)}
-                className="w-full bg-gradient-to-t from-slate-950/80 to-slate-800/40 border-t border-x border-slate-500/20 rounded-t-xl h-[120px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-slate-400/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden"
-              >
-                <span className="text-white font-bold text-xs truncate w-11/12 text-center group-hover:text-slate-300">{second.name}</span>
-                <span className="text-lg font-black text-white font-mono mt-1">
-                  {Math.floor(multiplier * second.points).toLocaleString()}
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 bg-slate-400/10 border border-slate-400/20 px-2 py-0.5 rounded-full mt-2">
-                  {getTier(second.points)}
-                </span>
+                {/* Pedestal block */}
+                <div
+                  onClick={() => router.push(currentUser && currentUser.id === second.id ? "/collection" : `/users/${second.id}/collection`)}
+                  className={theme.pedestal}
+                >
+                  <span className={`text-white font-bold text-xs truncate w-11/12 text-center ${theme.hoverText}`}>{second.name}</span>
+                  <span className={theme.points} style={theme.pointsStyle}>
+                    {Math.floor(multiplier * second.points).toLocaleString()}
+                  </span>
+                  <span className={theme.tierBadge}>
+                    {getTier(second.points)}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 1st Place */}
-          {first && (
-            <div className="podium-rise flex flex-col items-center w-1/3 z-10" style={{ animationDelay: "0.1s" }}>
-              <div className="relative mb-4 flex flex-col items-center animate-float">
-                <Crown className="w-6 h-6 text-amber-400 mb-1 animate-sparkle" />
-                {/* Gold ring glow */}
-                <div className="w-18 h-18 rounded-full border-[3px] border-amber-400 flex items-center justify-center font-black text-xl bg-amber-950/50 text-amber-300 shadow-[0_0_25px_rgba(245,158,11,0.3)] relative">
-                  {getInitials(first.name)}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-amber-400 border border-amber-950 flex items-center justify-center text-amber-950 font-black text-[11px] shimmer-effect overflow-hidden">
-                    1
+          {first && (() => {
+            const theme = getPodiumTheme(first.rank ?? 1);
+            return (
+              <div className="podium-rise flex flex-col items-center w-1/3 z-10" style={{ animationDelay: "0.1s" }}>
+                <div className={`relative mb-4 flex flex-col items-center ${theme.floatClass}`}>
+                  {theme.icon}
+                  <div className={theme.avatarContainer}>
+                    {getInitials(first.name)}
+                    <div className={theme.badge}>
+                      {first.rank ?? 1}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Pedestal block */}
-              <div
-                onClick={() => router.push(currentUser && currentUser.id === first.id ? "/collection" : `/users/${first.id}/collection`)}
-                className="w-full bg-gradient-to-t from-amber-950/80 to-amber-800/40 border-t-2 border-x border-amber-500/40 rounded-t-xl h-[160px] flex flex-col items-center justify-center shadow-2xl hover:scale-[1.03] hover:border-amber-400/60 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden"
-              >
-                <span className="text-white font-black text-sm truncate w-11/12 text-center group-hover:text-amber-300">{first.name}</span>
-                <span className="text-2xl font-black text-amber-400 font-mono mt-1" style={{ textShadow: "0 0 15px rgba(245,158,11,0.4)" }}>
-                  {Math.floor(multiplier * first.points).toLocaleString()}
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full mt-2.5">
-                  {getTier(first.points)}
-                </span>
+                {/* Pedestal block */}
+                <div
+                  onClick={() => router.push(currentUser && currentUser.id === first.id ? "/collection" : `/users/${first.id}/collection`)}
+                  className={theme.pedestal}
+                >
+                  <span className={`text-white font-black text-sm truncate w-11/12 text-center ${theme.hoverText}`}>{first.name}</span>
+                  <span className={theme.points} style={theme.pointsStyle}>
+                    {Math.floor(multiplier * first.points).toLocaleString()}
+                  </span>
+                  <span className={theme.tierBadge}>
+                    {getTier(first.points)}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* 3rd Place */}
-          {third && (
-            <div className="podium-rise flex flex-col items-center w-1/3" style={{ animationDelay: "0.3s" }}>
-              <div className="relative mb-3.5 flex flex-col items-center animate-float-delayed-more">
-                <Sparkles className="w-4 h-4 text-amber-700 mb-1.5" />
-                <div className="w-15 h-15 rounded-full border-2 border-amber-700 flex items-center justify-center font-black text-lg bg-amber-950/30 text-amber-600 shadow-[0_0_15px_rgba(180,83,9,0.15)] relative">
-                  {getInitials(third.name)}
-                  <div className="absolute -bottom-1 -right-1 w-5.5 h-5.5 rounded-full bg-amber-700 border border-amber-950 flex items-center justify-center text-white font-black text-[10px]">
-                    3
+          {third && (() => {
+            const theme = getPodiumTheme(third.rank ?? 3);
+            return (
+              <div className="podium-rise flex flex-col items-center w-1/3" style={{ animationDelay: "0.3s" }}>
+                <div className={`relative mb-3.5 flex flex-col items-center ${theme.floatClass}`}>
+                  {theme.icon}
+                  <div className={theme.avatarContainer}>
+                    {getInitials(third.name)}
+                    <div className={theme.badge}>
+                      {third.rank ?? 3}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Pedestal block */}
-              <div
-                onClick={() => router.push(currentUser && currentUser.id === third.id ? "/collection" : `/users/${third.id}/collection`)}
-                className="w-full bg-gradient-to-t from-amber-950/40 to-amber-900/10 border-t border-x border-amber-700/20 rounded-t-xl h-[100px] flex flex-col items-center justify-center shadow-lg hover:scale-[1.03] hover:border-amber-600/40 transition-all duration-300 group cursor-pointer relative shimmer-effect overflow-hidden"
-              >
-                <span className="text-white font-bold text-xs truncate w-11/12 text-center group-hover:text-amber-600">{third.name}</span>
-                <span className="text-lg font-black text-white font-mono mt-1">
-                  {Math.floor(multiplier * third.points).toLocaleString()}
-                </span>
-                <span className="text-[8px] font-black uppercase tracking-wider text-amber-600 bg-amber-600/10 border border-amber-600/20 px-2 py-0.5 rounded-full mt-2">
-                  {getTier(third.points)}
-                </span>
+                {/* Pedestal block */}
+                <div
+                  onClick={() => router.push(currentUser && currentUser.id === third.id ? "/collection" : `/users/${third.id}/collection`)}
+                  className={theme.pedestal}
+                >
+                  <span className={`text-white font-bold text-xs truncate w-11/12 text-center ${theme.hoverText}`}>{third.name}</span>
+                  <span className={theme.points} style={theme.pointsStyle}>
+                    {Math.floor(multiplier * third.points).toLocaleString()}
+                  </span>
+                  <span className={theme.tierBadge}>
+                    {getTier(third.points)}
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </section>
 
 

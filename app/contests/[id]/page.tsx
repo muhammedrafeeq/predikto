@@ -198,9 +198,9 @@ export default function ContestDetailPage() {
     bracket:          { label: "Tournament Bracket", icon: "🏆", desc: "Build your bracket picks",     color: "from-purple-900/60 to-purple-800/20 border-purple-500/30" },
   };
 
-  const activeGameTypes: GameType[] = (contest.gameTypes && contest.gameTypes.length > 0)
+  const activeGameTypes: GameType[] = ((contest.gameTypes && contest.gameTypes.length > 0)
     ? contest.gameTypes
-    : [contest.gameType];
+    : [contest.gameType]).filter((t) => t !== "first_goal" && t !== "formation");
 
   const isMultiGame = activeGameTypes.length > 1;
 

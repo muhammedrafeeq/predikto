@@ -247,7 +247,7 @@ export default function FormationContestView({ contestId }: { contestId: number 
     (m) => m.locked && m.userPrediction === null && !submitted[m.id]
   );
   const predictedUpcoming = upcomingMatches.filter(
-    (m) => m.userPrediction !== null || submitted[m.id]
+    (m) => (m.userPrediction !== null || submitted[m.id]) && new Date(m.deadline) > new Date()
   );
 
   if (loading) {
@@ -401,41 +401,8 @@ export default function FormationContestView({ contestId }: { contestId: number 
         </section>
       )}
 
-      {/* Results */}
-      {pastPredictions.filter((p) => p.actualHome !== null || p.actualAway !== null).length > 0 && (
-        <section className="space-y-3">
-          <h3 className="text-[10px] font-black uppercase tracking-wider text-white/35 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 inline-block" /> Results
-          </h3>
-          <div className="space-y-3">
-            {pastPredictions
-              .filter((p) => p.actualHome !== null || p.actualAway !== null)
-              .map((pred) => (
-                <div key={pred.matchId} className="rounded-2xl border border-white/5 p-4 surface-glass-1 flex flex-col gap-3">
-                  <div className="flex items-center justify-between text-xs font-black text-white">
-                    <span>{pred.teamHome} vs {pred.teamAway}</span>
-                    <span className="text-violet-400 font-black text-xs flex items-center gap-0.5">
-                      <Trophy className="w-3.5 h-3.5" /> {pred.points} pts
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <span className="text-[9px] text-white/30 font-black w-10 shrink-0">HOME</span>
-                      <FormationBadge predicted={pred.predictedHome} actual={pred.actualHome} />
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-[9px] text-white/30 font-black w-10 shrink-0">AWAY</span>
-                      <FormationBadge predicted={pred.predictedAway} actual={pred.actualAway} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </section>
-      )}
-
       {/* Empty State */}
-      {predictableMatches.length === 0 && predictedUpcoming.length === 0 && pastPredictions.length === 0 && (
+      {predictableMatches.length === 0 && predictedUpcoming.length === 0 && lockedMatches.length === 0 && (
         <div className="text-center py-16 text-white/30 surface-glass-1 border border-white/5 rounded-2xl">
           <Users className="w-12 h-12 text-white/10 mx-auto mb-3" />
           <p className="text-sm font-semibold">No matches scheduled in this tournament yet.</p>

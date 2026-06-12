@@ -64,7 +64,7 @@ export async function POST(
 
     // 3. Fetch all predictions submitted by users for this match
     const predictionsRes = await query(
-      `SELECT p.user_id, p.question_id, p.answer, q.type, q.points
+      `SELECT p.user_id, p.contest_id, p.question_id, p.answer, q.type, q.points
        FROM predictions p
        JOIN questions q ON p.question_id = q.id
        WHERE p.match_id = $1`,
@@ -86,28 +86,39 @@ export async function POST(
       return answer;
     };
 
-    // Group predictions by user ID
-    const userPredictions: Record<
-      number,
-      Array<{ type: string; answer: string; points: number }>
+    // Group predictions by user ID and contest ID
+    const userContestPredictions: Record<
+      string,
+      {
+        userId: number;
+        contestId: number;
+        preds: Array<{ type: string; answer: string; points: number }>;
+      }
     > = {};
 
     for (const row of predictionsRes.rows) {
       const uId = row.user_id;
-      if (!userPredictions[uId]) {
-        userPredictions[uId] = [];
+      const cId = row.contest_id;
+      const key = `${uId}-${cId}`;
+      if (!userContestPredictions[key]) {
+        userContestPredictions[key] = {
+          userId: uId,
+          contestId: cId,
+          preds: [],
+        };
       }
-      userPredictions[uId].push({
+      userContestPredictions[key].preds.push({
         type: row.type,
         answer: row.answer,
         points: parseInt(row.points, 10),
       });
     }
 
-    // 4. Calculate points for each user and update the scores table
-    for (const uIdStr of Object.keys(userPredictions)) {
-      const uId = parseInt(uIdStr, 10);
-      const preds = userPredictions[uId];
+    const userMaxCorrect: Record<number, number> = {};
+
+    // 4. Calculate points for each user-contest prediction and update the scores table
+    for (const key of Object.keys(userContestPredictions)) {
+      const { userId: uId, contestId: cId, preds } = userContestPredictions[key];
       let totalPoints = 0;
       let correctCount = 0;
 
@@ -130,25 +141,35 @@ export async function POST(
         totalPoints += 3;
       }
 
+      // Keep track of the user's best correct count across all contests for card drops
+      if (correctCount > (userMaxCorrect[uId] ?? -1)) {
+        userMaxCorrect[uId] = correctCount;
+      }
+
       // Write user score
       await query(
-        `INSERT INTO scores (user_id, match_id, points)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (user_id, match_id)
+        `INSERT INTO scores (user_id, contest_id, match_id, points)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (user_id, contest_id, match_id)
          DO UPDATE SET points = EXCLUDED.points`,
-        [uId, matchId, totalPoints]
+        [uId, cId, matchId, totalPoints]
       );
+    }
 
-      // Card Collection drops integration
-      if (correctCount === 3) {
+    // 5. Trigger card drops and hot streaks based on user max performance
+    for (const uIdStr of Object.keys(userMaxCorrect)) {
+      const uId = parseInt(uIdStr, 10);
+      const maxCorrect = userMaxCorrect[uId];
+
+      if (maxCorrect === 3) {
         await dropMultipleCards(uId, "perfect", 1, matchId);
         await dropMultipleCards(uId, "prediction", 2, matchId);
-      } else if (correctCount > 0) {
-        await dropMultipleCards(uId, "prediction", correctCount, matchId);
+      } else if (maxCorrect > 0) {
+        await dropMultipleCards(uId, "prediction", maxCorrect, matchId);
       }
 
       // Check Hot Streak (3 correct predictions in a row)
-      if (correctCount > 0) {
+      if (maxCorrect > 0) {
         const streakCheck = await query<any>(
           `SELECT s.points 
            FROM scores s 
@@ -160,6 +181,7 @@ export async function POST(
            LIMIT 2`,
           [uId, matchId]
         );
+
         if (streakCheck.rows.length === 2 && streakCheck.rows.every(r => r.points > 0)) {
           // Trigger hot streak bonus drop!
           await dropMultipleCards(uId, "streak", 1, matchId);
@@ -194,22 +216,31 @@ export async function POST(
 
     // 8. Send push to subscribed users
     if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-      webpush.setVapidDetails(
-        process.env.VAPID_EMAIL || "mailto:admin@predikto.app",
-        process.env.VAPID_PUBLIC_KEY,
-        process.env.VAPID_PRIVATE_KEY
-      );
-    }
-    const subsRes = await query(
-      "SELECT user_id, endpoint, p256dh, auth FROM push_subscriptions"
-    ).catch(() => ({ rows: [] }));
+      try {
+        webpush.setVapidDetails(
+          process.env.VAPID_EMAIL || "mailto:admin@predikto.app",
+          process.env.VAPID_PUBLIC_KEY,
+          process.env.VAPID_PRIVATE_KEY
+        );
 
-    const pushPayload = JSON.stringify({ title: notifTitle, body: notifBody, url: "/matches" });
-    for (const sub of subsRes.rows) {
-      webpush.sendNotification(
-        { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-        pushPayload
-      ).catch(() => {}); // ignore failed pushes
+        const subsRes = await query(
+          "SELECT user_id, endpoint, p256dh, auth FROM push_subscriptions"
+        ).catch(() => ({ rows: [] }));
+
+        const pushPayload = JSON.stringify({ title: notifTitle, body: notifBody, url: "/matches" });
+        for (const sub of subsRes.rows) {
+          try {
+            await webpush.sendNotification(
+              { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+              pushPayload
+            );
+          } catch (e) {
+            // ignore failed pushes
+          }
+        }
+      } catch (err) {
+        console.error("Webpush setup error:", err);
+      }
     }
 
     return NextResponse.json({

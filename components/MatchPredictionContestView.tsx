@@ -247,7 +247,6 @@ export default function MatchPredictionContestView({
             });
 
             const visible = mapped.filter((m) => {
-              if (m.status === "Predicted" || m.status === "Resulted") return true;
               return m.matchTimestamp > now;
             });
 

@@ -562,8 +562,6 @@ export default function AdminContestsPage() {
         >
           <option value="all">All Types</option>
           <option value="match_prediction">Match Prediction</option>
-          <option value="first_goal">First Goal</option>
-          <option value="formation">Formation</option>
           <option value="bracket">Bracket</option>
         </select>
       </div>
@@ -709,8 +707,10 @@ export default function AdminContestsPage() {
               <div>
                 <label className="block label-md text-on-surface-variant mb-1.5">Game Types <span className="text-white/30 font-normal text-xs">(select one or more)</span></label>
                 <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(GAME_TYPE_META).map(([type, meta]) => {
-                    const selected = newGameTypes.includes(type);
+                  {Object.entries(GAME_TYPE_META)
+                    .filter(([type]) => type !== "first_goal" && type !== "formation")
+                    .map(([type, meta]) => {
+                      const selected = newGameTypes.includes(type);
                     return (
                       <button
                         key={type}

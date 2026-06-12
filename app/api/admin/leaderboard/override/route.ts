@@ -33,9 +33,9 @@ export async function POST(request: Request) {
 
     // Insert or update the score record
     const scoreRes = await query(
-      `INSERT INTO scores (user_id, match_id, points)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (user_id, match_id)
+      `INSERT INTO scores (user_id, contest_id, match_id, points)
+       VALUES ($1, 1, $2, $3)
+       ON CONFLICT (user_id, contest_id, match_id)
        DO UPDATE SET points = EXCLUDED.points
        RETURNING id, user_id as "userId", match_id as "matchId", points`,
       [uId, mId, pts]

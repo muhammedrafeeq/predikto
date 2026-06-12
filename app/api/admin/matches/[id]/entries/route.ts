@@ -43,7 +43,7 @@ export async function GET(
       JOIN users u ON p.user_id = u.id
       JOIN questions q ON p.question_id = q.id
       LEFT JOIN results r ON p.question_id = r.question_id AND p.match_id = r.match_id
-      LEFT JOIN scores s ON p.user_id = s.user_id AND p.match_id = s.match_id
+      LEFT JOIN scores s ON p.user_id = s.user_id AND p.match_id = s.match_id AND s.contest_id = p.contest_id
       WHERE p.match_id = $1
       ORDER BY u.name ASC`,
       [matchId]

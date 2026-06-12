@@ -321,8 +321,6 @@ const GAMES = [
   { id: "trivia",    title: "Football Trivia",      Icon3d: Icon3dTrivia,    accent: "#38bdf8", glow: "rgba(56,189,248,0.5)",   bg: "linear-gradient(145deg,#082f49,#0369a1)",  badge: "DAILY",     maxPts: "30",  href: "/games/trivia" },
   { id: "who_am_i",  title: "Who Am I?",            Icon3d: Icon3dWhoAmI,    accent: "#2dd4bf", glow: "rgba(45,212,191,0.5)",   bg: "linear-gradient(145deg,#042f2e,#0f766e)",  badge: "DAILY",     maxPts: "15",  href: "/games/who-am-i" },
   { id: "flag_quiz", title: "Flag Quiz",             Icon3d: Icon3dFlag,      accent: "#f87171", glow: "rgba(248,113,113,0.5)",  bg: "linear-gradient(145deg,#1c0a0a,#991b1b)",  badge: "DAILY",     maxPts: "90",  href: "/games/flag-quiz" },
-  { id: "first_goal",title: "First Goal Timer",     Icon3d: Icon3dClock,     accent: "#fbbf24", glow: "rgba(251,191,36,0.5)",   bg: "linear-gradient(145deg,#1c1400,#b45309)",  badge: "PER MATCH", maxPts: "20",  href: "/games/first-goal" },
-  { id: "formation", title: "Formation Predictor",  Icon3d: Icon3dFormation, accent: "#a78bfa", glow: "rgba(167,139,250,0.5)",  bg: "linear-gradient(145deg,#1e1035,#6d28d9)",  badge: "PER MATCH", maxPts: "20",  href: "/games/formation" },
   { id: "bracket",   title: "Tournament Bracket",   Icon3d: Icon3dBracket,   accent: "#facc15", glow: "rgba(250,204,21,0.5)",   bg: "linear-gradient(145deg,#1a1200,#a16207)",  badge: "ONE-SHOT",  maxPts: "100+",href: "/games/bracket" },
   { id: "cards",     title: "Card Collection",      Icon3d: Icon3dCards,     accent: "#a78bfa", glow: "rgba(167,139,250,0.5)",  bg: "linear-gradient(145deg,#1e1035,#581c87)",  badge: "COLLECT",   maxPts: "200+",href: "/collection" },
 ];

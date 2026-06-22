@@ -292,7 +292,7 @@ export default function UserRegistry() {
         {filteredUsers.map((user) => (
           <div
             key={user.id}
-            className={`surface-glass-1 rounded-xl p-5 flex flex-col gap-4 relative overflow-visible group transition-all duration-300 ${
+            className={`surface-glass-1 rounded-xl p-4 flex flex-col gap-0 relative overflow-visible group transition-all duration-300 ${
               !user.isActive ? "grayscale-[0.6] opacity-75 border-red-500/10" : ""
             }`}
           >
@@ -361,54 +361,24 @@ export default function UserRegistry() {
             </div>
 
             {/* Profile Info */}
-            <div className="flex items-center gap-4">
-              <div className="relative select-none">
-                <div className="w-14 h-14 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary font-bold text-xl">
+            <div className="flex items-center gap-3 pr-6">
+              <div className="relative select-none shrink-0">
+                <div className="w-10 h-10 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary font-bold text-sm">
                   {getInitials(user.name)}
                 </div>
-                <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-[#131318] rounded-full shadow-[0_0_10px_currentColor] ${user.isActive ? "bg-secondary text-secondary" : "bg-outline text-outline"}`} />
+                <div className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-[#131318] rounded-full ${user.isActive ? "bg-secondary" : "bg-outline"}`} />
               </div>
-              <div>
-                <h3 className="label-md text-white text-base font-bold flex items-center gap-2">
+              <div className="min-w-0">
+                <h3 className="text-sm text-white font-bold truncate flex items-center gap-2">
                   {user.name}
                   {user.role === "admin" && (
-                    <span className="text-[9px] uppercase tracking-wider bg-primary-container/20 text-primary-container px-2 py-0.5 rounded-full font-bold">
+                    <span className="text-[9px] uppercase tracking-wider bg-primary-container/20 text-primary-container px-2 py-0.5 rounded-full font-bold shrink-0">
                       Admin
                     </span>
                   )}
                 </h3>
-                <p className="text-on-surface-variant label-sm mt-0.5 font-mono">{user.phone}</p>
+                <p className="text-on-surface-variant text-xs mt-0.5 font-mono">{user.phone}</p>
               </div>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex flex-col justify-center">
-                <p className="text-[10px] uppercase text-on-surface-variant tracking-wider font-semibold mb-1">Predictions</p>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-headline-md font-extrabold text-primary font-mono">{user.predictionsCount}</span>
-                  {user.predictionsCount > 0 && <span className="text-[10px] text-secondary font-bold font-mono">+10%</span>}
-                </div>
-              </div>
-              <div className="bg-white/5 p-3 rounded-lg border border-white/5 flex flex-col justify-center">
-                <p className="text-[10px] uppercase text-on-surface-variant tracking-wider font-semibold mb-1">Win Rate</p>
-                <div className="flex items-baseline">
-                  <span className="text-headline-md font-extrabold text-primary font-mono">{user.winRate}%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-1 select-none">
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2 h-2 rounded-full ${user.isActive ? "bg-secondary animate-pulse-slow" : "bg-outline"}`} />
-                <span className={`text-[12px] font-semibold ${user.isActive ? "text-secondary" : "text-on-surface-variant"}`}>
-                  {user.isActive ? "Active" : "Blocked"}
-                </span>
-              </div>
-              <span className="text-[10px] text-on-surface-variant font-mono">
-                Joined {new Date(user.createdAt).toLocaleDateString()}
-              </span>
             </div>
           </div>
         ))}

@@ -7,17 +7,20 @@ export async function GET() {
   try {
     await requireAdmin();
     const matchesRes = await query(
-      `SELECT 
-        m.id, 
-        m.team_home as "teamHome", 
-        m.team_away as "teamAway", 
-        m.match_time as "matchTime", 
-        m.deadline, 
-        m.status, 
+      `SELECT
+        m.id,
+        m.team_home as "teamHome",
+        m.team_away as "teamAway",
+        m.team_home_ml as "teamHomeMl",
+        m.team_away_ml as "teamAwayMl",
+        m.match_time as "matchTime",
+        m.deadline,
+        m.status,
+        COALESCE(m.round, '') as round,
         COUNT(DISTINCT p.id) as "predictionsCount"
       FROM matches m
       LEFT JOIN predictions p ON m.id = p.match_id
-      GROUP BY m.id, m.team_home, m.team_away, m.match_time, m.deadline, m.status
+      GROUP BY m.id, m.team_home, m.team_away, m.team_home_ml, m.team_away_ml, m.match_time, m.deadline, m.status, m.round
       ORDER BY m.match_time DESC`
     );
 
@@ -25,9 +28,12 @@ export async function GET() {
       id: row.id,
       teamHome: row.teamHome,
       teamAway: row.teamAway,
+      teamHomeMl: row.teamHomeMl,
+      teamAwayMl: row.teamAwayMl,
       matchTime: row.matchTime,
       deadline: row.deadline,
       status: row.status,
+      round: row.round,
       predictionsCount: parseInt(row.predictionsCount, 10),
     }));
 

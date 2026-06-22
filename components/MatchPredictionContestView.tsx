@@ -265,8 +265,10 @@ export default function MatchPredictionContestView({
   // Live countdown update ticker
   useEffect(() => {
     const timer = setInterval(() => {
-      setMatches((prev) =>
-        prev.map((m) => {
+      setMatches((prev) => {
+        const hasActive = prev.some((m) => m.secondsLeft !== undefined && m.secondsLeft > 0);
+        if (!hasActive) return prev;
+        return prev.map((m) => {
           if (m.secondsLeft === undefined || m.secondsLeft <= 0) return m;
           const next = m.secondsLeft - 1;
           if (next <= 0) {
@@ -277,8 +279,8 @@ export default function MatchPredictionContestView({
             };
           }
           return { ...m, secondsLeft: next };
-        })
-      );
+        });
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, []);

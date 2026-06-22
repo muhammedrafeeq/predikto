@@ -9,12 +9,13 @@ export async function GET() {
     // Fetch matches with prediction status and points for the current user
     const matchesRes = await query(
       `SELECT 
-        m.id, 
-        m.team_home as "teamHome", 
-        m.team_away as "teamAway", 
-        m.match_time as "matchTime", 
-        m.deadline, 
+        m.id,
+        m.team_home as "teamHome",
+        m.team_away as "teamAway",
+        m.match_time as "matchTime",
+        m.deadline,
         m.status,
+        COALESCE(m.round, '') as round,
         EXISTS(
           SELECT 1 FROM predictions p 
           WHERE p.match_id = m.id AND p.user_id = $1

@@ -42,7 +42,15 @@ export default function PwaInstallPrompt() {
   useEffect(() => {
     // 1. Service Worker Registration
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
+      window.addEventListener("load", async () => {
+        // Unregister any stale/third-party service workers (e.g. old Monetag SW)
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          const swUrl = reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || "";
+          if (!swUrl.includes("/sw.js")) {
+            await reg.unregister();
+          }
+        }
         navigator.serviceWorker
           .register("/sw.js")
           .then((reg) => console.log("Service Worker registered with scope: ", reg.scope))

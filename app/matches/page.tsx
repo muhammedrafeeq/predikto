@@ -13,11 +13,12 @@ import AuthModal from "@/components/AuthModal";
 interface Match {
   id: string;
   status: "Open" | "Upcoming" | "Predicted" | "Resulted" | "Locked";
-  secondsLeft?: number;      // seconds until prediction deadline
-  matchTimestamp: number;    // raw kickoff timestamp (ms)
-  kickoffTime: string;       // formatted kickoff string
+  secondsLeft?: number;
+  matchTimestamp: number;
+  kickoffTime: string;
   teamHome: string;
   teamAway: string;
+  round?: string;
   prediction?: string;
   pointsEarned?: number;
   scoreHome?: number;
@@ -265,7 +266,14 @@ const MatchCard = ({
         <div className="p-5 flex flex-col gap-5">
           {/* Header */}
           <div className="flex justify-between items-center">
-            <StatusBadge status={match.status} />
+            <div className="flex items-center gap-2">
+              <StatusBadge status={match.status} />
+              {match.round && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  {match.round}
+                </span>
+              )}
+            </div>
 
             <div className="flex items-center gap-3 text-xs">
               {/* Locked: show unlock date */}
@@ -507,6 +515,7 @@ export default function MatchCenter() {
                 kickoffTime,
                 teamHome: m.teamHome,
                 teamAway: m.teamAway,
+                round: m.round || undefined,
                 prediction: m.predictedScore || undefined,
                 pointsEarned: m.pointsEarned !== null ? m.pointsEarned : undefined,
               };
@@ -556,8 +565,10 @@ export default function MatchCenter() {
   // Live countdown (only for unlocked matches within 48h)
   useEffect(() => {
     const timer = setInterval(() => {
-      setMatches((prev) =>
-        prev.map((m) => {
+      setMatches((prev) => {
+        const hasActive = prev.some((m) => m.secondsLeft !== undefined && m.secondsLeft > 0);
+        if (!hasActive) return prev;
+        return prev.map((m) => {
           if (m.secondsLeft === undefined || m.secondsLeft <= 0) return m;
           const next = m.secondsLeft - 1;
           if (next <= 0) {
@@ -568,8 +579,8 @@ export default function MatchCenter() {
             };
           }
           return { ...m, secondsLeft: next };
-        })
-      );
+        });
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, []);

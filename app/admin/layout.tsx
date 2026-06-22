@@ -277,7 +277,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Fixed Responsive Mobile Bottom Navigation Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-surface/85 backdrop-blur-xl border-t border-white/10 z-50 flex items-center justify-around px-4 pb-safe select-none">
-        {navLinks.map((link) => {
+        {navLinks.filter((link) => !["/admin/bracket", "/admin/ads", "/admin/who-am-i", "/admin/flag-quiz", "/admin/cards"].includes(link.href)).map((link) => {
           const Icon = link.icon;
           const isActive = pathname === link.href;
           return (

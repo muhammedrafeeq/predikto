@@ -848,15 +848,21 @@ export default function AdminContestsPage() {
                       {!entriesData?.matches || entriesData.matches.length === 0 ? (
                         <p className="text-sm text-on-surface-variant text-center py-6">No matches available</p>
                       ) : (
-                        entriesData.matches.map((match: MatchInfo) => {
+                        [...entriesData.matches].sort((a: MatchInfo, b: MatchInfo) => {
+                          const now = Date.now();
+                          const aIsPast = new Date(a.matchTime).getTime() < now ? 1 : 0;
+                          const bIsPast = new Date(b.matchTime).getTime() < now ? 1 : 0;
+                          if (aIsPast !== bIsPast) return aIsPast - bIsPast;
+                          return new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime();
+                        }).map((match: MatchInfo) => {
                           const entry = entriesData.userEntries?.[predictingMember.id]?.[match.id];
                           const hasPreds = entry && Object.keys(entry.predictions || {}).length > 0;
                           const isPast = new Date(match.matchTime) < new Date();
                           return (
-                            <button
+                            <div
                               key={match.id}
                               onClick={() => selectMatchForPrediction(match)}
-                              className="flex items-center justify-between bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl px-4 py-3 text-left transition-all group"
+                              className="flex items-center justify-between bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl px-4 py-3 text-left transition-all group cursor-pointer"
                             >
                               <div>
                                 <p className="text-sm font-semibold text-white">
@@ -884,7 +890,7 @@ export default function AdminContestsPage() {
                                 )}
                                 <Pencil className="w-4 h-4 text-on-surface-variant group-hover:text-primary transition-colors" />
                               </div>
-                            </button>
+                            </div>
                           );
                         })
                       )}
@@ -1014,6 +1020,7 @@ export default function AdminContestsPage() {
                           )}
 
                           <button
+                            type="button"
                             onClick={handleSavePredictions}
                             disabled={saving}
                             className="flex items-center justify-center gap-2 py-3 bg-primary text-on-primary rounded-xl font-bold text-sm transition-all disabled:opacity-50 mt-1"
@@ -1106,6 +1113,7 @@ export default function AdminContestsPage() {
                           <div className="flex items-center gap-1.5 shrink-0">
                             {membersContest.gameType === "match_prediction" && (
                               <button
+                                type="button"
                                 onClick={() => openPredictForMember(m)}
                                 className="flex items-center gap-1 px-2.5 py-1.5 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-lg text-primary text-xs font-bold transition-all"
                                 title="Enter predictions"

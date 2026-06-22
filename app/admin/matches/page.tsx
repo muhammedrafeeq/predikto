@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Share2, Loader2, MessageSquare } from "lucide-react";
+import { Share2, Loader2, MessageSquare, Pencil, XCircle } from "lucide-react";
 import {
   Calendar,
   Plus,
@@ -39,6 +39,7 @@ interface Match {
   matchTime: string;
   deadline: string;
   status: string;
+  round: string;
   predictionsCount: number;
 }
 
@@ -109,7 +110,7 @@ export default function MatchManager() {
   const router = useRouter();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState<"all" | "upcoming" | "live" | "resulted">("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | "upcoming" | "live" | "resulted">("upcoming");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Form states for scheduling a new match
@@ -121,6 +122,46 @@ export default function MatchManager() {
   const [deadline, setDeadline] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Edit teams modal
+  const [editMatch, setEditMatch] = useState<Match | null>(null);
+  const [editHome, setEditHome] = useState("");
+  const [editAway, setEditAway] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  const openEditTeams = (match: Match) => {
+    setEditMatch(match);
+    setEditHome(match.teamHome);
+    setEditAway(match.teamAway);
+    setEditError("");
+  };
+
+  const handleEditTeams = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editMatch) return;
+    if (!editHome.trim() || !editAway.trim()) { setEditError("Both team names are required"); return; }
+    setEditSubmitting(true);
+    try {
+      const res = await fetch(`/api/admin/matches/${editMatch.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamHome: editHome.trim(), teamAway: editAway.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMatches((prev) => prev.map((m) => m.id === editMatch.id ? { ...m, teamHome: editHome.trim(), teamAway: editAway.trim() } : m));
+        setEditMatch(null);
+      } else {
+        setEditError(data.error || "Update failed");
+      }
+    } catch {
+      setEditError("Internal server error");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
   const [sharingId, setSharingId] = useState<number | null>(null);
   const [sharingQuestionsId, setSharingQuestionsId] = useState<number | null>(null);
   const [copyToast, setCopyToast] = useState<string | null>(null);
@@ -311,11 +352,24 @@ export default function MatchManager() {
     };
   };
 
-  const filteredMatches = matches.filter((match) => {
-    const statusInfo = getMatchStatus(match);
-    if (activeFilter === "all") return true;
-    return statusInfo.type === activeFilter;
-  });
+  const filteredMatches = matches
+    .filter((match) => {
+      const statusInfo = getMatchStatus(match);
+      if (activeFilter === "all") return true;
+      return statusInfo.type === activeFilter;
+    })
+    .sort((a: Match, b: Match) => {
+      if (activeFilter === "resulted") {
+        return new Date(b.matchTime).getTime() - new Date(a.matchTime).getTime();
+      }
+      if (activeFilter === "all") {
+        const aResulted = a.status === "resulted" ? 1 : 0;
+        const bResulted = b.status === "resulted" ? 1 : 0;
+        if (aResulted !== bResulted) return aResulted - bResulted;
+        return new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime();
+      }
+      return new Date(a.matchTime).getTime() - new Date(b.matchTime).getTime();
+    });
 
   if (loading) {
     return (
@@ -359,10 +413,10 @@ export default function MatchManager() {
       {/* Filter Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
         {[
-          { id: "all", label: "All Matches" },
           { id: "upcoming", label: "Upcoming (Open)" },
           { id: "live", label: "Closed (Live)" },
           { id: "resulted", label: "Resulted" },
+          { id: "all", label: "All Matches" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -392,11 +446,18 @@ export default function MatchManager() {
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-white/10 text-on-surface-variant font-mono">
                   {kickoff.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" })}
                 </span>
-                <div className={`flex items-center gap-1.5 ${statusInfo.classes} px-2.5 py-0.5 rounded-full`}>
-                  <span className={`h-2 w-2 rounded-full ${statusInfo.badgeColor} animate-pulse-slow`} />
-                  <span className="text-[10px] font-bold uppercase tracking-wider">
-                    {statusInfo.label}
-                  </span>
+                <div className="flex items-center gap-2">
+                  {match.round && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                      {match.round}
+                    </span>
+                  )}
+                  <div className={`flex items-center gap-1.5 ${statusInfo.classes} px-2.5 py-0.5 rounded-full`}>
+                    <span className={`h-2 w-2 rounded-full ${statusInfo.badgeColor} animate-pulse-slow`} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">
+                      {statusInfo.label}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -608,6 +669,16 @@ export default function MatchManager() {
                   {statusInfo.type === "resulted" ? "Edit Result" : "Set Result"}
                 </button>
 
+                {match.round && match.round !== "Group Stage" && (
+                  <button
+                    onClick={() => openEditTeams(match)}
+                    className="h-11 w-11 rounded-lg font-bold text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-all flex items-center justify-center cursor-pointer shrink-0"
+                    title="Edit team names"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                )}
+
                 <button
                   onClick={() => handleShareQuestions(match)}
                   disabled={sharingQuestionsId === match.id}
@@ -766,6 +837,55 @@ export default function MatchManager() {
                   className="flex-1 py-3 bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(139,128,255,0.3)] rounded-lg font-bold transition-all disabled:opacity-50 cursor-pointer text-center flex items-center justify-center"
                 >
                   {submitting ? "Scheduling..." : "Schedule Match"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Teams Modal ── */}
+      {editMatch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <div className="w-full max-w-sm surface-glass-1 rounded-xl p-6 flex flex-col gap-4 shadow-2xl border border-white/10">
+            <header className="flex justify-between items-center border-b border-white/5 pb-3">
+              <div>
+                <h3 className="font-bold text-white text-base">Edit Team Names</h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">{editMatch.round}</p>
+              </div>
+              <button type="button" onClick={() => setEditMatch(null)} className="p-1 hover:bg-white/10 rounded-full text-on-surface-variant hover:text-white transition-colors">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </header>
+
+            {editError && <div className="p-3 bg-error/10 border border-error/30 text-error rounded-lg text-sm">{editError}</div>}
+
+            <form onSubmit={handleEditTeams} className="flex flex-col gap-4">
+              <div>
+                <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Home Team</label>
+                <input
+                  autoFocus
+                  value={editHome}
+                  onChange={(e) => setEditHome(e.target.value)}
+                  placeholder="e.g. Germany"
+                  className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Away Team</label>
+                <input
+                  value={editAway}
+                  onChange={(e) => setEditAway(e.target.value)}
+                  placeholder="e.g. France"
+                  className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setEditMatch(null)} className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg font-bold text-sm text-on-surface transition-all">
+                  Cancel
+                </button>
+                <button type="submit" disabled={editSubmitting} className="flex-1 py-3 bg-primary text-on-primary rounded-lg font-bold text-sm transition-all disabled:opacity-50">
+                  {editSubmitting ? "Saving..." : "Save"}
                 </button>
               </div>
             </form>

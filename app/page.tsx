@@ -84,7 +84,7 @@ export default function ContestsDashboard() {
     window.location.reload();
   }, []);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async () => { // eslint-disable-line react-hooks/exhaustive-deps
     try {
       const [userRes, publicContestsRes, tourRes, settingsRes] = await Promise.all([
         fetch("/api/auth/me"),
@@ -132,7 +132,7 @@ export default function ContestsDashboard() {
     }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleJoinWithCode = async (code: string) => {
     setJoining(true); setJoinError(""); setJoinSuccess("");

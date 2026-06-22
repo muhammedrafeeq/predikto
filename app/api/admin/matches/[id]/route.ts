@@ -4,11 +4,12 @@ import { query } from "@/lib/db";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAdmin();
-    const matchId = parseInt(params.id, 10);
+    const { id } = await params;
+    const matchId = parseInt(id, 10);
     if (isNaN(matchId)) return NextResponse.json({ error: "Invalid match ID" }, { status: 400 });
 
     const body = await request.json();

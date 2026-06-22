@@ -66,7 +66,7 @@ const ROUND_OF_32: MatchDef[] = [
   { matchNo: 84, home: "1H",        away: "2J",           date: "2026-07-03", istTime: "12:30 AM", round: "Round of 32" },
   { matchNo: 85, home: "1B",        away: "3rd E/F/G/I/J",date: "2026-07-03", istTime: "8:30 AM",  round: "Round of 32" },
   { matchNo: 86, home: "1J",        away: "2H",           date: "2026-07-04", istTime: "3:30 AM",  round: "Round of 32" },
-  { matchNo: 87, home: "1K",        away: "3rd D/E/I/J/L",date: "2026-07-04", istTime: "7:30 AM",  round: "Round of 32" }, // time not provided, placeholder
+  { matchNo: 87, home: "1K",        away: "3rd D/E/I/J/L",date: "2026-07-04", istTime: "7:00 AM",  round: "Round of 32" },
   { matchNo: 88, home: "2D",        away: "2G",           date: "2026-07-03", istTime: "11:30 PM", round: "Round of 32" },
 ];
 
@@ -82,6 +82,30 @@ const ROUND_OF_16: MatchDef[] = [
   { matchNo: 96, home: "RD32 W13", away: "RD32 W15", date: "2026-07-08", istTime: "1:30 AM",  round: "Round of 16" },
 ];
 
+// 3rd Place
+const THIRD_PLACE: MatchDef[] = [
+  { matchNo: 104, home: "SF L1", away: "SF L2", date: "2026-07-19", istTime: "2:30 AM", round: "3rd Place" },
+];
+
+// Final
+const FINAL: MatchDef[] = [
+  { matchNo: 103, home: "SF W1", away: "SF W2", date: "2026-07-20", istTime: "12:30 AM", round: "Final" },
+];
+
+// Semi-Finals
+const SEMI_FINALS: MatchDef[] = [
+  { matchNo: 101, home: "QF W1", away: "QF W2", date: "2026-07-15", istTime: "12:30 AM", round: "Semi-Final" },
+  { matchNo: 102, home: "QF W3", away: "QF W4", date: "2026-07-16", istTime: "12:30 AM", round: "Semi-Final" },
+];
+
+// Quarter-Finals
+const QUARTER_FINALS: MatchDef[] = [
+  { matchNo: 97,  home: "RD16 W1", away: "RD16 W2", date: "2026-07-10", istTime: "1:30 AM",  round: "Quarter-Final" },
+  { matchNo: 98,  home: "RD16 W5", away: "RD16 W6", date: "2026-07-11", istTime: "12:30 AM", round: "Quarter-Final" },
+  { matchNo: 99,  home: "RD16 W3", away: "RD16 W4", date: "2026-07-12", istTime: "2:30 AM",  round: "Quarter-Final" },
+  { matchNo: 100, home: "RD16 W7", away: "RD16 W8", date: "2026-07-12", istTime: "6:30 AM",  round: "Quarter-Final" },
+];
+
 async function run() {
   const client = new Client({ connectionString });
   await client.connect();
@@ -93,7 +117,7 @@ async function run() {
     // Update existing group stage matches with round label
     await client.query(`UPDATE matches SET round = 'Group Stage' WHERE round = '' AND match_time < '2026-06-29'::timestamptz`);
 
-    const allMatches = [...ROUND_OF_32, ...ROUND_OF_16];
+    const allMatches = [...THIRD_PLACE, ...FINAL];
     let inserted = 0;
     let skipped = 0;
 

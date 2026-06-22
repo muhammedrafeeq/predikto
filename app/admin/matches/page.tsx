@@ -840,7 +840,7 @@ export default function MatchManager() {
           <div className="w-full max-w-sm surface-glass-1 rounded-xl p-6 flex flex-col gap-4 shadow-2xl border border-white/10">
             <header className="flex justify-between items-center border-b border-white/5 pb-3">
               <div>
-                <h3 className="font-bold text-white text-base">Edit Team Names</h3>
+                <h3 className="font-bold text-white text-base">Pick Teams</h3>
                 <p className="text-xs text-on-surface-variant mt-0.5">{editMatch.round}</p>
               </div>
               <button type="button" onClick={() => setEditMatch(null)} className="p-1 hover:bg-white/10 rounded-full text-on-surface-variant hover:text-white transition-colors">
@@ -848,27 +848,80 @@ export default function MatchManager() {
               </button>
             </header>
 
+            {/* Live match preview */}
+            {(editHome.trim() || editAway.trim()) && (
+              <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/4 border border-white/8">
+                {/* Home */}
+                <div className="flex flex-col items-center gap-1.5 flex-1">
+                  {editHome.trim() ? (
+                    <>
+                      {getFlag(editHome) ? (
+                        <img src={getFlag(editHome)!} alt={editHome} className="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-black text-white">
+                          {editHome.substring(0, 3).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="text-[11px] font-semibold text-white/80 text-center leading-tight max-w-18">{editHome}</span>
+                    </>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-white/5 border border-dashed border-white/15 flex items-center justify-center text-white/20 text-lg">?</div>
+                  )}
+                </div>
+
+                <span className="text-white/20 font-black text-lg px-2">VS</span>
+
+                {/* Away */}
+                <div className="flex flex-col items-center gap-1.5 flex-1">
+                  {editAway.trim() ? (
+                    <>
+                      {getFlag(editAway) ? (
+                        <img src={getFlag(editAway)!} alt={editAway} className="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg" />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-black text-white">
+                          {editAway.substring(0, 3).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="text-[11px] font-semibold text-white/80 text-center leading-tight max-w-18">{editAway}</span>
+                    </>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-white/5 border border-dashed border-white/15 flex items-center justify-center text-white/20 text-lg">?</div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {editError && <div className="p-3 bg-error/10 border border-error/30 text-error rounded-lg text-sm">{editError}</div>}
 
             <form onSubmit={handleEditTeams} className="flex flex-col gap-4">
               <div>
                 <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Home Team</label>
-                <input
-                  autoFocus
-                  value={editHome}
-                  onChange={(e) => setEditHome(e.target.value)}
-                  placeholder="e.g. Germany"
-                  className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none"
-                />
+                <div className="relative flex items-center gap-2">
+                  {getFlag(editHome) && (
+                    <img src={getFlag(editHome)!} alt="" className="absolute left-3 w-6 h-6 rounded-full object-cover pointer-events-none" />
+                  )}
+                  <input
+                    autoFocus
+                    value={editHome}
+                    onChange={(e) => setEditHome(e.target.value)}
+                    placeholder="e.g. Germany"
+                    className={`w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none transition-all ${getFlag(editHome) ? "pl-11" : ""}`}
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Away Team</label>
-                <input
-                  value={editAway}
-                  onChange={(e) => setEditAway(e.target.value)}
-                  placeholder="e.g. France"
-                  className="w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none"
-                />
+                <div className="relative flex items-center gap-2">
+                  {getFlag(editAway) && (
+                    <img src={getFlag(editAway)!} alt="" className="absolute left-3 w-6 h-6 rounded-full object-cover pointer-events-none" />
+                  )}
+                  <input
+                    value={editAway}
+                    onChange={(e) => setEditAway(e.target.value)}
+                    placeholder="e.g. France"
+                    className={`w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none transition-all ${getFlag(editAway) ? "pl-11" : ""}`}
+                  />
+                </div>
               </div>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setEditMatch(null)} className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg font-bold text-sm text-on-surface transition-all">

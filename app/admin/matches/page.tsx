@@ -119,12 +119,25 @@ export default function MatchManager() {
   const [editAway, setEditAway] = useState("");
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState("");
+  const [availableTeams, setAvailableTeams] = useState<string[]>([]);
+  const [homeSearch, setHomeSearch] = useState("");
+  const [awaySearch, setAwaySearch] = useState("");
+  const [homeDropOpen, setHomeDropOpen] = useState(false);
+  const [awayDropOpen, setAwayDropOpen] = useState(false);
 
   const openEditTeams = (match: Match) => {
     setEditMatch(match);
     setEditHome(match.teamHome);
     setEditAway(match.teamAway);
+    setHomeSearch("");
+    setAwaySearch("");
     setEditError("");
+    if (availableTeams.length === 0) {
+      fetch("/api/admin/teams")
+        .then((r) => r.json())
+        .then((d) => { if (d.success) setAvailableTeams(d.teams); })
+        .catch(() => {});
+    }
   };
 
   const handleEditTeams = async (e: React.FormEvent) => {
@@ -836,8 +849,8 @@ export default function MatchManager() {
 
       {/* ── Edit Teams Modal ── */}
       {editMatch && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="w-full max-w-sm surface-glass-1 rounded-xl p-6 flex flex-col gap-4 shadow-2xl border border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm" onClick={() => { setHomeDropOpen(false); setAwayDropOpen(false); }}>
+          <div className="w-full max-w-sm surface-glass-1 rounded-xl p-6 flex flex-col gap-4 shadow-2xl border border-white/10" onClick={(e) => e.stopPropagation()}>
             <header className="flex justify-between items-center border-b border-white/5 pb-3">
               <div>
                 <h3 className="font-bold text-white text-base">Pick Teams</h3>
@@ -849,80 +862,130 @@ export default function MatchManager() {
             </header>
 
             {/* Live match preview */}
-            {(editHome.trim() || editAway.trim()) && (
-              <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/4 border border-white/8">
-                {/* Home */}
-                <div className="flex flex-col items-center gap-1.5 flex-1">
-                  {editHome.trim() ? (
-                    <>
-                      {getFlag(editHome) ? (
-                        <img src={getFlag(editHome)!} alt={editHome} className="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-black text-white">
-                          {editHome.substring(0, 3).toUpperCase()}
-                        </div>
-                      )}
-                      <span className="text-[11px] font-semibold text-white/80 text-center leading-tight max-w-18">{editHome}</span>
-                    </>
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-white/5 border border-dashed border-white/15 flex items-center justify-center text-white/20 text-lg">?</div>
-                  )}
-                </div>
-
-                <span className="text-white/20 font-black text-lg px-2">VS</span>
-
-                {/* Away */}
-                <div className="flex flex-col items-center gap-1.5 flex-1">
-                  {editAway.trim() ? (
-                    <>
-                      {getFlag(editAway) ? (
-                        <img src={getFlag(editAway)!} alt={editAway} className="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-black text-white">
-                          {editAway.substring(0, 3).toUpperCase()}
-                        </div>
-                      )}
-                      <span className="text-[11px] font-semibold text-white/80 text-center leading-tight max-w-18">{editAway}</span>
-                    </>
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-white/5 border border-dashed border-white/15 flex items-center justify-center text-white/20 text-lg">?</div>
-                  )}
-                </div>
+            <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/4 border border-white/8">
+              <div className="flex flex-col items-center gap-1.5 flex-1">
+                {editHome.trim() ? (
+                  <>
+                    {getFlag(editHome) ? (
+                      <img src={getFlag(editHome)!} alt={editHome} className="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-black text-white">
+                        {editHome.substring(0, 3).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-[11px] font-semibold text-white/80 text-center leading-tight max-w-18">{editHome}</span>
+                  </>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-white/5 border border-dashed border-white/15 flex items-center justify-center text-white/20 text-lg">?</div>
+                )}
               </div>
-            )}
+              <span className="text-white/20 font-black text-lg px-2">VS</span>
+              <div className="flex flex-col items-center gap-1.5 flex-1">
+                {editAway.trim() ? (
+                  <>
+                    {getFlag(editAway) ? (
+                      <img src={getFlag(editAway)!} alt={editAway} className="w-12 h-12 rounded-full object-cover border-2 border-white/10 shadow-lg" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-xs font-black text-white">
+                        {editAway.substring(0, 3).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-[11px] font-semibold text-white/80 text-center leading-tight max-w-18">{editAway}</span>
+                  </>
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-white/5 border border-dashed border-white/15 flex items-center justify-center text-white/20 text-lg">?</div>
+                )}
+              </div>
+            </div>
 
             {editError && <div className="p-3 bg-error/10 border border-error/30 text-error rounded-lg text-sm">{editError}</div>}
 
             <form onSubmit={handleEditTeams} className="flex flex-col gap-4">
-              <div>
+              {/* Home Team picker */}
+              <div className="relative">
                 <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Home Team</label>
-                <div className="relative flex items-center gap-2">
+                <div className="relative">
                   {getFlag(editHome) && (
-                    <img src={getFlag(editHome)!} alt="" className="absolute left-3 w-6 h-6 rounded-full object-cover pointer-events-none" />
+                    <img src={getFlag(editHome)!} alt="" className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full object-cover pointer-events-none z-10" />
                   )}
                   <input
                     autoFocus
-                    value={editHome}
-                    onChange={(e) => setEditHome(e.target.value)}
-                    placeholder="e.g. Germany"
+                    value={homeSearch || editHome}
+                    onChange={(e) => { setHomeSearch(e.target.value); setEditHome(e.target.value); setHomeDropOpen(true); }}
+                    onFocus={() => setHomeDropOpen(true)}
+                    onBlur={() => setTimeout(() => setHomeDropOpen(false), 150)}
+                    placeholder="Search team..."
                     className={`w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none transition-all ${getFlag(editHome) ? "pl-11" : ""}`}
                   />
                 </div>
+                {homeDropOpen && availableTeams.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-[#101015] border border-white/10 rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto">
+                    {availableTeams
+                      .filter((t) => t.toLowerCase().includes((homeSearch || editHome).toLowerCase()))
+                      .map((team) => (
+                        <button
+                          key={team}
+                          type="button"
+                          onPointerDown={(e) => { e.preventDefault(); setEditHome(team); setHomeSearch(""); setHomeDropOpen(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                        >
+                          {getFlag(team) ? (
+                            <img src={getFlag(team)!} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+                              {team.substring(0, 3).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="text-sm font-semibold text-white/90">{team}</span>
+                          {editHome === team && <CheckCircle className="w-4 h-4 text-primary ml-auto shrink-0" />}
+                        </button>
+                      ))}
+                  </div>
+                )}
               </div>
-              <div>
+
+              {/* Away Team picker */}
+              <div className="relative">
                 <label className="block text-xs text-on-surface-variant mb-1.5 font-semibold uppercase tracking-wider">Away Team</label>
-                <div className="relative flex items-center gap-2">
+                <div className="relative">
                   {getFlag(editAway) && (
-                    <img src={getFlag(editAway)!} alt="" className="absolute left-3 w-6 h-6 rounded-full object-cover pointer-events-none" />
+                    <img src={getFlag(editAway)!} alt="" className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full object-cover pointer-events-none z-10" />
                   )}
                   <input
-                    value={editAway}
-                    onChange={(e) => setEditAway(e.target.value)}
-                    placeholder="e.g. France"
+                    value={awaySearch || editAway}
+                    onChange={(e) => { setAwaySearch(e.target.value); setEditAway(e.target.value); setAwayDropOpen(true); }}
+                    onFocus={() => setAwayDropOpen(true)}
+                    onBlur={() => setTimeout(() => setAwayDropOpen(false), 150)}
+                    placeholder="Search team..."
                     className={`w-full bg-[#050507] border border-white/10 rounded-lg p-3 text-on-surface focus:border-primary focus:outline-none transition-all ${getFlag(editAway) ? "pl-11" : ""}`}
                   />
                 </div>
+                {awayDropOpen && availableTeams.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-[#101015] border border-white/10 rounded-xl shadow-2xl z-50 max-h-52 overflow-y-auto">
+                    {availableTeams
+                      .filter((t) => t.toLowerCase().includes((awaySearch || editAway).toLowerCase()))
+                      .map((team) => (
+                        <button
+                          key={team}
+                          type="button"
+                          onPointerDown={(e) => { e.preventDefault(); setEditAway(team); setAwaySearch(""); setAwayDropOpen(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                        >
+                          {getFlag(team) ? (
+                            <img src={getFlag(team)!} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+                              {team.substring(0, 3).toUpperCase()}
+                            </div>
+                          )}
+                          <span className="text-sm font-semibold text-white/90">{team}</span>
+                          {editAway === team && <CheckCircle className="w-4 h-4 text-primary ml-auto shrink-0" />}
+                        </button>
+                      ))}
+                  </div>
+                )}
               </div>
+
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setEditMatch(null)} className="flex-1 py-3 bg-white/5 border border-white/10 hover:bg-white/10 rounded-lg font-bold text-sm text-on-surface transition-all">
                   Cancel

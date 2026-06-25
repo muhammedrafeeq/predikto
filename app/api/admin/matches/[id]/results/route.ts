@@ -135,24 +135,16 @@ export async function POST(
         if (correctAns === undefined) continue;
 
         const predAnswer = pred.type === "winner" ? resolveWinner(pred.answer) : pred.answer;
-        let earned = 0;
-
-        if (pred.type === "first_goal_minute") {
-          earned = scoreFirstGoalMinute(predAnswer.trim(), correctAns);
-          answeredCount++;
-          if (earned === 3) correctCount++; // full marks = exact
-        } else {
-          const isCorrect = normalize(predAnswer) === normalize(correctAns);
-          earned = isCorrect ? pred.points : 0;
-          answeredCount++;
-          if (isCorrect) correctCount++;
+        const isCorrect = normalize(predAnswer) === normalize(correctAns);
+        if (isCorrect) {
+          totalPoints += pred.points;
+          correctCount++;
         }
-
-        totalPoints += earned;
+        answeredCount++;
       }
 
-      // All correct bonus: every answered question was correct → +5 pts
-      if (answeredCount > 0 && correctCount === answeredCount) totalPoints += 5;
+      // All correct bonus: all 3 standard questions correct → +3 pts
+      if (correctCount === 3) totalPoints += 3;
 
       if (correctCount > (userMaxCorrect[uId] ?? -1)) {
         userMaxCorrect[uId] = correctCount;
@@ -172,7 +164,7 @@ export async function POST(
       const uId = parseInt(uIdStr, 10);
       const maxCorrect = userMaxCorrect[uId];
 
-      if (maxCorrect >= 5) {
+      if (maxCorrect === 3) {
         await dropMultipleCards(uId, "perfect", 1, matchId);
         await dropMultipleCards(uId, "prediction", 2, matchId);
       } else if (maxCorrect > 0) {

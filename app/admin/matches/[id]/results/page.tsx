@@ -805,10 +805,6 @@ export default function ResultEntry({
                       <th className="py-2.5 px-3">Winner</th>
                       <th className="py-2.5 px-3">Score</th>
                       <th className="py-2.5 px-3">MOTM</th>
-                      <th className="py-2.5 px-3">1st Min</th>
-                      <th className="py-2.5 px-3">Yellow</th>
-                      <th className="py-2.5 px-3">Sub</th>
-                      <th className="py-2.5 px-3">ET</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -846,35 +842,6 @@ export default function ResultEntry({
                           : "text-white/70"
                         }`}>
                           {entry.predictions.man_of_match?.answer ?? "-"}
-                        </td>
-                        <td className={`py-2.5 px-3 text-[10px] font-mono ${
-                          entry.predictions.first_goal_minute?.isCorrect === true ? "text-emerald-400 font-bold"
-                          : entry.predictions.first_goal_minute?.isCorrect === false ? "text-red-400/60"
-                          : "text-white/60"
-                        }`}>
-                          {entry.predictions.first_goal_minute?.answer === "no_goal" ? "no goal"
-                            : entry.predictions.first_goal_minute?.answer ? `${entry.predictions.first_goal_minute.answer}'` : "-"}
-                        </td>
-                        <td className={`py-2.5 px-3 text-[10px] ${
-                          entry.predictions.first_yellow_team?.isCorrect === true ? "text-emerald-400 font-bold"
-                          : entry.predictions.first_yellow_team?.isCorrect === false ? "text-red-400/60 line-through"
-                          : "text-white/60"
-                        }`}>
-                          {entry.predictions.first_yellow_team?.answer ?? "-"}
-                        </td>
-                        <td className={`py-2.5 px-3 text-[10px] ${
-                          entry.predictions.first_sub_team?.isCorrect === true ? "text-emerald-400 font-bold"
-                          : entry.predictions.first_sub_team?.isCorrect === false ? "text-red-400/60 line-through"
-                          : "text-white/60"
-                        }`}>
-                          {entry.predictions.first_sub_team?.answer ?? "-"}
-                        </td>
-                        <td className={`py-2.5 px-3 text-[10px] ${
-                          entry.predictions.extra_time?.isCorrect === true ? "text-emerald-400 font-bold"
-                          : entry.predictions.extra_time?.isCorrect === false ? "text-red-400/60"
-                          : "text-white/60"
-                        }`}>
-                          {entry.predictions.extra_time?.answer ?? "-"}
                         </td>
                       </tr>
                     ))}
@@ -1003,12 +970,6 @@ export default function ResultEntry({
                   { label: "Exact Score", pts: "+4 pts" },
                   { label: "Correct Winner", pts: "+2 pts" },
                   { label: "Man of the Match", pts: "+2 pts" },
-                  { label: "1st Goal Min (exact)", pts: "+3 pts" },
-                  { label: "1st Goal Min (±5min)", pts: "+2 pts" },
-                  { label: "1st Goal Min (±10min)", pts: "+1 pt" },
-                  { label: "1st Yellow Card Team", pts: "+2 pts" },
-                  { label: "1st Substitution Team", pts: "+2 pts" },
-                  { label: "Extra Time", pts: "+2 pts" },
                 ].map(({ label, pts }) => (
                   <div key={label} className="flex justify-between items-center p-2.5 bg-white/5 rounded-lg border border-white/5">
                     <span className="text-on-surface-variant font-sans text-xs">{label}</span>
@@ -1017,7 +978,7 @@ export default function ResultEntry({
                 ))}
                 <div className="flex justify-between items-center p-2.5 bg-amber-500/8 rounded-lg border border-amber-500/20">
                   <span className="text-amber-300 font-sans text-xs font-bold">🏆 All Correct Bonus</span>
-                  <span className="font-black text-amber-400 text-xs">+5 pts</span>
+                  <span className="font-black text-amber-400 text-xs">+3 pts</span>
                 </div>
 
                 <div className="pt-3 border-t border-white/10 mt-4 font-sans">
@@ -1025,7 +986,7 @@ export default function ResultEntry({
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
                       Max Points
                     </span>
-                    <span className="headline-lg text-secondary font-mono font-extrabold">24</span>
+                    <span className="headline-lg text-secondary font-mono font-extrabold">11</span>
                   </div>
                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                     <div className="h-full bg-secondary w-full rounded-full shadow-[0_0_10px_rgba(67,223,158,0.4)]" />
@@ -1181,17 +1142,17 @@ export default function ResultEntry({
                       padding: "6px 4px",
                       borderBottom: "1px solid rgba(255,255,255,0.04)",
                       fontSize: "9px",
-                      color: entry.predictions.scorer?.isCorrect === true
+                      color: entry.predictions.man_of_match?.isCorrect === true
                         ? "#4ade80"
-                        : entry.predictions.scorer?.isCorrect === false
+                        : entry.predictions.man_of_match?.isCorrect === false
                         ? "rgba(239, 68, 68, 0.6)"
                         : "rgba(255,255,255,0.7)",
-                      textDecoration: entry.predictions.scorer?.isCorrect === false ? "line-through" : "none",
-                      fontWeight: entry.predictions.scorer?.isCorrect === true ? "bold" : "normal",
+                      textDecoration: entry.predictions.man_of_match?.isCorrect === false ? "line-through" : "none",
+                      fontWeight: entry.predictions.man_of_match?.isCorrect === true ? "bold" : "normal",
                     }}
                   >
-                    {entry.predictions.scorer?.answer
-                      ? `${entry.predictions.scorer.answer}${entry.predictions.scorer.isCorrect === true ? " ✓" : ""}`
+                    {entry.predictions.man_of_match?.answer
+                      ? `${entry.predictions.man_of_match.answer}${entry.predictions.man_of_match.isCorrect === true ? " ✓" : ""}`
                       : "-"}
                   </div>
                 </div>

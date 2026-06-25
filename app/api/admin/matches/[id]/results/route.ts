@@ -4,6 +4,17 @@ import { query } from "@/lib/db";
 import webpush from "web-push";
 import { dropMultipleCards } from "@/lib/cardDrop";
 
+// Partial scoring for first goal minute: exact=3, ±5min=2, ±10min=1
+function scoreFirstGoalMinute(predicted: string, correct: string): number {
+  if (predicted === "no_goal" && correct === "no_goal") return 3;
+  if (predicted === "no_goal" || correct === "no_goal") return 0;
+  const diff = Math.abs(parseInt(predicted, 10) - parseInt(correct, 10));
+  if (diff === 0) return 3;
+  if (diff <= 5) return 2;
+  if (diff <= 10) return 1;
+  return 0;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -18,37 +29,49 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { winner, score, scorer } = body;
+    const { winner, score, man_of_match, first_goal_minute, first_yellow_team, first_sub_team, extra_time } = body;
 
-    if (winner === undefined || score === undefined || scorer === undefined) {
+    if (winner === undefined || score === undefined) {
       return NextResponse.json(
-        { error: "winner, score, and scorer correct answers are required" },
+        { error: "winner and score correct answers are required" },
         { status: 400 }
       );
     }
 
-    // 1. Fetch the match questions to map correct answers to question IDs
+    // 1. Fetch match info
+    const matchInfoRes = await query(
+      "SELECT team_home, team_away FROM matches WHERE id = $1",
+      [matchId]
+    );
+    if (matchInfoRes.rowCount === 0) {
+      return NextResponse.json({ error: "Match not found" }, { status: 404 });
+    }
+    const { team_home: teamHome, team_away: teamAway } = matchInfoRes.rows[0];
+
+    // 2. Fetch the match questions
     const questionsRes = await query(
       "SELECT id, type, points FROM questions WHERE match_id = $1",
       [matchId]
     );
 
     if (questionsRes.rowCount === 0) {
-      return NextResponse.json(
-        { error: "No questions found for this match" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "No questions found for this match" }, { status: 404 });
     }
 
     const questions = questionsRes.rows;
 
+    // Build correct answers map
     const correctAnswers: Record<string, string> = {
       winner: winner.trim(),
       score: score.trim(),
-      scorer: scorer.trim(),
     };
+    if (man_of_match !== undefined && String(man_of_match).trim()) correctAnswers.man_of_match = String(man_of_match).trim();
+    if (first_goal_minute !== undefined) correctAnswers.first_goal_minute = String(first_goal_minute).trim();
+    if (first_yellow_team !== undefined) correctAnswers.first_yellow_team = String(first_yellow_team).trim();
+    if (first_sub_team !== undefined) correctAnswers.first_sub_team = String(first_sub_team).trim();
+    if (extra_time !== undefined) correctAnswers.extra_time = String(extra_time).trim();
 
-    // 2. Insert correct answers into results table
+    // 3. Insert correct answers into results table
     for (const q of questions) {
       const correctAns = correctAnswers[q.type];
       if (correctAns === undefined) continue;
@@ -62,7 +85,7 @@ export async function POST(
       );
     }
 
-    // 3. Fetch all predictions submitted by users for this match
+    // 4. Fetch all predictions submitted for this match
     const predictionsRes = await query(
       `SELECT p.user_id, p.contest_id, p.question_id, p.answer, q.type, q.points
        FROM predictions p
@@ -71,14 +94,6 @@ export async function POST(
       [matchId]
     );
 
-    // Fetch match teams for legacy answer resolution
-    const matchRow2 = await query(
-      "SELECT team_home, team_away FROM matches WHERE id = $1",
-      [matchId]
-    );
-    const teamHome = matchRow2.rows[0]?.team_home ?? "";
-    const teamAway = matchRow2.rows[0]?.team_away ?? "";
-
     const resolveWinner = (answer: string) => {
       const a = answer.trim().toLowerCase();
       if (a === "home") return teamHome;
@@ -86,26 +101,18 @@ export async function POST(
       return answer;
     };
 
-    // Group predictions by user ID and contest ID
+    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s*-\s*/g, "-").replace(/\s+/g, " ");
+
+    // Group predictions by user-contest
     const userContestPredictions: Record<
       string,
-      {
-        userId: number;
-        contestId: number;
-        preds: Array<{ type: string; answer: string; points: number }>;
-      }
+      { userId: number; contestId: number; preds: Array<{ type: string; answer: string; points: number }> }
     > = {};
 
     for (const row of predictionsRes.rows) {
-      const uId = row.user_id;
-      const cId = row.contest_id;
-      const key = `${uId}-${cId}`;
+      const key = `${row.user_id}-${row.contest_id}`;
       if (!userContestPredictions[key]) {
-        userContestPredictions[key] = {
-          userId: uId,
-          contestId: cId,
-          preds: [],
-        };
+        userContestPredictions[key] = { userId: row.user_id, contestId: row.contest_id, preds: [] };
       }
       userContestPredictions[key].preds.push({
         type: row.type,
@@ -116,37 +123,41 @@ export async function POST(
 
     const userMaxCorrect: Record<number, number> = {};
 
-    // 4. Calculate points for each user-contest prediction and update the scores table
+    // 5. Calculate and save scores
     for (const key of Object.keys(userContestPredictions)) {
       const { userId: uId, contestId: cId, preds } = userContestPredictions[key];
       let totalPoints = 0;
+      let answeredCount = 0;
       let correctCount = 0;
 
       for (const pred of preds) {
         const correctAns = correctAnswers[pred.type];
-        // Case insensitive and trim comparison
-        const normalize = (s: string) => s.trim().toLowerCase().replace(/\s*-\s*/g, "-");
+        if (correctAns === undefined) continue;
+
         const predAnswer = pred.type === "winner" ? resolveWinner(pred.answer) : pred.answer;
-        if (
-          correctAns !== undefined &&
-          normalize(predAnswer) === normalize(correctAns)
-        ) {
-          totalPoints += pred.points;
-          correctCount++;
+        let earned = 0;
+
+        if (pred.type === "first_goal_minute") {
+          earned = scoreFirstGoalMinute(predAnswer.trim(), correctAns);
+          answeredCount++;
+          if (earned === 3) correctCount++; // full marks = exact
+        } else {
+          const isCorrect = normalize(predAnswer) === normalize(correctAns);
+          earned = isCorrect ? pred.points : 0;
+          answeredCount++;
+          if (isCorrect) correctCount++;
         }
+
+        totalPoints += earned;
       }
 
-      // Add 3 points bonus if all three questions were correct
-      if (correctCount === 3) {
-        totalPoints += 3;
-      }
+      // All correct bonus: every answered question was correct → +5 pts
+      if (answeredCount > 0 && correctCount === answeredCount) totalPoints += 5;
 
-      // Keep track of the user's best correct count across all contests for card drops
       if (correctCount > (userMaxCorrect[uId] ?? -1)) {
         userMaxCorrect[uId] = correctCount;
       }
 
-      // Write user score
       await query(
         `INSERT INTO scores (user_id, contest_id, match_id, points)
          VALUES ($1, $2, $3, $4)
@@ -156,65 +167,52 @@ export async function POST(
       );
     }
 
-    // 5. Trigger card drops and hot streaks based on user max performance
+    // 6. Trigger card drops
     for (const uIdStr of Object.keys(userMaxCorrect)) {
       const uId = parseInt(uIdStr, 10);
       const maxCorrect = userMaxCorrect[uId];
 
-      if (maxCorrect === 3) {
+      if (maxCorrect >= 5) {
         await dropMultipleCards(uId, "perfect", 1, matchId);
         await dropMultipleCards(uId, "prediction", 2, matchId);
       } else if (maxCorrect > 0) {
-        await dropMultipleCards(uId, "prediction", maxCorrect, matchId);
+        await dropMultipleCards(uId, "prediction", Math.min(maxCorrect, 3), matchId);
       }
 
-      // Check Hot Streak (3 correct predictions in a row)
       if (maxCorrect > 0) {
         const streakCheck = await query<any>(
-          `SELECT s.points 
-           FROM scores s 
-           JOIN matches m ON s.match_id = m.id 
-           WHERE s.user_id = $1 
-             AND m.status = 'resulted' 
-             AND m.match_time < (SELECT match_time FROM matches WHERE id = $2) 
-           ORDER BY m.match_time DESC 
+          `SELECT s.points
+           FROM scores s
+           JOIN matches m ON s.match_id = m.id
+           WHERE s.user_id = $1
+             AND m.status = 'resulted'
+             AND m.match_time < (SELECT match_time FROM matches WHERE id = $2)
+           ORDER BY m.match_time DESC
            LIMIT 2`,
           [uId, matchId]
         );
 
-        if (streakCheck.rows.length === 2 && streakCheck.rows.every(r => r.points > 0)) {
-          // Trigger hot streak bonus drop!
+        if (streakCheck.rows.length === 2 && streakCheck.rows.every((r: any) => r.points > 0)) {
           await dropMultipleCards(uId, "streak", 1, matchId);
         }
       }
     }
 
-    // 5. Update match status to 'resulted'
-    await query(
-      "UPDATE matches SET status = 'resulted' WHERE id = $1",
-      [matchId]
-    );
+    // 7. Update match status to 'resulted'
+    await query("UPDATE matches SET status = 'resulted' WHERE id = $1", [matchId]);
 
-    // 6. Get match details for notification text
-    const matchRes = await query(
-      "SELECT team_home, team_away FROM matches WHERE id = $1",
-      [matchId]
-    );
-    const matchRow = matchRes.rows[0];
+    // 8. Send notifications
     const notifTitle = "Results Published! 🏆";
-    const notifBody = `${matchRow.team_home} vs ${matchRow.team_away} — ${correctAnswers.score}. Check your points!`;
+    const notifBody = `${teamHome} vs ${teamAway} — ${correctAnswers.score}. Check your points!`;
 
-    // 7. Fetch all users to create in-app notifications
     const allUsers = await query("SELECT id FROM users WHERE is_active = true");
     for (const u of allUsers.rows) {
       await query(
-        `INSERT INTO notifications (user_id, title, body) VALUES ($1, $2, $3)
-         ON CONFLICT DO NOTHING`,
+        `INSERT INTO notifications (user_id, title, body) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING`,
         [u.id, notifTitle, notifBody]
-      ).catch(() => {}); // ignore if table doesn't exist yet
+      ).catch(() => {});
     }
 
-    // 8. Send push to subscribed users
     if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
       try {
         webpush.setVapidDetails(
@@ -222,11 +220,9 @@ export async function POST(
           process.env.VAPID_PUBLIC_KEY,
           process.env.VAPID_PRIVATE_KEY
         );
-
         const subsRes = await query(
-          "SELECT user_id, endpoint, p256dh, auth FROM push_subscriptions"
+          "SELECT endpoint, p256dh, auth FROM push_subscriptions"
         ).catch(() => ({ rows: [] }));
-
         const pushPayload = JSON.stringify({ title: notifTitle, body: notifBody, url: "/matches" });
         for (const sub of subsRes.rows) {
           try {
@@ -234,9 +230,7 @@ export async function POST(
               { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
               pushPayload
             );
-          } catch (e) {
-            // ignore failed pushes
-          }
+          } catch {}
         }
       } catch (err) {
         console.error("Webpush setup error:", err);
@@ -249,9 +243,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("POST Admin Match Results Error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

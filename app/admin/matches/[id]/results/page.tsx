@@ -62,6 +62,8 @@ interface Match {
   teamAway: string;
   matchTime: string;
   status: string;
+  isKnockout: boolean;
+  knockoutRound: string | null;
 }
 
 export default function ResultEntry({
@@ -93,6 +95,20 @@ export default function ResultEntry({
   const [firstGoalMinute, setFirstGoalMinute] = useState<number | "">("");
   const [homeFormation, setHomeFormation] = useState("");
   const [awayFormation, setAwayFormation] = useState("");
+
+  // ESPN auto-result states
+  const [espnEventId, setEspnEventId] = useState("");
+  const [espnFetching, setEspnFetching] = useState(false);
+  const [espnPublishing, setEspnPublishing] = useState(false);
+  const [espnPreview, setEspnPreview] = useState<any>(null);
+  const [espnError, setEspnError] = useState<string | null>(null);
+
+  // New question states
+  const [firstGoalMinuteResult, setFirstGoalMinuteResult] = useState<string>("");
+  const [noFirstGoal, setNoFirstGoal] = useState(false);
+  const [extraTimeResult, setExtraTimeResult] = useState<"yes" | "no" | null>(null);
+  const [firstYellowTeam, setFirstYellowTeam] = useState<"home" | "away" | null>(null);
+  const [firstSubTeam, setFirstSubTeam] = useState<"home" | "away" | null>(null);
   const [entries, setEntries] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sharingImage, setSharingImage] = useState(false);
@@ -113,27 +129,32 @@ export default function ResultEntry({
             if (data.firstGoalMinute !== null) setFirstGoalMinute(data.firstGoalMinute);
             if (data.homeFormation) setHomeFormation(data.homeFormation);
             if (data.awayFormation) setAwayFormation(data.awayFormation);
-            
-            // Prefill standard prediction answers if resulted
+
+            // Prefill if already published
             if (data.entries && data.entries.length > 0) {
               const firstEntry = data.entries[0];
-              const correctWinner = firstEntry.predictions?.winner?.correctAnswer;
-              const correctScore = firstEntry.predictions?.score?.correctAnswer;
-              const correctScorer = firstEntry.predictions?.scorer?.correctAnswer;
-              if (correctWinner) {
-                if (correctWinner === data.match.teamHome) setWinnerChoice("home");
-                else if (correctWinner === data.match.teamAway) setWinnerChoice("away");
+              const p = firstEntry.predictions ?? {};
+              if (p.winner?.correctAnswer) {
+                const cw = p.winner.correctAnswer;
+                if (cw === data.match.teamHome) setWinnerChoice("home");
+                else if (cw === data.match.teamAway) setWinnerChoice("away");
                 else setWinnerChoice("draw");
               }
-              if (correctScore) {
-                const parts = correctScore.split("-");
-                if (parts.length === 2) {
-                  setHomeScore(parseInt(parts[0], 10) || 0);
-                  setAwayScore(parseInt(parts[1], 10) || 0);
-                }
+              if (p.score?.correctAnswer) {
+                const parts = p.score.correctAnswer.split("-");
+                if (parts.length === 2) { setHomeScore(parseInt(parts[0], 10) || 0); setAwayScore(parseInt(parts[1], 10) || 0); }
               }
-              if (correctScorer) {
-                setScorerName(correctScorer);
+              if (p.man_of_match?.correctAnswer) setScorerName(p.man_of_match.correctAnswer);
+              if (p.first_goal_minute?.correctAnswer) {
+                if (p.first_goal_minute.correctAnswer === "no_goal") setNoFirstGoal(true);
+                else setFirstGoalMinuteResult(p.first_goal_minute.correctAnswer);
+              }
+              if (p.extra_time?.correctAnswer) setExtraTimeResult(p.extra_time.correctAnswer as "yes" | "no");
+              if (p.first_yellow_team?.correctAnswer) {
+                setFirstYellowTeam(p.first_yellow_team.correctAnswer === data.match.teamHome ? "home" : "away");
+              }
+              if (p.first_sub_team?.correctAnswer) {
+                setFirstSubTeam(p.first_sub_team.correctAnswer === data.match.teamHome ? "home" : "away");
               }
             }
           }
@@ -194,13 +215,7 @@ export default function ResultEntry({
     setSuccessMsg("");
     setShowProgress(true);
 
-    if (!scorerName.trim()) {
-      setErrorMsg("First goalscorer name is required");
-      setShowProgress(false);
-      return;
-    }
-
-    if (firstGoalMinute !== "" && (isNaN(Number(firstGoalMinute)) || Number(firstGoalMinute) < 1 || Number(firstGoalMinute) > 120)) {
+    if (firstGoalMinuteResult !== "" && !noFirstGoal && (isNaN(Number(firstGoalMinuteResult)) || Number(firstGoalMinuteResult) < 1 || Number(firstGoalMinuteResult) > 120)) {
       setErrorMsg("First goal minute must be between 1 and 120");
       setShowProgress(false);
       return;
@@ -212,29 +227,29 @@ export default function ResultEntry({
       return;
     }
 
-    // Determine winner value (team name or Draw)
     let winnerValue = "Draw";
-    if (winnerChoice === "home") {
-      winnerValue = match.teamHome;
-    } else if (winnerChoice === "away") {
-      winnerValue = match.teamAway;
-    }
+    if (winnerChoice === "home") winnerValue = match.teamHome;
+    else if (winnerChoice === "away") winnerValue = match.teamAway;
 
     const scoreValue = `${homeScore}-${awayScore}`;
 
     try {
-      // Simulate computing animation for 1.2s
       await new Promise((resolve) => setTimeout(resolve, 1200));
 
-      // 1. Publish standard match results
+      const payload: Record<string, any> = {
+        winner: winnerValue,
+        score: scoreValue,
+      };
+      if (scorerName.trim()) payload.man_of_match = scorerName.trim();
+      payload.first_goal_minute = noFirstGoal ? "no_goal" : firstGoalMinuteResult.trim() || "no_goal";
+      if (extraTimeResult) payload.extra_time = extraTimeResult;
+      if (firstYellowTeam) payload.first_yellow_team = firstYellowTeam === "home" ? match.teamHome : match.teamAway;
+      if (firstSubTeam) payload.first_sub_team = firstSubTeam === "home" ? match.teamHome : match.teamAway;
+
       const res = await fetch(`/api/admin/matches/${matchId}/results`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          winner: winnerValue,
-          score: scoreValue,
-          scorer: scorerName.trim(),
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -244,25 +259,7 @@ export default function ResultEntry({
         return;
       }
 
-      // 2. Publish first goal minute results if specified
-      if (firstGoalMinute !== "") {
-        const fgRes = await fetch("/api/admin/games/first-goal", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            matchId,
-            firstGoalMinute: Number(firstGoalMinute),
-          }),
-        });
-        if (!fgRes.ok) {
-          const fgData = await fgRes.json();
-          setErrorMsg(`Match results published, but failed to save first goal timer: ${fgData.error || "Error"}`);
-          setShowProgress(false);
-          return;
-        }
-      }
-
-      // 3. Publish formation results if specified
+      // 2. Publish formation results if specified
       if (homeFormation && awayFormation) {
         const formRes = await fetch("/api/admin/games/formation", {
           method: "POST",
@@ -381,6 +378,70 @@ export default function ResultEntry({
       }
     } finally {
       setSharingImage(false);
+    }
+  };
+
+  const handleESPNFetch = async () => {
+    if (!espnEventId.trim()) return;
+    setEspnFetching(true);
+    setEspnError(null);
+    setEspnPreview(null);
+    try {
+      const res = await fetch(`/api/admin/matches/${matchId}/auto-result?espnEventId=${espnEventId.trim()}`);
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setEspnError(data.error || "Failed to fetch from ESPN");
+      } else {
+        setEspnPreview(data.result);
+        // Autofill the manual form fields from ESPN data
+        const r = data.result;
+        const hs = r.homeScore ?? 0;
+        const as_ = r.awayScore ?? 0;
+        setHomeScore(hs);
+        setAwayScore(as_);
+        if (hs > as_) setWinnerChoice("home");
+        else if (as_ > hs) setWinnerChoice("away");
+        else setWinnerChoice("draw");
+        if (match?.isKnockout) {
+          setTotalGoals(r.totalGoals);
+          if (r.firstGoalMinute === "no_goal") { setKoNoFirstGoal(true); setKoFirstGoalMinute(""); }
+          else { setKoNoFirstGoal(false); setKoFirstGoalMinute(r.firstGoalMinute); }
+          setKoExtraTime(r.extraTime);
+          if (r.firstGoalscorer === "no_goal") { setKoNoGoalscorer(true); setKoFirstGoalscorer(""); }
+          else { setKoNoGoalscorer(false); setKoFirstGoalscorer(r.firstGoalscorer); }
+        }
+      }
+    } catch {
+      setEspnError("Network error fetching ESPN data");
+    } finally {
+      setEspnFetching(false);
+    }
+  };
+
+  const handleESPNPublish = async () => {
+    if (!espnEventId.trim() || !espnPreview) return;
+    setEspnPublishing(true);
+    setEspnError(null);
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      await new Promise(r => setTimeout(r, 800));
+      const res = await fetch(`/api/admin/matches/${matchId}/auto-result`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ espnEventId: espnEventId.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setEspnError(data.error || "Auto-result failed");
+      } else {
+        setSuccessMsg(`✅ AUTO-RESULT PUBLISHED — ${data.espnResult.scoreline} · ${data.usersScored} users scored`);
+        setTimeout(() => router.push("/admin/matches"), 2000);
+      }
+    } catch {
+      setEspnError("Network error during publish");
+    } finally {
+      setEspnPublishing(false);
     }
   };
 
@@ -682,11 +743,95 @@ export default function ResultEntry({
 
 
 
+            {/* Additional result fields — all matches */}
+            <div className="space-y-4 pt-2 border-t border-white/8">
+              <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Additional Results</span>
+
+              {/* First Goal Minute */}
+              <div className="space-y-2">
+                <label className="label-md text-on-surface-variant flex items-center gap-2 select-none uppercase tracking-wider text-xs">
+                  <Clock className="w-4 h-4 text-primary" /> First Goal Minute
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number" min={1} max={120}
+                    disabled={noFirstGoal}
+                    value={firstGoalMinuteResult}
+                    onChange={(e) => setFirstGoalMinuteResult(e.target.value)}
+                    placeholder="e.g. 34"
+                    className={`flex-1 bg-[#050507] border border-white/10 rounded-lg px-4 py-3 text-on-surface focus:border-primary focus:outline-none text-sm ${noFirstGoal ? "opacity-30" : ""}`}
+                  />
+                  <span className="text-on-surface-variant shrink-0 font-bold">'</span>
+                  <label className="flex items-center gap-2 cursor-pointer select-none shrink-0">
+                    <input type="checkbox" checked={noFirstGoal}
+                      onChange={(e) => { setNoFirstGoal(e.target.checked); if (e.target.checked) setFirstGoalMinuteResult(""); }}
+                      className="w-4 h-4 rounded accent-primary" />
+                    <span className="text-xs text-on-surface-variant">No goal</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Extra Time */}
+              <div className="space-y-2">
+                <label className="label-md text-on-surface-variant uppercase tracking-wider text-xs">Extra Time?</label>
+                <div className="flex gap-3">
+                  {(["yes", "no"] as const).map(opt => (
+                    <button key={opt} type="button" onClick={() => setExtraTimeResult(extraTimeResult === opt ? null : opt)}
+                      className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border ${
+                        extraTimeResult === opt ? "bg-primary/15 border-primary text-primary" : "surface-glass-1 border-white/10 text-on-surface-variant hover:border-white/30"
+                      }`}>
+                      {opt === "yes" ? "Yes — ET" : "No — 90 Mins"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* First Yellow Card Team */}
+              <div className="space-y-2">
+                <label className="label-md text-on-surface-variant uppercase tracking-wider text-xs flex items-center gap-2">
+                  <ShieldAlert className="w-4 h-4 text-yellow-400" /> 1st Yellow Card
+                </label>
+                <div className="flex gap-3">
+                  {(["home", "away"] as const).map(side => {
+                    const team = side === "home" ? match?.teamHome : match?.teamAway;
+                    return (
+                      <button key={side} type="button" onClick={() => setFirstYellowTeam(firstYellowTeam === side ? null : side)}
+                        className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border ${
+                          firstYellowTeam === side ? "bg-yellow-500/15 border-yellow-500 text-yellow-400" : "surface-glass-1 border-white/10 text-on-surface-variant hover:border-white/30"
+                        }`}>
+                        {team}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* First Substitution Team */}
+              <div className="space-y-2">
+                <label className="label-md text-on-surface-variant uppercase tracking-wider text-xs flex items-center gap-2">
+                  <Users className="w-4 h-4 text-primary" /> 1st Substitution
+                </label>
+                <div className="flex gap-3">
+                  {(["home", "away"] as const).map(side => {
+                    const team = side === "home" ? match?.teamHome : match?.teamAway;
+                    return (
+                      <button key={side} type="button" onClick={() => setFirstSubTeam(firstSubTeam === side ? null : side)}
+                        className={`flex-1 py-2.5 rounded-lg font-bold text-sm transition-all cursor-pointer border ${
+                          firstSubTeam === side ? "bg-primary/15 border-primary text-primary" : "surface-glass-1 border-white/10 text-on-surface-variant hover:border-white/30"
+                        }`}>
+                        {team}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
             {/* Calculate CTA */}
             <button
               onClick={handlePublishResults}
               disabled={showProgress}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-container to-inverse-primary text-on-primary-container font-bold headline-md flex items-center justify-center gap-2 hover:shadow-[0_0_35px_rgba(139,128,255,0.4)] active:scale-98 transition-all duration-300 disabled:opacity-50 cursor-pointer"
+              className="w-full py-4 rounded-xl bg-linear-to-r from-primary-container to-inverse-primary text-on-primary-container font-bold headline-md flex items-center justify-center gap-2 hover:shadow-[0_0_35px_rgba(139,128,255,0.4)] active:scale-98 transition-all duration-300 disabled:opacity-50 cursor-pointer"
             >
               <Sparkles className="w-6 h-6 animate-pulse" />
               CALCULATE & PUBLISH
@@ -740,9 +885,13 @@ export default function ResultEntry({
                   <thead>
                     <tr className="border-b border-white/10 text-white/40 uppercase tracking-widest text-[9px] font-bold">
                       <th className="py-2.5 px-3">User</th>
-                      <th className="py-2.5 px-3">Winner Tip</th>
-                      <th className="py-2.5 px-3">Score Tip</th>
-                      <th className="py-2.5 px-3">MOTM Tip</th>
+                      <th className="py-2.5 px-3">Winner</th>
+                      <th className="py-2.5 px-3">Score</th>
+                      <th className="py-2.5 px-3">MOTM</th>
+                      <th className="py-2.5 px-3">1st Min</th>
+                      <th className="py-2.5 px-3">Yellow</th>
+                      <th className="py-2.5 px-3">Sub</th>
+                      <th className="py-2.5 px-3">ET</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -768,22 +917,47 @@ export default function ResultEntry({
                           )}
                         </td>
                         <td className={`py-2.5 px-3 font-mono font-bold ${
-                          entry.predictions.score?.isCorrect === true
-                            ? "text-emerald-400"
-                            : entry.predictions.score?.isCorrect === false
-                            ? "text-red-400/60 line-through"
-                            : "text-primary"
+                          entry.predictions.score?.isCorrect === true ? "text-emerald-400"
+                          : entry.predictions.score?.isCorrect === false ? "text-red-400/60 line-through"
+                          : "text-primary"
                         }`}>
-                          {entry.predictions.score ? entry.predictions.score.answer : "-"}
+                          {entry.predictions.score?.answer ?? "-"}
                         </td>
-                        <td className={`py-2.5 px-3 ${
-                          entry.predictions.scorer?.isCorrect === true
-                            ? "text-emerald-400 font-bold"
-                            : entry.predictions.scorer?.isCorrect === false
-                            ? "text-red-400/60 line-through"
-                            : "text-white/70"
+                        <td className={`py-2.5 px-3 text-[10px] ${
+                          entry.predictions.man_of_match?.isCorrect === true ? "text-emerald-400 font-bold"
+                          : entry.predictions.man_of_match?.isCorrect === false ? "text-red-400/60 line-through"
+                          : "text-white/70"
                         }`}>
-                          {entry.predictions.scorer ? entry.predictions.scorer.answer : "-"}
+                          {entry.predictions.man_of_match?.answer ?? "-"}
+                        </td>
+                        <td className={`py-2.5 px-3 text-[10px] font-mono ${
+                          entry.predictions.first_goal_minute?.isCorrect === true ? "text-emerald-400 font-bold"
+                          : entry.predictions.first_goal_minute?.isCorrect === false ? "text-red-400/60"
+                          : "text-white/60"
+                        }`}>
+                          {entry.predictions.first_goal_minute?.answer === "no_goal" ? "no goal"
+                            : entry.predictions.first_goal_minute?.answer ? `${entry.predictions.first_goal_minute.answer}'` : "-"}
+                        </td>
+                        <td className={`py-2.5 px-3 text-[10px] ${
+                          entry.predictions.first_yellow_team?.isCorrect === true ? "text-emerald-400 font-bold"
+                          : entry.predictions.first_yellow_team?.isCorrect === false ? "text-red-400/60 line-through"
+                          : "text-white/60"
+                        }`}>
+                          {entry.predictions.first_yellow_team?.answer ?? "-"}
+                        </td>
+                        <td className={`py-2.5 px-3 text-[10px] ${
+                          entry.predictions.first_sub_team?.isCorrect === true ? "text-emerald-400 font-bold"
+                          : entry.predictions.first_sub_team?.isCorrect === false ? "text-red-400/60 line-through"
+                          : "text-white/60"
+                        }`}>
+                          {entry.predictions.first_sub_team?.answer ?? "-"}
+                        </td>
+                        <td className={`py-2.5 px-3 text-[10px] ${
+                          entry.predictions.extra_time?.isCorrect === true ? "text-emerald-400 font-bold"
+                          : entry.predictions.extra_time?.isCorrect === false ? "text-red-400/60"
+                          : "text-white/60"
+                        }`}>
+                          {entry.predictions.extra_time?.answer ?? "-"}
                         </td>
                       </tr>
                     ))}
@@ -796,9 +970,104 @@ export default function ResultEntry({
 
         {/* Sidebar panels (Right) */}
         <div className="w-full lg:w-80 space-y-6">
+
+          {/* ESPN Auto-Result Panel */}
+          <div className="bg-[#181822] border border-white/10 rounded-xl p-5 space-y-4 relative">
+            <div className="absolute top-0 left-0 w-full h-0.75 bg-linear-to-r from-amber-500 to-orange-400 opacity-60 rounded-t-xl" />
+            <h3 className="label-md font-extrabold uppercase tracking-widest text-amber-400/80 flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              ESPN Auto-Result
+            </h3>
+
+            <p className="text-[10px] text-white/30 leading-relaxed">
+              Enter the ESPN event ID to auto-fetch and publish all correct answers in one tap.
+              Find it in the ESPN match URL: <span className="font-mono text-white/40">…summary?event=<span className="text-amber-400">704445</span></span>
+            </p>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={espnEventId}
+                onChange={(e) => { setEspnEventId(e.target.value); setEspnPreview(null); setEspnError(null); }}
+                placeholder="ESPN event ID…"
+                className="flex-1 bg-[#050507] border border-white/10 rounded-lg px-3 py-2.5 text-sm text-white font-mono focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none placeholder:text-white/20"
+              />
+              <button
+                type="button"
+                onClick={handleESPNFetch}
+                disabled={!espnEventId.trim() || espnFetching}
+                className="px-3 py-2.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 text-xs font-bold hover:bg-amber-500/25 transition-all disabled:opacity-40 cursor-pointer"
+              >
+                {espnFetching ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Fetch"
+                )}
+              </button>
+            </div>
+
+            {espnError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{espnError}</span>
+              </div>
+            )}
+
+            {espnPreview && (
+              <div className="space-y-3">
+                <div className="p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-lg space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white/80">{espnPreview.homeName} vs {espnPreview.awayName}</span>
+                    <span className="text-base font-black font-mono text-emerald-400">{espnPreview.scoreline}</span>
+                  </div>
+                  <div className="text-[10px] text-white/40 space-y-0.5">
+                    <div>Winner: <span className="text-white/70 font-semibold">{espnPreview.winner}</span></div>
+                    <div>Total goals: <span className="text-white/70 font-semibold">{espnPreview.totalGoals}</span></div>
+                    {match?.isKnockout && (
+                      <>
+                        <div>1st goal: <span className="text-white/70 font-semibold">{espnPreview.firstGoalMinute === "no_goal" ? "No goal" : `${espnPreview.firstGoalMinute}'`}</span></div>
+                        <div>Extra time: <span className="text-white/70 font-semibold">{espnPreview.extraTime === "yes" ? "Yes" : "No"}</span></div>
+                        <div>1st scorer: <span className="text-white/70 font-semibold">{espnPreview.firstGoalscorer === "no_goal" ? "No goal" : espnPreview.firstGoalscorer}</span></div>
+                      </>
+                    )}
+                    <div className="pt-1 text-amber-400/60">
+                      Status: {espnPreview.status} · Period {espnPreview.period}
+                    </div>
+                  </div>
+                </div>
+
+                {espnPreview.status !== "final" && espnPreview.status !== "postgame" && (
+                  <p className="text-[10px] text-amber-400/80 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    Match may not be finished — publish anyway?
+                  </p>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleESPNPublish}
+                  disabled={espnPublishing}
+                  className="w-full py-3 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 text-sm font-black flex items-center justify-center gap-2 hover:bg-amber-500/30 transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {espnPublishing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Publishing…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Publish via ESPN
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Award Preview */}
           <div className="bg-[#181822] border border-white/10 rounded-xl p-5 relative select-none">
-            <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-secondary to-primary opacity-50" />
+            <div className="absolute top-0 left-0 w-full h-0.75 bg-linear-to-r from-secondary to-primary opacity-50" />
             <h3 className="label-md font-extrabold uppercase tracking-widest text-on-surface-variant border-b border-white/5 pb-2 mb-4 flex items-center gap-2">
               <Activity className="w-4 h-4 text-secondary" />
               Award Preview
@@ -812,26 +1081,34 @@ export default function ResultEntry({
                 </p>
               </div>
             ) : (
-              <div className="space-y-3 font-mono text-xs">
-                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
-                  <span className="text-on-surface-variant font-sans text-sm">Correct Winner</span>
-                  <span className="font-bold text-primary">+2 pts</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
-                  <span className="text-on-surface-variant font-sans text-sm">Exact Score</span>
-                  <span className="font-bold text-primary">+4 pts</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-white/5 rounded-lg border border-white/5">
-                  <span className="text-on-surface-variant font-sans text-sm">Man of the Match</span>
-                  <span className="font-bold text-primary">+2 pts</span>
+              <div className="space-y-2 font-mono text-xs">
+                {[
+                  { label: "Exact Score", pts: "+4 pts" },
+                  { label: "Correct Winner", pts: "+2 pts" },
+                  { label: "Man of the Match", pts: "+2 pts" },
+                  { label: "1st Goal Min (exact)", pts: "+3 pts" },
+                  { label: "1st Goal Min (±5min)", pts: "+2 pts" },
+                  { label: "1st Goal Min (±10min)", pts: "+1 pt" },
+                  { label: "1st Yellow Card Team", pts: "+2 pts" },
+                  { label: "1st Substitution Team", pts: "+2 pts" },
+                  { label: "Extra Time", pts: "+2 pts" },
+                ].map(({ label, pts }) => (
+                  <div key={label} className="flex justify-between items-center p-2.5 bg-white/5 rounded-lg border border-white/5">
+                    <span className="text-on-surface-variant font-sans text-xs">{label}</span>
+                    <span className="font-bold text-primary text-xs">{pts}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center p-2.5 bg-amber-500/8 rounded-lg border border-amber-500/20">
+                  <span className="text-amber-300 font-sans text-xs font-bold">🏆 All Correct Bonus</span>
+                  <span className="font-black text-amber-400 text-xs">+5 pts</span>
                 </div>
 
-                <div className="pt-4 border-t border-white/10 mt-6 font-sans">
+                <div className="pt-3 border-t border-white/10 mt-4 font-sans">
                   <div className="flex justify-between items-end mb-1">
                     <span className="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">
-                      Max Match Standings
+                      Max Points
                     </span>
-                    <span className="headline-lg text-secondary font-mono font-extrabold">11</span>
+                    <span className="headline-lg text-secondary font-mono font-extrabold">24</span>
                   </div>
                   <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                     <div className="h-full bg-secondary w-full rounded-full shadow-[0_0_10px_rgba(67,223,158,0.4)]" />
@@ -839,7 +1116,7 @@ export default function ResultEntry({
                 </div>
 
                 <div className="mt-6 p-3.5 rounded-lg bg-secondary/5 border border-secondary/15 flex items-start gap-2.5 font-sans">
-                  <Check className="w-4 h-4 text-secondary flex-shrink-0 mt-0.5" />
+                  <Check className="w-4 h-4 text-secondary shrink-0 mt-0.5" />
                   <p className="text-[11px] text-on-surface-variant leading-relaxed font-medium">
                     Publishing these results will finalize all user standings for this match week.
                     This action cannot be undone.

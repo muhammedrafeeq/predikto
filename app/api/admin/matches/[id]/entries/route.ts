@@ -17,8 +17,10 @@ export async function GET(
 
     // 1. Fetch Match Details
     const matchRes = await query(
-      `SELECT id, team_home as "teamHome", team_away as "teamAway", 
-              match_time as "matchTime", deadline, status 
+      `SELECT id, team_home as "teamHome", team_away as "teamAway",
+              match_time as "matchTime", deadline, status,
+              COALESCE(is_knockout, false) as "isKnockout",
+              knockout_round as "knockoutRound"
        FROM matches WHERE id = $1`,
       [matchId]
     );
@@ -60,7 +62,7 @@ export async function GET(
       return answer;
     };
 
-    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s*-\s*/g, "-");
+    const normalize = (s: string) => s.trim().toLowerCase().replace(/\s*-\s*/g, "-").replace(/\s+/g, " ");
 
     for (const row of entriesRes.rows) {
       const uId = row.user_id;
@@ -77,9 +79,19 @@ export async function GET(
       const userEntry = entriesMap.get(uId);
       const isWinnerQ = row.question_type === "winner";
       const predAnswer = isWinnerQ ? resolveWinner(row.predicted_answer) : row.predicted_answer;
-      const isCorrect = row.correct_answer !== null
-        ? normalize(predAnswer) === normalize(row.correct_answer)
-        : null;
+
+      let isCorrect: boolean | null = null;
+      if (row.correct_answer !== null) {
+        if (row.question_type === "first_goal_minute") {
+          const p = predAnswer?.trim() ?? "";
+          const c = row.correct_answer?.trim() ?? "";
+          if (p === "no_goal" && c === "no_goal") isCorrect = true;
+          else if (p === "no_goal" || c === "no_goal") isCorrect = false;
+          else isCorrect = Math.abs(parseInt(p, 10) - parseInt(c, 10)) <= 10;
+        } else {
+          isCorrect = normalize(predAnswer) === normalize(row.correct_answer);
+        }
+      }
 
       userEntry.predictions[row.question_type] = {
         answer: row.predicted_answer,
@@ -109,6 +121,19 @@ export async function GET(
       [matchId]
     );
 
+    // 5. Fetch existing knockout correct answers for prefilling
+    const knockoutResultsRes = await query(
+      `SELECT q.type, r.correct_answer
+       FROM results r
+       JOIN questions q ON r.question_id = q.id
+       WHERE r.match_id = $1 AND q.type IN ('man_of_match','first_goal_minute','extra_time','first_yellow_team','first_sub_team')`,
+      [matchId]
+    );
+    const knockoutResults: Record<string, string> = {};
+    for (const row of knockoutResultsRes.rows) {
+      knockoutResults[row.type] = row.correct_answer;
+    }
+
     return NextResponse.json({
       success: true,
       match,
@@ -117,6 +142,7 @@ export async function GET(
       firstGoalMinute: firstGoalRes.rows[0]?.first_goal_minute ?? null,
       homeFormation: formationRes.rows[0]?.home_formation ?? null,
       awayFormation: formationRes.rows[0]?.away_formation ?? null,
+      knockoutResults,
     });
   } catch (error) {
     console.error("GET Admin Match Entries Error:", error);

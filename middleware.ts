@@ -12,13 +12,42 @@ function decodeJwt(token: string) {
   }
 }
 
-export function middleware(request: NextRequest) {
+// In-memory cache for maintenance flag (30s TTL)
+let maintenanceCache: { value: boolean; ts: number } | null = null;
+
+async function isMaintenanceOn(request: NextRequest): Promise<boolean> {
+  const now = Date.now();
+  if (maintenanceCache && now - maintenanceCache.ts < 30_000) {
+    return maintenanceCache.value;
+  }
+  try {
+    const url = new URL("/api/maintenance-status", request.url);
+    const res = await fetch(url.toString(), { cache: "no-store" });
+    const data = await res.json();
+    maintenanceCache = { value: !!data.enabled, ts: now };
+    return !!data.enabled;
+  } catch {
+    return false;
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
   const decoded = token ? decodeJwt(token) : null;
   const isTokenExpired = decoded?.exp ? decoded.exp * 1000 < Date.now() : true;
   const isLoggedIn = decoded && !isTokenExpired;
+
+  // Maintenance mode — skip for admins, the maintenance page itself, and API/assets
+  const isAdmin = isLoggedIn && decoded.role === "admin";
+  const isMaintenancePath = pathname === "/maintenance" || pathname.startsWith("/api/") || pathname.startsWith("/_next/");
+  if (!isAdmin && !isMaintenancePath) {
+    const maintenance = await isMaintenanceOn(request);
+    if (maintenance) {
+      return NextResponse.redirect(new URL("/maintenance", request.url));
+    }
+  }
 
   // "/" is the home/contests page — always serve it (public)
   if (pathname === "/") {
@@ -69,6 +98,7 @@ export const config = {
   matcher: [
     "/",
     "/login",
+    "/maintenance",
     "/contests",
     "/contests/:path+",
     "/matches/:path*",

@@ -1,4 +1,4 @@
-const CACHE_NAME = "skorio-cache-v1";
+const CACHE_NAME = "skorio-cache-v2";
 
 // Push notification handler
 self.addEventListener("push", (event) => {
@@ -79,8 +79,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Skip dynamic Next.js development HMR/webpack calls
-  if (url.pathname.includes("_next/webpack-hmr") || url.pathname.includes("webpack")) {
+  // Skip Next.js static chunks — let browser HTTP cache handle versioned assets
+  if (url.pathname.startsWith("/_next/")) {
     return;
   }
 

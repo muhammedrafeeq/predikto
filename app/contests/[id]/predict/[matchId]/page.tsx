@@ -43,7 +43,7 @@ const getFlag = (name: string) => {
 
 interface Question {
   id: number;
-  type: "winner" | "score" | "scorer";
+  type: "winner" | "score" | "man_of_match";
   label: string;
   points: number;
 }
@@ -98,8 +98,8 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
               else if (preds.winner.answer === data.match.teamAway) setWinner("away");
               else if (preds.winner.answer === "Draw") setWinner("draw");
             }
-            if (preds.scorer) {
-              setTopScorer(preds.scorer.answer);
+            if (preds.man_of_match) {
+              setTopScorer(preds.man_of_match.answer);
             }
             if (preds.score) {
               const parts = preds.score.answer.split("-");
@@ -185,8 +185,8 @@ export default function ContestPredictPage({ params }: PredictPageProps) {
       }
 
       if (topScorer.trim()) {
-        const scorerQ = questions.find(q => q.type === "scorer");
-        if (scorerQ) preds.push({ questionId: scorerQ.id, answer: topScorer.trim() });
+        const motmQ = questions.find(q => q.type === "man_of_match");
+        if (motmQ) preds.push({ questionId: motmQ.id, answer: topScorer.trim() });
       }
 
       const res = await fetch(`/api/contests/${contestId}/predict`, {

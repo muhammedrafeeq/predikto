@@ -217,7 +217,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             className={`flex items-center justify-between w-full p-3 rounded-lg border transition-all label-md cursor-pointer ${
               maintenance
                 ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
-                : "border-white/8 text-white/40 hover:bg-white/5 hover:text-white/60"
+                : "border-white/15 text-white/60 hover:bg-white/5 hover:text-white/80"
             }`}
           >
             <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
@@ -303,6 +303,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
 
           <hr className="border-white/5 my-2 mx-4" />
+
+          <button
+            onClick={toggleMaintenance}
+            disabled={maintenanceLoading}
+            className={`flex items-center justify-between px-4 py-3 rounded-lg transition-all label-md w-full cursor-pointer border ${
+              maintenance
+                ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                : "border-white/8 text-white/50 hover:bg-white/5"
+            }`}
+          >
+            <span className="flex items-center gap-3 text-xs font-bold uppercase tracking-wider">
+              🔧 Maintenance
+            </span>
+            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+              maintenance ? "bg-amber-500/20 text-amber-400" : "bg-white/8 text-white/30"
+            }`}>
+              {maintenanceLoading ? "..." : maintenance ? "ON" : "OFF"}
+            </span>
+          </button>
 
           <button
             onClick={handleLogout}

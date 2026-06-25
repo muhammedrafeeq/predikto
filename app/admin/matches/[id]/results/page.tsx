@@ -402,14 +402,6 @@ export default function ResultEntry({
         if (hs > as_) setWinnerChoice("home");
         else if (as_ > hs) setWinnerChoice("away");
         else setWinnerChoice("draw");
-        if (match?.isKnockout) {
-          setTotalGoals(r.totalGoals);
-          if (r.firstGoalMinute === "no_goal") { setKoNoFirstGoal(true); setKoFirstGoalMinute(""); }
-          else { setKoNoFirstGoal(false); setKoFirstGoalMinute(r.firstGoalMinute); }
-          setKoExtraTime(r.extraTime);
-          if (r.firstGoalscorer === "no_goal") { setKoNoGoalscorer(true); setKoFirstGoalscorer(""); }
-          else { setKoNoGoalscorer(false); setKoFirstGoalscorer(r.firstGoalscorer); }
-        }
       }
     } catch {
       setEspnError("Network error fetching ESPN data");

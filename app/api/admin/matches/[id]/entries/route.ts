@@ -121,17 +121,17 @@ export async function GET(
       [matchId]
     );
 
-    // 5. Fetch existing knockout correct answers for prefilling
-    const knockoutResultsRes = await query(
+    // 5. Fetch all published correct answers for prefilling
+    const publishedRes = await query(
       `SELECT q.type, r.correct_answer
        FROM results r
        JOIN questions q ON r.question_id = q.id
-       WHERE r.match_id = $1 AND q.type IN ('man_of_match','first_goal_minute','extra_time','first_yellow_team','first_sub_team')`,
+       WHERE r.match_id = $1`,
       [matchId]
     );
-    const knockoutResults: Record<string, string> = {};
-    for (const row of knockoutResultsRes.rows) {
-      knockoutResults[row.type] = row.correct_answer;
+    const publishedResults: Record<string, string> = {};
+    for (const row of publishedRes.rows) {
+      publishedResults[row.type] = row.correct_answer;
     }
 
     return NextResponse.json({
@@ -142,7 +142,7 @@ export async function GET(
       firstGoalMinute: firstGoalRes.rows[0]?.first_goal_minute ?? null,
       homeFormation: formationRes.rows[0]?.home_formation ?? null,
       awayFormation: formationRes.rows[0]?.away_formation ?? null,
-      knockoutResults,
+      publishedResults,
     });
   } catch (error) {
     console.error("GET Admin Match Entries Error:", error);

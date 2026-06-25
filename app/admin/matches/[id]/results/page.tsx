@@ -130,33 +130,18 @@ export default function ResultEntry({
             if (data.homeFormation) setHomeFormation(data.homeFormation);
             if (data.awayFormation) setAwayFormation(data.awayFormation);
 
-            // Prefill if already published
-            if (data.entries && data.entries.length > 0) {
-              const firstEntry = data.entries[0];
-              const p = firstEntry.predictions ?? {};
-              if (p.winner?.correctAnswer) {
-                const cw = p.winner.correctAnswer;
-                if (cw === data.match.teamHome) setWinnerChoice("home");
-                else if (cw === data.match.teamAway) setWinnerChoice("away");
-                else setWinnerChoice("draw");
-              }
-              if (p.score?.correctAnswer) {
-                const parts = p.score.correctAnswer.split("-");
-                if (parts.length === 2) { setHomeScore(parseInt(parts[0], 10) || 0); setAwayScore(parseInt(parts[1], 10) || 0); }
-              }
-              if (p.man_of_match?.correctAnswer) setScorerName(p.man_of_match.correctAnswer);
-              if (p.first_goal_minute?.correctAnswer) {
-                if (p.first_goal_minute.correctAnswer === "no_goal") setNoFirstGoal(true);
-                else setFirstGoalMinuteResult(p.first_goal_minute.correctAnswer);
-              }
-              if (p.extra_time?.correctAnswer) setExtraTimeResult(p.extra_time.correctAnswer as "yes" | "no");
-              if (p.first_yellow_team?.correctAnswer) {
-                setFirstYellowTeam(p.first_yellow_team.correctAnswer === data.match.teamHome ? "home" : "away");
-              }
-              if (p.first_sub_team?.correctAnswer) {
-                setFirstSubTeam(p.first_sub_team.correctAnswer === data.match.teamHome ? "home" : "away");
-              }
+            // Prefill from results table (authoritative) if already published
+            const published = data.publishedResults ?? {};
+            if (published.winner) {
+              if (published.winner === data.match.teamHome) setWinnerChoice("home");
+              else if (published.winner === data.match.teamAway) setWinnerChoice("away");
+              else setWinnerChoice("draw");
             }
+            if (published.score) {
+              const parts = published.score.split("-");
+              if (parts.length === 2) { setHomeScore(parseInt(parts[0], 10) || 0); setAwayScore(parseInt(parts[1], 10) || 0); }
+            }
+            if (published.man_of_match) setScorerName(published.man_of_match);
           }
         }
 

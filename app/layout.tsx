@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import PwaInstallPrompt from "@/components/PwaInstallPrompt";
-import { AdProvider } from "@/lib/AdContext";
 import ThemeProvider from "@/components/ThemeProvider";
 import LanguageProvider from "@/components/LanguageProvider";
 import Script from "next/script";
@@ -23,21 +22,13 @@ const BASE_URL = "https://www.skorio.in";
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: "Skorio — FIFA World Cup 2026 Predictions",
+    default: "Skorio — Live Scores & Football Mini-Games",
     template: "%s | Skorio",
   },
-  description: "Predict FIFA World Cup 2026 match scores, top scorers, and compete on the global leaderboard. Free sports prediction game.",
+  description: "Live football scores, match schedules, and interactive football mini-games.",
   keywords: [
-    "FIFA World Cup 2026", "World Cup 2026", "world cup predictions", "football predictions",
-    "soccer predictions", "match predictor", "sports prediction", "sports quiz", "sports game",
-    "cricket prediction", "cricket quiz", "sports leaderboard", "prediction app", "prediction game",
-    "formation predictor", "football formation", "first goal predictor", "first goal timer",
-    "bracket predictor", "tournament bracket", "score predictor", "exact score prediction",
-    "football quiz", "soccer quiz", "sports fantasy", "free prediction game", "football contest",
-    "world cup contest", "world cup quiz", "world cup bracket", "world cup leaderboard",
-    "man of the match predictor", "football games online", "sports prediction contest",
-    "FIFA 2026", "world cup 2026 predictions", "world cup 2026 games", "world cup 2026 bracket",
-    "skorio", "predikto", "football prediction app", "soccer prediction app"
+    "World Cup 2026", "live scores", "football scores", "soccer live scores", "sports quiz", "sports game",
+    "football quiz", "soccer quiz", "flag quiz", "penalty shootout", "who am i football", "skorio"
   ],
   authors: [{ name: "Skorio" }],
   creator: "Skorio",
@@ -48,14 +39,14 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: BASE_URL,
     siteName: "Skorio",
-    title: "Skorio — FIFA World Cup 2026 Predictions",
-    description: "Predict FIFA World Cup 2026 match scores, top scorers, and compete on the global leaderboard.",
+    title: "Skorio — Live Scores & Football Mini-Games",
+    description: "Live football scores, match schedules, and interactive football mini-games.",
     images: [{ url: "/icon-512.png", width: 512, height: 512, alt: "Skorio Logo" }],
   },
   twitter: {
     card: "summary",
-    title: "Skorio — FIFA World Cup 2026 Predictions",
-    description: "Predict FIFA World Cup 2026 match scores and compete on the global leaderboard.",
+    title: "Skorio — Live Scores & Football Mini-Games",
+    description: "Live football scores, match schedules, and interactive football mini-games.",
     images: ["/icon-512.png"],
   },
   icons: {
@@ -63,8 +54,6 @@ export const metadata: Metadata = {
     apple: "/icon-192.png",
   },
   other: {
-    "3ab35c5b9da6236fff41dc5eca6c57ee4b990300": "3ab35c5b9da6236fff41dc5eca6c57ee4b990300",
-    "google-adsense-account": "ca-pub-3775560788605769",
     "google-site-verification": "OpmBFVnkW2OQfgrjMq9Xjx6B8h_IUA25fxCDAEgfk3c",
     "msvalidate.01": "F6C1D4E137D25EBDF8BCF8861C265154",
   },
@@ -77,14 +66,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3775560788605769"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
-      </head>
+      <head />
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -94,7 +76,7 @@ export default function RootLayout({
             "@type": "WebApplication",
             "name": "Skorio",
             "url": "${BASE_URL}",
-            "description": "Predict FIFA World Cup 2026 match scores, top scorers, and compete on the global leaderboard.",
+            "description": "Live football scores, match schedules, and interactive football mini-games.",
             "applicationCategory": "SportsApplication",
             "operatingSystem": "Web",
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -103,10 +85,8 @@ export default function RootLayout({
         `}</Script>
         <ThemeProvider>
           <LanguageProvider>
-            <AdProvider>
-              {children}
-              <PwaInstallPrompt />
-            </AdProvider>
+            {children}
+            <PwaInstallPrompt />
           </LanguageProvider>
         </ThemeProvider>
       </body>

@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, LogOut, LogIn, ShieldAlert, FileText, Mail, Trophy, User, UserPlus } from "lucide-react";
-import NotificationBar from "./NotificationBar";
 import ThemeToggle from "./ThemeToggle";
 import { useLang } from "./LanguageProvider";
 
@@ -55,21 +54,22 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {(["contests", "matches", "rankings", "history"] as const).map((tab) => {
+          {(["scores", "matches", "games"] as const).map((tab) => {
             const labels: Record<string, string> = {
-              contests: "Contests", matches: "Matches", rankings: "Rankings", history: "History",
+              scores: "Live Scores", matches: "Matches", games: "Mini-Games",
             };
             const routes: Record<string, string> = {
-              contests: "/", matches: "/matches", rankings: "/leaderboard", history: "/history",
+              scores: "/", matches: "/matches", games: "/games",
             };
+            const currentTabKey = activeTab === "matches" ? "matches" : activeTab === "contests" ? "scores" : tab;
             return (
               <button
                 key={tab}
                 onClick={() => router.push(routes[tab])}
                 className="label-md transition-colors cursor-pointer"
                 style={{
-                  color: activeTab === tab ? "var(--color-primary)" : "var(--nav-link-color)",
-                  fontWeight: activeTab === tab ? 900 : undefined,
+                  color: currentTabKey === tab ? "var(--color-primary)" : "var(--nav-link-color)",
+                  fontWeight: currentTabKey === tab ? 900 : undefined,
                 }}
               >
                 {labels[tab]}
@@ -85,15 +85,8 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
               <span className="text-xs font-bold leading-tight" style={{ color: "var(--nav-link-active)" }}>
                 {userName}
               </span>
-              {typeof userPoints === "number" && (
-                <span className="text-amber-500 font-extrabold text-[10px] tracking-wide leading-none mt-0.5">
-                  {userPoints} PTS
-                </span>
-              )}
             </div>
           )}
-
-          <NotificationBar />
 
           {/* Avatar */}
           <div
@@ -175,7 +168,7 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
                     {userName}
                   </p>
                   <p className="text-[10px] mt-0.5 font-bold uppercase tracking-wider" style={{ color: "var(--nav-link-color)" }}>
-                    {userRole === "admin" ? "Admin Staff" : userRole === "guest" ? "Guest Player" : "Competitor"}
+                    {userRole === "guest" ? "Guest Fan" : "Football Fan"}
                   </p>
                 </div>
               </div>
@@ -188,8 +181,8 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
               </span>
 
               {[
-                { tab: "contests", label: "Contests Dashboard", route: "/", Icon: Trophy },
-                { tab: "matches", label: "Matches Predictor", route: "/matches", Icon: User },
+                { tab: "scores", label: "Live Scores & Fixtures", route: "/", Icon: Trophy },
+                { tab: "matches", label: "Match Schedule", route: "/matches", Icon: User },
               ].map(({ tab, label, route, Icon }) => (
                 <button
                   key={tab}

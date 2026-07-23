@@ -177,11 +177,7 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
-      if (data.user?.role === "admin") {
-        window.location.href = "/admin";
-      } else {
-        window.location.href = "/";
-      }
+      window.location.href = "/";
     } catch {
       setError("Network error. Please try again.");
       setIsLoading(false);

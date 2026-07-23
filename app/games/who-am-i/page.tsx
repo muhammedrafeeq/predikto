@@ -175,7 +175,7 @@ export default function WhoAmIPage() {
   const fetchSuggestions = useCallback(async (q: string) => {
     if (q.length < 2) { setPlayerSuggestions([]); return; }
     try {
-      const res = await fetch(`/api/admin/players?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/players?q=${encodeURIComponent(q)}`);
       if (res.ok) {
         const data = await res.json();
         setPlayerSuggestions(data.players ?? []);

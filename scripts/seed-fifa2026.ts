@@ -262,15 +262,12 @@ async function seed() {
     // 1. Ensure schema
     const schemaPath = path.join(process.cwd(), "lib", "schema.sql");
     await client.query(fs.readFileSync(schemaPath, "utf8"));
-    await client.query(`
-      ALTER TABLE contests ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE
-    `);
     console.log("✅  Schema verified.");
 
-    // 2. Clear ALL match-related data and RESET ID sequences so IDs always start from 1
-    console.log("🗑️   Truncating existing matches, questions, predictions, results, scores, players…");
+    // 2. Clear matches, players, teams
+    console.log("🗑️   Truncating existing matches, players, teams…");
     await client.query(
-      "TRUNCATE TABLE scores, results, predictions, questions, matches, players RESTART IDENTITY CASCADE"
+      "TRUNCATE TABLE matches, players, teams RESTART IDENTITY CASCADE"
     );
     console.log("✅  Cleared (sequences reset).");
 
@@ -310,63 +307,31 @@ async function seed() {
       console.log(`ℹ️   Admin updated (id: ${adminId})`);
     }
 
-    // Seed default Tournament and Contest
-    console.log("🏆  Seeding default tournament and contest...");
-    await client.query(`
-      INSERT INTO tournaments (id, name, description, type, status)
-      VALUES (1, 'FIFA World Cup 2026', 'Official FIFA World Cup 2026 Tournament', 'league', 'active')
-      ON CONFLICT (id) DO NOTHING
-    `);
-    await client.query(`SELECT setval(pg_get_serial_sequence('tournaments', 'id'), COALESCE(MAX(id), 1)) FROM tournaments`);
-
-    await client.query(`
-      INSERT INTO contests (id, name, tournament_id, game_type, join_code, creator_id)
-      VALUES (1, 'WC2026', 1, 'match_prediction', '958102', (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1))
-      ON CONFLICT (id) DO NOTHING
-    `);
-
-    // If it already exists, rename and update it
-    await client.query(`
-      UPDATE contests
-      SET name = 'WC2026',
-          join_code = '958102',
-          creator_id = (SELECT id FROM users WHERE phone = '7994028594' LIMIT 1)
-      WHERE id = 1 OR name = 'Public Arena'
-    `);
-    await client.query(`SELECT setval(pg_get_serial_sequence('contests', 'id'), COALESCE(MAX(id), 1)) FROM contests`);
-
-    // Add admin to Public Arena
-    if (adminId) {
-      await client.query(`INSERT INTO contest_members (contest_id, user_id) VALUES (1, $1) ON CONFLICT DO NOTHING`, [adminId]);
+    // Seed teams table
+    console.log("🚩  Seeding teams...");
+    for (const t of Object.keys(SQUADS)) {
+      const code = t.slice(0, 3).toUpperCase();
+      const flag = "⚽";
+      await client.query(
+        `INSERT INTO teams (name, code, flag_emoji) VALUES ($1, $2, $3) ON CONFLICT (name) DO NOTHING`,
+        [t, code, flag]
+      );
     }
 
-    // 4. Insert matches
+    // Insert matches
     console.log(`\n📅  Inserting ${MATCHES.length} matches…\n`);
     let inserted = 0;
 
     for (const m of MATCHES) {
       const matchTime = new Date(m.utcTime);
-      // Deadline = 1 hour before kickoff
       const deadline = new Date(matchTime.getTime() - 60 * 60 * 1000);
       const now = new Date();
-      const status = matchTime < now ? "resulted" : "upcoming";
+      const status = matchTime < now ? "finished" : "upcoming";
 
-      const mRes = await client.query(
-        `INSERT INTO matches (tournament_id, team_home, team_away, match_time, deadline, status)
-         VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-        [1, m.home, m.away, matchTime, deadline, status]
-      );
-      const matchId: number = mRes.rows[0].id;
-
-      // 3 questions per match
       await client.query(
-        `INSERT INTO questions (match_id, type, label, points) VALUES ($1,'winner','Match Winner',2)`, [matchId]
-      );
-      await client.query(
-        `INSERT INTO questions (match_id, type, label, points) VALUES ($1,'score','Exact Scoreline',4)`, [matchId]
-      );
-      await client.query(
-        `INSERT INTO questions (match_id, type, label, points) VALUES ($1,'scorer','First Goalscorer',2)`, [matchId]
+        `INSERT INTO matches (team_home, team_away, match_time, deadline, status)
+         VALUES ($1,$2,$3,$4,$5)`,
+        [m.home, m.away, matchTime, deadline, status]
       );
 
       const d = matchTime.toLocaleDateString("en-GB", { day:"2-digit", month:"short" });
@@ -377,22 +342,18 @@ async function seed() {
 
     // 5. Summary
     const totM = (await client.query("SELECT COUNT(*) FROM matches")).rows[0].count;
-    const totQ = (await client.query("SELECT COUNT(*) FROM questions")).rows[0].count;
     const totU = (await client.query("SELECT COUNT(*) FROM users")).rows[0].count;
     const totP = (await client.query("SELECT COUNT(*) FROM players")).rows[0].count;
+    const totT = (await client.query("SELECT COUNT(*) FROM teams")).rows[0].count;
 
     console.log(`
 ─────────────────────────────────────────────
 📊  Database Summary:
     👤  Users     : ${totU}
     ⚽  Matches   : ${totM}
-    ❓  Questions : ${totQ}
+    🚩  Teams     : ${totT}
     🏃  Players   : ${totP}
 ─────────────────────────────────────────────
-🔑  Admin Login:
-    Phone    : ${ADMIN_PHONE}
-    Password : ${ADMIN_PIN}
-
 🎉  Reseed complete!
 `);
   } catch (err) {

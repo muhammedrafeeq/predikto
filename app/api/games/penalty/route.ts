@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/gameAuth";
+import { getOptionalAuth } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
-import { dropCard } from "@/lib/cardDrop";
 
 const POINTS_MAP: Record<number, number> = { 5: 20, 4: 15, 3: 10, 2: 5, 1: 2, 0: 0 };
 const DIRECTIONS = ["left", "center", "right"] as const;
@@ -9,15 +8,21 @@ type Direction = (typeof DIRECTIONS)[number];
 
 export async function GET(_req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const user = await getOptionalAuth();
 
-    // Total all-time points
+    if (!user?.userId) {
+      return NextResponse.json({
+        played: false,
+        totalPoints: 0,
+        career: { sevenDayBest: 0, totalGames: 0, totalGoals: 0, days: [] },
+      });
+    }
+
     const totRes = await query(
       `SELECT COALESCE(SUM(points),0)::int AS total FROM game_scores WHERE user_id = $1 AND game_type = 'penalty'`,
       [user.userId]
     );
 
-    // Last 7 days stats: one row per calendar day with best score, total goals, games
     const careerRes = await query(
       `SELECT
          DATE(played_at) AS day,
@@ -34,23 +39,14 @@ export async function GET(_req: NextRequest) {
     );
 
     const rows = careerRes.rows as any[];
-
-    const sevenDayBest = rows.length > 0
-      ? Math.max(...rows.map((r) => r.best_pts))
-      : 0;
-
+    const sevenDayBest = rows.length > 0 ? Math.max(...rows.map((r) => r.best_pts)) : 0;
     const totalGames = rows.reduce((s: number, r) => s + r.games, 0);
     const totalGoals = rows.reduce((s: number, r) => s + (r.total_goals ?? 0), 0);
 
     return NextResponse.json({
       played: false,
       totalPoints: totRes.rows[0].total,
-      career: {
-        sevenDayBest,
-        totalGames,
-        totalGoals,
-        days: rows,
-      },
+      career: { sevenDayBest, totalGames, totalGoals, days: rows },
     });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
@@ -60,7 +56,7 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const user = await getOptionalAuth();
     const body = await req.json();
     const kicks: Direction[] = body.kicks;
 
@@ -76,31 +72,20 @@ export async function POST(req: NextRequest) {
     const goalieKicks: Direction[] = kicks.map(() => DIRECTIONS[Math.floor(Math.random() * 3)]);
     const goals = kicks.filter((k, i) => k !== goalieKicks[i]).length;
     const points = POINTS_MAP[goals] ?? 0;
-    const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const refId = parseInt(`${today}${user.userId}`, 10) % 2147483647;
 
-    const insert = await query(
-      `INSERT INTO game_scores (user_id, contest_id, game_type, reference_id, points, metadata, played_at)
-       VALUES ($1, NULL, 'penalty', $2, $3, $4, NOW())
-       ON CONFLICT (user_id, game_type, reference_id) WHERE contest_id IS NULL DO NOTHING
-       RETURNING id`,
-      [user.userId, refId, points, JSON.stringify({ goals, goalieKicks })]
-    );
+    if (user?.userId) {
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      const refId = parseInt(`${today}${user.userId}`, 10) % 2147483647;
 
-    if (insert.rowCount === 0) {
-      return NextResponse.json({ error: "Already played today" }, { status: 409 });
+      await query(
+        `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
+         VALUES ($1, 'penalty', $2, $3, $4, NOW())
+         ON CONFLICT (user_id, game_type, reference_id) DO NOTHING`,
+        [user.userId, refId, points, JSON.stringify({ goals, goalieKicks })]
+      );
     }
 
-    // Drop card if at least 3 goals are scored
-    let droppedCard = null;
-    if (goals >= 3) {
-      const card = await dropCard(user.userId, "trivia");
-      if (card) {
-        droppedCard = card;
-      }
-    }
-
-    return NextResponse.json({ goals, goalieKicks, points, alreadyPlayed: false, droppedCard });
+    return NextResponse.json({ success: true, goals, goalieKicks, points });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });

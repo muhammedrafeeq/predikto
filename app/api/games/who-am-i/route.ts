@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/gameAuth";
+import { getOptionalAuth } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
 
 const POINTS_BY_CLUE: Record<number, number> = { 1: 15, 2: 12, 3: 9, 4: 6, 5: 3, 6: 1 };
@@ -31,7 +31,7 @@ function fuzzyMatch(guess: string, playerName: string, aliases: string[]): boole
 
 export async function GET(_req: NextRequest) {
   try {
-    await requireAuth();
+    await getOptionalAuth();
     const player = await getTodayPlayer();
     if (!player) {
       return NextResponse.json({ error: "No players configured yet" }, { status: 503 });
@@ -49,7 +49,7 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const user = await getOptionalAuth();
     const body = await req.json();
     const { guess, cluesRevealed } = body as { guess: string; cluesRevealed: number };
 
@@ -70,22 +70,26 @@ export async function POST(req: NextRequest) {
 
     if (correct) {
       const points = POINTS_BY_CLUE[clueNum] ?? 1;
-      await query(
-        `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
-         VALUES ($1, 'who_am_i', $2, $3, $4, NOW())
-         ON CONFLICT (user_id, game_type, reference_id) WHERE contest_id IS NULL DO NOTHING`,
-        [user.userId, refId, points, JSON.stringify({ cluesRevealed: clueNum, correct: true, guess })]
-      );
+      if (user?.userId) {
+        await query(
+          `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
+           VALUES ($1, 'who_am_i', $2, $3, $4, NOW())
+           ON CONFLICT (user_id, game_type, reference_id) DO NOTHING`,
+          [user.userId, refId, points, JSON.stringify({ cluesRevealed: clueNum, correct: true, guess })]
+        );
+      }
       return NextResponse.json({ correct: true, points, playerName: player.player_name, gameOver: true });
     }
 
     if (isLastClue) {
-      await query(
-        `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
-         VALUES ($1, 'who_am_i', $2, 0, $3, NOW())
-         ON CONFLICT (user_id, game_type, reference_id) WHERE contest_id IS NULL DO NOTHING`,
-        [user.userId, refId, JSON.stringify({ cluesRevealed: clueNum, correct: false, guess })]
-      );
+      if (user?.userId) {
+        await query(
+          `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata, played_at)
+           VALUES ($1, 'who_am_i', $2, 0, $3, NOW())
+           ON CONFLICT (user_id, game_type, reference_id) DO NOTHING`,
+          [user.userId, refId, JSON.stringify({ cluesRevealed: clueNum, correct: false, guess })]
+        );
+      }
       return NextResponse.json({ correct: false, points: 0, playerName: player.player_name, gameOver: true });
     }
 

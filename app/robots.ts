@@ -5,8 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/matches", "/leaderboard", "/games", "/login", "/privacy-policy", "/terms-conditions", "/contact-us"],
-        disallow: ["/admin/", "/api/"],
+        allow: ["/", "/matches", "/games", "/login", "/privacy-policy", "/terms-conditions", "/contact-us"],
+        disallow: ["/api/"],
       },
     ],
     sitemap: "https://www.skorio.in/sitemap.xml",

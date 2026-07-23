@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Trophy, Shield, History, Gamepad2, ChevronRight, Sparkles, LayoutGrid, Layers } from "lucide-react";
+import BottomNav from "@/components/BottomNav";
+import Footer from "@/components/Footer";
 
 const SoccerBallIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -321,8 +323,6 @@ const GAMES = [
   { id: "trivia",    title: "Football Trivia",      Icon3d: Icon3dTrivia,    accent: "#38bdf8", glow: "rgba(56,189,248,0.5)",   bg: "linear-gradient(145deg,#082f49,#0369a1)",  badge: "DAILY",     maxPts: "30",  href: "/games/trivia" },
   { id: "who_am_i",  title: "Who Am I?",            Icon3d: Icon3dWhoAmI,    accent: "#2dd4bf", glow: "rgba(45,212,191,0.5)",   bg: "linear-gradient(145deg,#042f2e,#0f766e)",  badge: "DAILY",     maxPts: "15",  href: "/games/who-am-i" },
   { id: "flag_quiz", title: "Flag Quiz",             Icon3d: Icon3dFlag,      accent: "#f87171", glow: "rgba(248,113,113,0.5)",  bg: "linear-gradient(145deg,#1c0a0a,#991b1b)",  badge: "DAILY",     maxPts: "90",  href: "/games/flag-quiz" },
-  { id: "bracket",   title: "Tournament Bracket",   Icon3d: Icon3dBracket,   accent: "#facc15", glow: "rgba(250,204,21,0.5)",   bg: "linear-gradient(145deg,#1a1200,#a16207)",  badge: "ONE-SHOT",  maxPts: "100+",href: "/games/bracket" },
-  { id: "cards",     title: "Card Collection",      Icon3d: Icon3dCards,     accent: "#a78bfa", glow: "rgba(167,139,250,0.5)",  bg: "linear-gradient(145deg,#1e1035,#581c87)",  badge: "COLLECT",   maxPts: "200+",href: "/collection" },
 ];
 
 export default function GamesHub() {
@@ -380,23 +380,11 @@ export default function GamesHub() {
       {/* Header */}
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-5 py-3 h-16"
         style={{ background: "rgba(10,10,15,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => router.push("/")}>
           <img src="/skorio-logo.png" alt="Skorio Logo" className="w-7 h-7 object-contain rounded-lg" />
           <span className="text-lg font-black tracking-tighter" style={{ color: "#a855f7" }}>
             SKO<span style={{ color: "#fff" }}>RIO</span>
           </span>
-        </div>
-        <div className="flex items-center gap-3">
-          {gamePoints > 0 && (
-            <span className="text-xs font-bold font-mono px-2.5 py-1 rounded-full"
-              style={{ color: "#a78bfa", background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.2)" }}>
-              {gamePoints} pts
-            </span>
-          )}
-          <div className="w-9 h-9 rounded-full flex items-center justify-center font-black text-sm select-none"
-            style={{ background: "linear-gradient(135deg,#a855f7,#6366f1)" }}>
-            {(currentUser?.name ?? "U")[0].toUpperCase()}
-          </div>
         </div>
       </header>
 
@@ -407,21 +395,14 @@ export default function GamesHub() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-3"
             style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)" }}>
             <Gamepad2 className="w-3.5 h-3.5" style={{ color: "#a78bfa" }} />
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Mini Games Arena</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color: "#a78bfa" }}>Football Mini Games</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight mb-1">Play & Earn Points</h2>
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Six games. One leaderboard. Compete daily.</p>
-          <button onClick={() => router.push("/games/leaderboard")}
-            className="mt-4 inline-flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105"
-            style={{ background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.25)", color: "#c4b5fd" }}>
-            <Trophy className="w-4 h-4" />
-            Games Leaderboard
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <h2 className="text-2xl font-black tracking-tight mb-1">Play Free Mini-Games</h2>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>Test your football skills and knowledge instantly.</p>
         </div>
 
-        {/* 3-column grid */}
-        <div className="grid grid-cols-3 gap-x-3 gap-y-5 px-2">
+        {/* Mobile Responsive Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-2">
           {GAMES.map((game, idx) => {
             const isHovered = hovered === game.id;
             const isPressed = pressed === game.id;
@@ -504,32 +485,8 @@ export default function GamesHub() {
         )}
       </main>
 
-      {/* Bottom Nav */}
-      <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 md:hidden"
-        style={{ background: "rgba(10,10,15,0.92)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        <a href="/" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
-          <LayoutGrid className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">My Contests</span>
-        </a>
-        <a href="/games" className="flex flex-col items-center gap-0.5" style={{ color: "#a78bfa" }}>
-          <Gamepad2 className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Games</span>
-        </a>
-        <a href="/collection" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
-          <Layers className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">Cards</span>
-        </a>
-        <a href="/history" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
-          <History className="w-5 h-5" />
-          <span className="text-[10px] font-semibold">History</span>
-        </a>
-        {currentUser?.role === "admin" && (
-          <a href="/admin" className="flex flex-col items-center gap-0.5 opacity-40 hover:opacity-100 transition-opacity text-white">
-            <Shield className="w-5 h-5" />
-            <span className="text-[10px] font-semibold">Admin</span>
-          </a>
-        )}
-      </nav>
+      <Footer />
+      <BottomNav activeTab="games" />
     </div>
   );
 }

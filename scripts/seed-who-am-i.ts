@@ -274,6 +274,18 @@ async function main() {
   await client.connect();
   console.log("✅ Connected to database");
 
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS who_am_i_players (
+      id SERIAL PRIMARY KEY,
+      player_name VARCHAR(100) UNIQUE NOT NULL,
+      aliases JSONB DEFAULT '[]',
+      clues JSONB NOT NULL,
+      clues_ml JSONB DEFAULT '[]',
+      active BOOLEAN DEFAULT TRUE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // All players from the players table
   const playersRes = await client.query(
     `SELECT DISTINCT name, team_name FROM players ORDER BY name ASC`
@@ -307,7 +319,8 @@ async function main() {
 
     await client.query(
       `INSERT INTO who_am_i_players (player_name, aliases, clues, clues_ml, active)
-       VALUES ($1, $2, $3, $4, true)`,
+       VALUES ($1, $2, $3, $4, true)
+       ON CONFLICT (player_name) DO NOTHING`,
       [name, JSON.stringify(aliases), JSON.stringify(en), JSON.stringify(ml)]
     );
 

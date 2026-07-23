@@ -1,41 +1,9 @@
 const CACHE_NAME = "skorio-cache-v2";
 
-// Push notification handler
-self.addEventListener("push", (event) => {
-  if (!event.data) return;
-  const data = event.data.json();
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: "/icon-192.png",
-      badge: "/icon-192.png",
-      data: { url: data.url || "/matches" },
-      vibrate: [200, 100, 200],
-    })
-  );
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      const url = event.notification.data?.url || "/matches";
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && "focus" in client) {
-          client.navigate(url);
-          return client.focus();
-        }
-      }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
-});
-
 const ASSETS_TO_CACHE = [
   "/",
   "/matches",
-  "/leaderboard",
-  "/history",
+  "/games",
   "/login",
   "/icon.png",
   "/icon-192.png",
@@ -98,34 +66,29 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => {
-          return caches.match(request).then((cachedResponse) => {
-            if (cachedResponse) return cachedResponse;
-            return new Response(
-              JSON.stringify({ error: "Network unavailable. Loaded offline copy." }),
-              { status: 503, headers: { "Content-Type": "application/json" } }
-            );
-          });
+          return caches.match(request);
         })
     );
     return;
   }
 
-  // Static files and pages: Stale-while-revalidate
+  // Static pages/assets: Cache-first with Network fallback
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
-      const fetchPromise = fetch(request)
-        .then((networkResponse) => {
-          if (networkResponse.status === 200) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => null);
-
-      return cachedResponse || fetchPromise;
+      if (cachedResponse) {
+        // Fetch in background to update cache
+        fetch(request)
+          .then((networkResponse) => {
+            if (networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, networkResponse);
+              });
+            }
+          })
+          .catch(() => {});
+        return cachedResponse;
+      }
+      return fetch(request);
     })
   );
 });

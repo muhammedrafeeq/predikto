@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Award, Trophy, Shield, ArrowRight, Clock, History, LayoutGrid, Gamepad2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import TopBar from "@/components/TopBar";
+import BottomNav from "@/components/BottomNav";
 
 interface HistoryCard {
   id: string;
@@ -334,27 +335,7 @@ export default function PredictionHistory() {
         </div>
       </main>
 
-      {/* Responsive Mobile Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 pb-safe bg-[#0a0a0f]/90 backdrop-blur-xl border-t border-white/10 md:hidden">
-        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary gap-0.5" href="/">
-          <LayoutGrid className="w-5 h-5 text-on-surface-variant" />
-          <span className="label-sm select-none text-xs">My Contests</span>
-        </a>
-        <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-violet-400 gap-0.5 transition-colors" href="/games">
-          <Gamepad2 className="w-5 h-5 text-on-surface-variant" />
-          <span className="label-sm select-none text-xs">Games</span>
-        </a>
-        <a className="flex flex-col items-center justify-center text-primary font-bold gap-0.5" href="/history">
-          <History className="w-5 h-5 text-primary" />
-          <span className="label-sm select-none text-xs">History</span>
-        </a>
-        {user?.role === "admin" && (
-          <a className="flex flex-col items-center justify-center text-on-surface-variant hover:text-secondary gap-0.5 transition-colors" href="/admin">
-            <Shield className="w-5 h-5" />
-            <span className="label-sm select-none text-xs">Admin</span>
-          </a>
-        )}
-      </nav>
+      <BottomNav />
     </div>
   );
 }

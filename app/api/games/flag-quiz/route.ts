@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/gameAuth";
+import { getOptionalAuth } from "@/lib/gameAuth";
 import { query } from "@/lib/db";
-import { dropCard } from "@/lib/cardDrop";
 
 type Difficulty = "easy" | "medium" | "hard";
 
@@ -33,28 +32,30 @@ function calcStreakBonus(results: { correct: boolean }[]): number {
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const user = await getOptionalAuth();
     const url = new URL(req.url);
     const diff = (url.searchParams.get("difficulty") as Difficulty) || "medium";
     const validDiffs: Difficulty[] = ["easy", "medium", "hard"];
     const difficulty = validDiffs.includes(diff) ? diff : "medium";
     const refId = getTodayRef();
 
-    // Check already played
-    const played = await query(
-      `SELECT points, metadata FROM game_scores
-       WHERE user_id = $1 AND game_type = 'flag_quiz' AND reference_id = $2
-         AND metadata->>'difficulty' = $3`,
-      [user.userId, refId, difficulty]
-    );
-    if (played.rowCount && played.rowCount > 0) {
-      return NextResponse.json({
-        played: true,
-        points: played.rows[0].points,
-        correct: played.rows[0].metadata?.correct ?? 0,
-        difficulty,
-        timeLimit: DIFF_TIME[difficulty],
-      });
+    // Check already played if logged in
+    if (user?.userId) {
+      const played = await query(
+        `SELECT points, metadata FROM game_scores
+         WHERE user_id = $1 AND game_type = 'flag_quiz' AND reference_id = $2
+           AND metadata->>'difficulty' = $3`,
+        [user.userId, refId, difficulty]
+      );
+      if (played.rowCount && played.rowCount > 0) {
+        return NextResponse.json({
+          played: true,
+          points: played.rows[0].points,
+          correct: played.rows[0].metadata?.correct ?? 0,
+          difficulty,
+          timeLimit: DIFF_TIME[difficulty],
+        });
+      }
     }
 
     // Fetch 10 random active flags for this difficulty
@@ -104,7 +105,7 @@ interface AnswerInput {
 
 export async function POST(req: NextRequest) {
   try {
-    const user = await requireAuth();
+    const user = await getOptionalAuth();
     const body = await req.json();
     const { answers, difficulty } = body as { answers: AnswerInput[]; difficulty: Difficulty };
 
@@ -118,13 +119,15 @@ export async function POST(req: NextRequest) {
 
     const refId = getTodayRef();
 
-    // Prevent duplicate submission
-    const existing = await query(
-      `SELECT id FROM game_scores WHERE user_id = $1 AND game_type = 'flag_quiz' AND reference_id = $2 AND metadata->>'difficulty' = $3`,
-      [user.userId, refId, difficulty]
-    );
-    if (existing.rowCount && existing.rowCount > 0) {
-      return NextResponse.json({ error: "Already played today" }, { status: 409 });
+    // Prevent duplicate submission if logged in
+    if (user?.userId) {
+      const existing = await query(
+        `SELECT id FROM game_scores WHERE user_id = $1 AND game_type = 'flag_quiz' AND reference_id = $2 AND metadata->>'difficulty' = $3`,
+        [user.userId, refId, difficulty]
+      );
+      if (existing.rowCount && existing.rowCount > 0) {
+        return NextResponse.json({ error: "Already played today" }, { status: 409 });
+      }
     }
 
     const mult = DIFF_MULTIPLIER[difficulty];
@@ -145,22 +148,15 @@ export async function POST(req: NextRequest) {
     const totalPoints = basePoints + streakBonus;
     const correctCount = results.filter((r) => r.correct).length;
 
-    await query(
-      `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata)
-       VALUES ($1, 'flag_quiz', $2, $3, $4)`,
-      [user.userId, refId, totalPoints, JSON.stringify({ difficulty, date: new Date().toISOString().slice(0, 10), correct: correctCount, total: answers.length })]
-    );
-
-    // Drop card if at least 5 correct answers are obtained
-    let droppedCard = null;
-    if (correctCount >= 5) {
-      const card = await dropCard(user.userId, "trivia");
-      if (card) {
-        droppedCard = card;
-      }
+    if (user?.userId) {
+      await query(
+        `INSERT INTO game_scores (user_id, game_type, reference_id, points, metadata)
+         VALUES ($1, 'flag_quiz', $2, $3, $4)`,
+        [user.userId, refId, totalPoints, JSON.stringify({ difficulty, date: new Date().toISOString().slice(0, 10), correct: correctCount, total: answers.length })]
+      );
     }
 
-    return NextResponse.json({ success: true, results, totalPoints, streakBonus, correctCount, droppedCard });
+    return NextResponse.json({ success: true, results, totalPoints, streakBonus, correctCount });
   } catch (err: unknown) {
     const e = err as { status?: number; message?: string };
     return NextResponse.json({ error: e.message ?? "Error" }, { status: e.status ?? 500 });

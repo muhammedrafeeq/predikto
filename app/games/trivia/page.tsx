@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trophy, Clock, CheckCircle, XCircle, Zap, Flame } from "lucide-react";
-import CardReveal from "@/components/cards/CardReveal";
 
 interface TriviaQuestion {
   id: number;
@@ -547,25 +546,6 @@ export default function TriviaPage() {
 
         {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
       </main>
-
-      {/* Inline Card Reveal Overlay Modal */}
-      {revealQueue.length > 0 && currentRevealIndex >= 0 && (
-        <div className="fixed inset-0 bg-neutral-950/90 backdrop-blur-md z-50 flex flex-col items-center justify-center p-4">
-          <div className="text-center mb-6">
-            <span className="text-[10px] bg-indigo-950 border border-indigo-900 text-indigo-400 px-3 py-1 rounded-full font-black tracking-widest uppercase">
-              Card Reward {currentRevealIndex + 1} of {revealQueue.length}
-            </span>
-            <h2 className="text-xl font-black text-white mt-2">
-              Flip the Card to Reveal Your Player!
-            </h2>
-          </div>
-
-          <CardReveal
-            card={revealQueue[currentRevealIndex]}
-            onComplete={handleRevealComplete}
-          />
-        </div>
-      )}
     </div>
   );
 }

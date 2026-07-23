@@ -6,7 +6,7 @@ import { X, LogIn, Zap, Loader2 } from "lucide-react";
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess?: () => void;
   hint?: string;
 }
 
@@ -28,7 +28,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, hint }: AuthModa
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Could not create guest session."); setIsGuestLoading(false); return; }
       if (data.credentials) localStorage.setItem("guestCredentials", JSON.stringify(data.credentials));
-      onSuccess();
+      if (onSuccess) onSuccess();
+      else window.location.reload();
     } catch {
       setError("Network error. Please try again.");
       setIsGuestLoading(false);

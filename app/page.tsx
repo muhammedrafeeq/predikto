@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
+import { HomeSkeleton } from "@/components/Skeletons";
 
 interface Match {
   id: string | number;
@@ -388,8 +389,12 @@ export default function VoltScoreHome() {
 
       {/* Main Body Content */}
       <main className="pt-20 pb-28 px-4 sm:px-6 max-w-[1200px] mx-auto space-y-10">
-        {/* Top Leagues Horizontal Scroll Section */}
-        <section>
+        {loading ? (
+          <HomeSkeleton />
+        ) : (
+          <>
+            {/* Top Leagues Horizontal Scroll Section */}
+            <section>
           <div className="flex justify-between items-center mb-4">
             <h2 className="font-label-caps text-[12px] text-[#c4c9ac] tracking-widest uppercase">
               TOP LEAGUES
@@ -702,6 +707,8 @@ export default function VoltScoreHome() {
             Play Mini-Games <ArrowRight className="w-4 h-4" />
           </button>
         </section>
+          </>
+        )}
       </main>
 
       <Footer />

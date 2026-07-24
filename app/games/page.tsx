@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
+import { GamesSkeleton } from "@/components/Skeletons";
 
 /* ── 3-D SVG Icons for Volt Score Theme ── */
 
@@ -160,6 +161,7 @@ export default function VoltScoreGamesHub() {
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<{ id: number; name: string; role?: string } | null>(null);
   const [gamePoints, setGamePoints] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadUser() {
@@ -181,6 +183,8 @@ export default function VoltScoreGamesHub() {
         }
       } catch (err) {
         console.error("Games page user load error:", err);
+      } finally {
+        setLoading(false);
       }
     }
     loadUser();
@@ -216,8 +220,12 @@ export default function VoltScoreGamesHub() {
 
       {/* Main Body */}
       <main className="pt-20 pb-28 px-4 sm:px-6 max-w-[1200px] mx-auto space-y-8">
-        {/* Hero Section */}
-        <section className="glass-card rounded-2xl p-6 sm:p-10 border border-[#c3f400]/30 bg-gradient-to-r from-[#c3f400]/10 via-[#0e0e0e] to-[#00e3fd]/10 shadow-[0_0_30px_rgba(195,244,0,0.1)] relative overflow-hidden">
+        {loading ? (
+          <GamesSkeleton />
+        ) : (
+          <>
+            {/* Hero Section */}
+            <section className="glass-card rounded-2xl p-6 sm:p-10 border border-[#c3f400]/30 bg-gradient-to-r from-[#c3f400]/10 via-[#0e0e0e] to-[#00e3fd]/10 shadow-[0_0_30px_rgba(195,244,0,0.1)] relative overflow-hidden">
           <div className="relative z-10 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#c3f400]/10 border border-[#c3f400]/30 text-[#c3f400] font-label-caps text-[11px] tracking-widest uppercase mb-3">
               <Gamepad2 className="w-4 h-4 text-[#c3f400] animate-pulse" /> MINI-GAMES ARENA
@@ -302,6 +310,8 @@ export default function VoltScoreGamesHub() {
             </div>
           ))}
         </section>
+          </>
+        )}
       </main>
 
       <Footer />

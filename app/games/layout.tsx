@@ -1,19 +1,24 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Games",
-  description: "Play free FIFA World Cup 2026 sports games — bracket predictor, formation predictor, first goal timer, penalty challenge, sports trivia quiz and more.",
+  title: "Interactive Football Games & Quizzes",
+  description: "Play free interactive football mini-games online — Who Am I? Player Guessing, Flag Quiz, Penalty Shootout, and Football Trivia with real-time scoreboards.",
   keywords: [
-    "sports games online", "world cup 2026 games", "formation predictor", "football formation game",
-    "first goal timer", "first goal predictor", "bracket predictor", "world cup bracket game",
-    "penalty challenge game", "sports trivia quiz", "football quiz game", "soccer games online",
-    "sports prediction games", "who am i football quiz", "world cup trivia",
-    "football mini games", "free sports games", "cricket prediction game"
+    "football games online",
+    "free football mini games",
+    "who am i football quiz",
+    "guess the football player",
+    "flag quiz online",
+    "penalty shootout game",
+    "football trivia quiz",
+    "soccer games online",
+    "football leaderboard games",
+    "skorio games"
   ],
   alternates: { canonical: "https://www.skorio.in/games" },
   openGraph: {
-    title: "Free Sports Games | Skorio",
-    description: "Play FIFA World Cup 2026 games — formation predictor, first goal timer, bracket builder, sports trivia and more.",
+    title: "Interactive Football Games & Quizzes | Skorio",
+    description: "Play free interactive football mini-games — Who Am I, Flag Quiz, Penalty Shootout, and Football Trivia.",
   },
 };
 

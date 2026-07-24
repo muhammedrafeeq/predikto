@@ -1,18 +1,25 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Matches",
-  description: "Predict FIFA World Cup 2026 match scores, winners and first goal scorers. Submit your exact score predictions and earn points on the leaderboard.",
+  title: "Live Football Matches & Scorecard Center",
+  description: "Get real-time live football match scores, lineups, match commentary, head-to-head records, and fixtures across Premier League, Champions League, La Liga, and international tournaments.",
   keywords: [
-    "world cup 2026 matches", "FIFA match predictions", "exact score predictor",
-    "football match predictor", "world cup score prediction", "first goal predictor",
-    "man of the match predictor", "sports prediction game", "soccer match predictor",
-    "world cup 2026 fixtures", "predict football scores"
+    "live football matches",
+    "football scorecard",
+    "today match live score",
+    "football match center",
+    "live match commentary",
+    "football head to head stats",
+    "premier league live score",
+    "champions league fixtures",
+    "world cup 2026 matches",
+    "real time football stats",
+    "football schedule today"
   ],
   alternates: { canonical: "https://www.skorio.in/matches" },
   openGraph: {
-    title: "FIFA World Cup 2026 Matches | Skorio",
-    description: "Predict FIFA World Cup 2026 match scores, winners and first goal scorers. Earn points and climb the leaderboard.",
+    title: "Live Football Matches & Scorecard Center | Skorio",
+    description: "Get real-time live football match scores, lineups, match commentary, head-to-head records, and fixtures.",
   },
 };
 

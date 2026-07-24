@@ -1,29 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Narrow:wght@400;500;700&family=Geist:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Next-Gen Foundations & Palette */
-  --color-base-bg: #03050e;
-  --color-surface: #090c21;
-  --color-surface-dim: #090c21;
-  --color-surface-bright: #161c42;
-  --color-surface-container: #0f1433;
+  /* Next-Gen Foundations & Volt Score Palette */
+  --color-base-bg: #0A0A0A;
+  --color-surface: #131313;
+  --color-surface-dim: #131313;
+  --color-surface-bright: #3a3939;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353534;
+  --color-surface-container-lowest: #0e0e0e;
 
-  --color-on-surface: #f8fafc;
-  --color-on-surface-variant: #94a3b8;
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #c4c9ac;
+  --color-on-background: #e5e2e1;
 
-  --color-primary: #6366f1;
-  --color-secondary: #10b981;
-  --color-tertiary: #f59e0b;
+  --color-primary-fixed: #c3f400;
+  --color-primary-fixed-dim: #abd600;
+  --color-primary-container: #c3f400;
+  --color-on-primary-container: #556d00;
+  --color-on-primary-fixed: #161e00;
 
-  --color-background: #03050e;
-  --color-on-background: #f8fafc;
+  --color-primary: #ffffff;
+  --color-secondary: #bdf4ff;
+  --color-secondary-container: #00e3fd;
+  --color-tertiary: #ffffff;
+
+  --color-background: #0A0A0A;
 
   /* Roundness tokens */
-  --radius-sm: 0.5rem;
-  --radius-DEFAULT: 1.0rem;
-  --radius-md: 1.25rem;
-  --radius-lg: 1.75rem;
-  --radius-xl: 2.5rem;
+  --radius-sm: 0.125rem;
+  --radius-DEFAULT: 0.125rem;
+  --radius-md: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
   --radius-full: 9999px;
 }
 
@@ -84,20 +96,97 @@
   filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.3));
 }
 
+/* ── Volt Score Custom Utilities ───────────────────────── */
+.glass-card {
+  background: rgba(26, 26, 26, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.live-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .5; transform: scale(1.1); }
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.font-headline-lg {
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+}
+.font-headline-lg-mobile {
+  font-family: 'Anton', sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+}
+.font-headline-md {
+  font-family: 'Anton', sans-serif;
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: 0.04em;
+  font-weight: 400;
+}
+.font-display-score {
+  font-family: 'Anton', sans-serif;
+  letter-spacing: 0.02em;
+  font-weight: 400;
+}
+.font-body-lg {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 500;
+}
+.font-body-md {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+}
+.font-label-caps {
+  font-family: 'Geist', sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+.font-label-mono {
+  font-family: 'Geist', sans-serif;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+}
+
 /* ── Body & Ambient Background Lights ───────────────────────── */
 body {
-  color: var(--foreground);
-  background: #03050e;
+  color: #e5e2e1;
+  background: #0A0A0A;
   background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.25), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 50%, rgba(16, 185, 129, 0.12), transparent),
-    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(245, 158, 11, 0.1), transparent);
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(195, 244, 0, 0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 100% 50%, rgba(0, 227, 253, 0.08), transparent),
+    radial-gradient(ellipse 60% 40% at 0% 100%, rgba(195, 244, 0, 0.05), transparent);
   background-attachment: fixed;
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  min-height: 100vh;
+  font-family: 'Archivo Narrow', var(--font-geist-sans), system-ui, sans-serif;
+  min-height: max(884px, 100dvh);
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #03050e; }
-::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.8); }
+::-webkit-scrollbar-track { background: #0A0A0A; }
+::-webkit-scrollbar-thumb { background: rgba(195, 244, 0, 0.3); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(195, 244, 0, 0.7); }

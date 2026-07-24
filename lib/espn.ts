@@ -90,9 +90,19 @@ export async function fetchLiveMatches(): Promise<EspnMatch[]> {
   }
 
   try {
+    const today = new Date();
+    const pastDate = new Date(today);
+    pastDate.setDate(today.getDate() - 5);
+    const futureDate = new Date(today);
+    futureDate.setDate(today.getDate() + 2);
+
+    const formatYmd = (d: Date) => d.toISOString().slice(0, 10).replace(/-/g, "");
+    const dateParam = `dates=${formatYmd(pastDate)}-${formatYmd(futureDate)}`;
+
     const responses = await Promise.allSettled(
       LEAGUE_ENDPOINTS.map(async (l) => {
-        const res = await fetch(l.url, { next: { revalidate: 10 } });
+        const fullUrl = `${l.url}?${dateParam}`;
+        const res = await fetch(fullUrl, { next: { revalidate: 10 } });
         if (!res.ok) return null;
         const data = await res.json();
         const leagueName = data.leagues?.[0]?.name || l.name;
@@ -120,7 +130,11 @@ export async function fetchLiveMatches(): Promise<EspnMatch[]> {
         const status: "live" | "upcoming" | "finished" =
           state === "in" ? "live" : state === "post" ? "finished" : "upcoming";
 
-        const statusDetail = c.status?.type?.shortDetail || (status === "finished" ? "FT" : "VS");
+        const rawDetail = c.status?.type?.shortDetail;
+        const isScheduledWord = !rawDetail || rawDetail.toLowerCase().includes("sched");
+        const statusDetail = isScheduledWord && e.date
+          ? new Date(e.date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+          : rawDetail || (status === "finished" ? "FT" : "VS");
 
         const parsedMatch: EspnMatch = {
           id: String(e.id),

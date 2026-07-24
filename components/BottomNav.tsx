@@ -2,53 +2,54 @@
 
 import React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Gamepad2, Calendar, Activity } from "lucide-react";
+import { Home, Trophy, Newspaper, Gamepad2, User } from "lucide-react";
 
 interface BottomNavProps {
-  activeTab?: "matches" | "games";
+  activeTab?: "home" | "leagues" | "news" | "games" | "profile" | "matches";
 }
 
 export default function BottomNav({ activeTab }: BottomNavProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const currentTab = activeTab || (pathname?.startsWith("/games") ? "games" : "matches");
+  const currentTab =
+    activeTab === "games" || pathname?.startsWith("/games")
+      ? "games"
+      : "home";
+
+  const navItems = [
+    { id: "home", label: "Home", icon: Home, route: "/" },
+    { id: "games", label: "Games", icon: Gamepad2, route: "/games" },
+  ];
 
   return (
-    <nav className="fixed bottom-0 w-full z-50 flex justify-around items-center h-16 md:hidden select-none bg-slate-950/90 backdrop-blur-2xl border-t border-white/10 px-4">
-      <button
-        onClick={() => router.push("/matches")}
-        className={`flex-1 flex flex-col items-center justify-center gap-1 h-full cursor-pointer transition-all ${
-          currentTab === "matches"
-            ? "text-indigo-400 font-black"
-            : "text-white/40 hover:text-white/80"
-        }`}
-      >
-        <div className="relative">
-          <Calendar className="w-5 h-5" />
-          {currentTab === "matches" && (
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-md shadow-indigo-500/80" />
-          )}
-        </div>
-        <span className="text-[11px] font-bold tracking-wider uppercase">Matches</span>
-      </button>
+    <nav className="fixed bottom-0 w-full z-50 bg-[#0e0e0e]/90 backdrop-blur-2xl border-t border-[#c3f400]/10 rounded-t-xl">
+      <div className="w-full flex justify-around items-center px-4 py-2.5 max-w-container-max mx-auto">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentTab === item.id;
 
-      <button
-        onClick={() => router.push("/games")}
-        className={`flex-1 flex flex-col items-center justify-center gap-1 h-full cursor-pointer transition-all ${
-          currentTab === "games"
-            ? "text-amber-400 font-black"
-            : "text-white/40 hover:text-white/80"
-        }`}
-      >
-        <div className="relative">
-          <Gamepad2 className="w-5 h-5" />
-          {currentTab === "games" && (
-            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-amber-400 shadow-md shadow-amber-400/80" />
-          )}
-        </div>
-        <span className="text-[11px] font-bold tracking-wider uppercase">Games</span>
-      </button>
+          return (
+            <button
+              key={item.id}
+              onClick={() => router.push(item.route)}
+              className={`flex flex-col items-center justify-center cursor-pointer active:scale-90 transition-all duration-200 ${
+                isActive
+                  ? "text-[#c3f400] font-bold"
+                  : "text-[#c4c9ac]/60 hover:text-[#c3f400]/80"
+              }`}
+            >
+              <div className="relative">
+                <Icon className="w-5 h-5" />
+                {isActive && (
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#c3f400] shadow-[0_0_8px_#c3f400]" />
+                )}
+              </div>
+              <span className="font-label-mono text-[10px] mt-1">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
     </nav>
   );
 }

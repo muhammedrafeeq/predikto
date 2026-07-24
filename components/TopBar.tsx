@@ -54,12 +54,12 @@ export default function TopBar({ userName, userPoints, userRole, activeTab }: To
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
-          {(["scores", "matches", "games"] as const).map((tab) => {
+          {(["scores", "matches"] as const).map((tab) => {
             const labels: Record<string, string> = {
-              scores: "Live Scores", matches: "Matches", games: "Mini-Games",
+              scores: "Live Scores", matches: "Matches",
             };
             const routes: Record<string, string> = {
-              scores: "/", matches: "/matches", games: "/games",
+              scores: "/", matches: "/matches",
             };
             const currentTabKey = activeTab === "matches" ? "matches" : activeTab === "contests" ? "scores" : tab;
             return (

@@ -69,6 +69,14 @@ export interface EspnEventDetail {
   h2h: H2hMatch[];
 }
 
+function extractEspnTeamLogo(comp: any): string {
+  if (!comp || !comp.team) return "";
+  if (typeof comp.team.logo === "string" && comp.team.logo.length > 0) return comp.team.logo;
+  if (Array.isArray(comp.team.logos) && comp.team.logos[0]?.href) return comp.team.logos[0].href;
+  if (comp.team.id) return `https://a.espncdn.com/i/teamlogos/soccer/500/${comp.team.id}.png`;
+  return "";
+}
+
 const LEAGUE_ENDPOINTS = [
   { slug: "all", name: "All Matches", url: "https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard" },
   { slug: "eng.1", name: "Premier League", url: "https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard" },
@@ -143,11 +151,11 @@ export async function fetchLiveMatches(): Promise<EspnMatch[]> {
           statusDetail,
           matchTime: e.date,
           teamHome: homeComp.team?.displayName || homeComp.team?.name || "Home Team",
-          teamHomeLogo: homeComp.team?.logo || "/icon-192.png",
+          teamHomeLogo: extractEspnTeamLogo(homeComp),
           teamHomeCode: homeComp.team?.abbreviation || homeComp.team?.displayName?.slice(0, 3).toUpperCase() || "HOM",
           scoreHome: parseInt(homeComp.score ?? "0", 10),
           teamAway: awayComp.team?.displayName || awayComp.team?.name || "Away Team",
-          teamAwayLogo: awayComp.team?.logo || "/icon-192.png",
+          teamAwayLogo: extractEspnTeamLogo(awayComp),
           teamAwayCode: awayComp.team?.abbreviation || awayComp.team?.displayName?.slice(0, 3).toUpperCase() || "AWY",
           scoreAway: parseInt(awayComp.score ?? "0", 10),
           league: defaultLeague,
@@ -262,11 +270,11 @@ async function getMatchesFromDb(): Promise<EspnMatch[]> {
       statusDetail: r.status_detail || (r.status === "finished" ? "FT" : "VS"),
       matchTime: r.match_time,
       teamHome: r.team_home,
-      teamHomeLogo: r.team_home_logo || "/icon-192.png",
+      teamHomeLogo: r.team_home_logo || "",
       teamHomeCode: r.team_home.slice(0, 3).toUpperCase(),
       scoreHome: r.score_home ?? 0,
       teamAway: r.team_away,
-      teamAwayLogo: r.team_away_logo || "/icon-192.png",
+      teamAwayLogo: r.team_away_logo || "",
       teamAwayCode: r.team_away.slice(0, 3).toUpperCase(),
       scoreAway: r.score_away ?? 0,
       league: r.league || "Football",
@@ -343,11 +351,11 @@ export async function fetchEspnMatchDetail(matchId: string): Promise<EspnEventDe
       statusDetail,
       matchTime: headerComp.date || new Date().toISOString(),
       teamHome: homeComp?.team?.displayName || "Home Team",
-      teamHomeLogo: homeComp?.team?.logo || "/icon-192.png",
+      teamHomeLogo: extractEspnTeamLogo(homeComp),
       teamHomeCode: homeComp?.team?.abbreviation || "HOM",
       scoreHome: parseInt(homeComp?.score ?? "0", 10),
       teamAway: awayComp?.team?.displayName || "Away Team",
-      teamAwayLogo: awayComp?.team?.logo || "/icon-192.png",
+      teamAwayLogo: extractEspnTeamLogo(awayComp),
       teamAwayCode: awayComp?.team?.abbreviation || "AWY",
       scoreAway: parseInt(awayComp?.score ?? "0", 10),
       league: data.header?.league?.name || "Live Football",

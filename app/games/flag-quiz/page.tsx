@@ -35,6 +35,46 @@ const DIFF_META: Record<Difficulty, { label: string; time: number; mult: number;
   hard:   { label: "Hard",   time: 10, mult: 3, color: "text-red-400",     bg: "border-red-500/40 bg-red-900/20"       },
 };
 
+const COUNTRY_TO_CODE: Record<string, string> = {
+  "Argentina": "ar", "Brazil": "br", "France": "fr", "Germany": "de", "Spain": "es",
+  "England": "gb-eng", "Portugal": "pt", "Netherlands": "nl", "Italy": "it", "United States": "us",
+  "Mexico": "mx", "Canada": "ca", "Japan": "jp", "Uruguay": "uy", "Croatia": "hr",
+  "Belgium": "be", "Colombia": "co", "South Korea": "kr", "Morocco": "ma", "Australia": "au",
+  "Sweden": "se", "Switzerland": "ch", "Poland": "pl", "Denmark": "dk", "Nigeria": "ng",
+  "Egypt": "eg", "India": "in", "Chile": "cl", "Peru": "pe", "Ecuador": "ec",
+  "Paraguay": "py", "Venezuela": "ve", "Ghana": "gh", "Ivory Coast": "ci", "Cameroon": "cm",
+  "Senegal": "sn", "Algeria": "dz", "Tunisia": "tn", "Iran": "ir", "Qatar": "qa",
+  "Saudi Arabia": "sa", "United Arab Emirates": "ae", "Turkey": "tr", "Ukraine": "ua", "Serbia": "rs",
+  "Scotland": "gb-sct", "Wales": "gb-wls", "Austria": "at", "Greece": "gr", "Norway": "no",
+  "Czechia": "cz", "Romania": "ro", "South Africa": "za", "Mali": "ml", "Costa Rica": "cr",
+  "Jamaica": "jm", "Panama": "pa", "Honduras": "hn", "Iceland": "is", "Republic of Ireland": "ie",
+  "Finland": "fi", "Iraq": "iq", "Uzbekistan": "uz", "China": "cn", "New Zealand": "nz",
+  "Cape Verde": "cv", "Georgia": "ge", "Albania": "al", "Slovakia": "sk", "Slovenia": "si",
+  "Bosnia and Herzegovina": "ba", "Montenegro": "me", "North Macedonia": "mk", "Luxembourg": "lu",
+  "Cyprus": "cy", "Armenia": "am", "Azerbaijan": "az", "Kazakhstan": "kz", "Jordan": "jo",
+  "Bahrain": "bh", "Oman": "om", "Palestine": "ps", "Syria": "sy", "Thailand": "th",
+  "Vietnam": "vn", "Indonesia": "id", "Malaysia": "my", "Fiji": "fj", "Haiti": "ht",
+  "Curaçao": "cw", "Trinidad and Tobago": "tt", "El Salvador": "sv", "Bolivia": "bo",
+  "Burkina Faso": "bf", "DR Congo": "cd", "Zambia": "zm", "Angola": "ao", "Benin": "bj",
+  "Mauritania": "mr", "Madagascar": "mg", "Equatorial Guinea": "gq", "Gabon": "ga", "Mozambique": "mz",
+  "Northern Ireland": "gb-nir"
+};
+
+function getFlagImageUrl(countryName: string, emoji: string): string {
+  const code = COUNTRY_TO_CODE[countryName];
+  if (code) return `https://flagcdn.com/w320/${code}.png`;
+  if (emoji && emoji.length >= 4) {
+    const char1 = emoji.codePointAt(0);
+    const char2 = emoji.codePointAt(2);
+    if (char1 && char2 && char1 >= 0x1f1e6 && char1 <= 0x1f1ff && char2 >= 0x1f1e6 && char2 <= 0x1f1ff) {
+      const c1 = String.fromCharCode(char1 - 0x1f1e6 + 97);
+      const c2 = String.fromCharCode(char2 - 0x1f1e6 + 97);
+      return `https://flagcdn.com/w320/${c1}${c2}.png`;
+    }
+  }
+  return "";
+}
+
 export default function FlagQuizPage() {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("pick");
@@ -178,33 +218,49 @@ export default function FlagQuizPage() {
   // DIFFICULTY PICK SCREEN
   if (phase === "pick") {
     return (
-      <div className="min-h-screen bg-base-bg text-on-surface flex flex-col pb-24">
-        <header className="flex items-center gap-3 px-5 py-4 pt-safe">
-          <button onClick={() => router.push("/games")} className="text-white/50 hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="font-black text-lg tracking-tight">Flag Quiz</h1>
+      <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] flex flex-col pt-20 pb-24 selection:bg-[#c3f400] selection:text-[#161e00]">
+        <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[#131313]/80 border-b border-[#c3f400]/10">
+          <div className="flex justify-between items-center px-4 sm:px-6 h-16 w-full max-w-[1200px] mx-auto">
+            <button
+              onClick={() => router.push("/games")}
+              className="active:scale-95 transition-transform flex items-center gap-2 cursor-pointer text-[#c4c9ac] hover:text-[#c3f400]"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#c3f400]" />
+              <span className="font-label-caps text-[12px] uppercase tracking-widest font-bold">
+                BACK
+              </span>
+            </button>
+
+            <div className="font-label-caps text-[14px] text-white tracking-widest font-bold uppercase flex items-center gap-2">
+              <Flag className="w-4 h-4 text-[#c3f400]" />
+              FLAG QUIZ
+            </div>
+
+            <div className="bg-[#c3f400]/10 px-3 py-1 rounded-full border border-[#c3f400]/30 text-[#c3f400] font-label-caps text-xs font-bold">
+              {meta.label.toUpperCase()}
+            </div>
+          </div>
         </header>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8">
-          <div className="text-center">
-            <div className="text-7xl mb-4">🏳️</div>
-            <h2 className="text-2xl font-black text-white mb-1">Flag Quiz</h2>
-            <p className="text-white/40 text-sm">Identify WC 2026 nation flags. Faster = more points!</p>
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-8 max-w-md mx-auto w-full">
+          <div className="text-center space-y-2">
+            <div className="text-7xl mb-2 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">🏳️</div>
+            <h2 className="font-headline-md text-3xl text-white tracking-wider uppercase">Flag Quiz</h2>
+            <p className="text-[#c4c9ac] text-xs font-medium">Identify WC 2026 nation flags. Faster speed = bonus multiplier!</p>
           </div>
 
           {alreadyPlayed && (
-            <div className="w-full max-w-sm bg-emerald-900/30 border border-emerald-500/30 rounded-2xl p-4 text-center">
+            <div className="w-full glass-card bg-emerald-900/20 border border-emerald-500/40 rounded-2xl p-4 text-center shadow-lg">
               <CheckCircle className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
               <p className="text-emerald-300 font-bold text-sm">Already played {DIFF_META[difficulty].label} today</p>
-              <p className="text-white/50 text-xs mt-1">You scored <span className="text-white font-bold">{todayPoints} pts</span></p>
+              <p className="text-[#c4c9ac] text-xs mt-1">You scored <span className="text-[#c3f400] font-bold">{todayPoints} pts</span></p>
             </div>
           )}
 
-          {error && <p className="text-red-400 text-sm text-center">{error}</p>}
+          {error && <p className="text-rose-400 text-xs font-bold text-center bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-xl">{error}</p>}
 
-          <div className="w-full max-w-sm space-y-3">
-            <p className="text-xs text-white/40 font-bold uppercase tracking-widest text-center mb-4">Select Difficulty</p>
+          <div className="w-full space-y-3">
+            <p className="font-label-caps text-[11px] text-[#c3f400] font-bold uppercase tracking-widest text-center mb-3">Select Difficulty</p>
             {(["easy", "medium", "hard"] as Difficulty[]).map((d) => {
               const m = DIFF_META[d];
               return (
@@ -212,13 +268,15 @@ export default function FlagQuizPage() {
                   key={d}
                   onClick={() => { setDifficulty(d); setAlreadyPlayed(false); }}
                   className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
-                    difficulty === d ? m.bg + " " + m.color : "border-white/10 bg-white/5 text-white/50"
+                    difficulty === d
+                      ? "border-[#c3f400] bg-[#c3f400]/10 text-white shadow-[0_0_15px_rgba(195,244,0,0.15)]"
+                      : "border-white/10 glass-card text-[#c4c9ac] hover:border-white/20"
                   }`}
                 >
-                  <span className="font-bold text-sm">{m.label}</span>
-                  <div className="flex items-center gap-3 text-xs font-semibold opacity-70">
+                  <span className="font-bold text-sm uppercase font-label-caps">{m.label}</span>
+                  <div className="flex items-center gap-3 text-xs font-label-mono font-semibold">
                     <span>⏱ {m.time}s</span>
-                    <span>×{m.mult} pts</span>
+                    <span className="text-[#c3f400] font-bold">×{m.mult} pts</span>
                   </div>
                 </button>
               );
@@ -227,14 +285,14 @@ export default function FlagQuizPage() {
 
           <button
             onClick={startGame}
-            className="w-full max-w-sm py-4 bg-primary text-on-primary rounded-2xl font-black text-base tracking-wide active:scale-95 transition-transform"
+            className="w-full py-4 bg-[#c3f400] text-[#161e00] hover:bg-[#b5e300] rounded-2xl font-label-caps font-bold text-sm tracking-wider uppercase active:scale-95 transition-all shadow-[0_0_25px_rgba(195,244,0,0.3)]"
           >
             Start Quiz
           </button>
 
-          <div className="text-center text-xs text-white/30 space-y-1">
-            <p>10 flags · Speed-based scoring · Daily limit per difficulty</p>
-            <p>Max <span className="text-white/50 font-bold">90 pts</span> (Hard, all fast + streak)</p>
+          <div className="text-center text-xs font-label-mono text-[#c4c9ac]/60 space-y-1">
+            <p>10 flags · Speed-based scoring · Daily limit</p>
+            <p>Max <span className="text-[#c3f400] font-bold">90 pts</span> (Hard mode)</p>
           </div>
         </div>
       </div>
@@ -244,8 +302,9 @@ export default function FlagQuizPage() {
   // LOADING
   if (phase === "loading") {
     return (
-      <div className="min-h-screen bg-base-bg flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-2 border-[#c3f400] border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(195,244,0,0.5)]" />
+        <span className="mt-4 font-label-caps text-xs text-[#c3f400] tracking-widest uppercase">LOADING QUIZ...</span>
       </div>
     );
   }
@@ -254,56 +313,79 @@ export default function FlagQuizPage() {
   if (phase === "playing" && question) {
     const progress = (currentIndex / questions.length) * 100;
     const timerProgress = (timeLeft / meta.time) * 100;
-    const timerColor = timerProgress > 50 ? "bg-emerald-500" : timerProgress > 25 ? "bg-amber-500" : "bg-red-500";
 
     return (
-      <div className="min-h-screen bg-base-bg text-on-surface flex flex-col pb-24">
-        <header className="flex items-center justify-between px-5 py-4 pt-safe">
-          <button onClick={() => router.push("/games")} className="text-white/50 hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <span className={`text-xs font-black uppercase tracking-widest ${meta.color}`}>{meta.label}</span>
-          <span className="text-white/40 text-xs font-bold">{currentIndex + 1} / {questions.length}</span>
+      <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] flex flex-col pt-20 pb-24 selection:bg-[#c3f400] selection:text-[#161e00]">
+        <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[#131313]/80 border-b border-[#c3f400]/10">
+          <div className="flex justify-between items-center px-4 sm:px-6 h-16 w-full max-w-[1200px] mx-auto">
+            <button
+              onClick={() => router.push("/games")}
+              className="active:scale-95 transition-transform flex items-center gap-2 cursor-pointer text-[#c4c9ac] hover:text-[#c3f400]"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#c3f400]" />
+              <span className="font-label-caps text-[12px] uppercase tracking-widest font-bold">
+                QUIT
+              </span>
+            </button>
+
+            <span className="font-label-caps text-xs text-[#c3f400] font-bold uppercase tracking-widest">{meta.label}</span>
+            <span className="font-label-mono text-[#c4c9ac] text-xs font-bold">{currentIndex + 1} / {questions.length}</span>
+          </div>
         </header>
 
         {/* Progress bar */}
-        <div className="h-1 bg-white/5 mx-5 rounded-full overflow-hidden">
-          <div className="h-full bg-primary transition-all duration-300 rounded-full" style={{ width: `${progress}%` }} />
+        <div className="h-1 bg-white/10 w-full">
+          <div className="h-full bg-[#c3f400] transition-all duration-300 shadow-[0_0_10px_rgba(195,244,0,0.6)]" style={{ width: `${progress}%` }} />
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 pt-4">
+        <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 pt-4 max-w-md mx-auto w-full">
           {/* Timer */}
-          <div className="w-full max-w-sm">
-            <div className="flex justify-between items-center mb-1.5 text-xs text-white/40 font-semibold">
-              <span className="flex items-center gap-1"><Zap className="w-3 h-3" /> Time</span>
-              <span className={timeLeft <= 5 ? "text-red-400 font-black animate-pulse" : ""}>{timeLeft}s</span>
+          <div className="w-full glass-card p-3 rounded-xl border border-white/10">
+            <div className="flex justify-between items-center mb-1.5 text-xs font-label-mono">
+              <span className="flex items-center gap-1 text-[#c4c9ac]"><Zap className="w-3.5 h-3.5 text-[#c3f400]" /> TIME REMAINING</span>
+              <span className={timeLeft <= 5 ? "text-rose-400 font-bold animate-pulse text-sm" : "text-[#c3f400] font-bold text-sm"}>{timeLeft}s</span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-              <div className={`h-full ${timerColor} transition-all duration-1000 rounded-full`} style={{ width: `${timerProgress}%` }} />
+              <div className="h-full bg-gradient-to-r from-[#c3f400] to-[#00e3fd] transition-all duration-1000 rounded-full shadow-[0_0_10px_rgba(195,244,0,0.4)]" style={{ width: `${timerProgress}%` }} />
             </div>
           </div>
 
           {/* Flag */}
-          <div className="text-center">
-            <div className="text-[100px] leading-none select-none drop-shadow-2xl">{question.flagEmoji}</div>
-            <p className="text-white/30 text-xs mt-3 font-semibold uppercase tracking-widest">Which country?</p>
+          <div className="text-center glass-card p-6 sm:p-8 rounded-3xl border border-white/15 w-full shadow-[0_0_30px_rgba(0,0,0,0.4)] flex flex-col items-center">
+            <div className="flex justify-center items-center h-32 sm:h-40 my-2 w-full">
+              <img
+                src={getFlagImageUrl(question.correctAnswer, question.flagEmoji)}
+                alt="Country Flag"
+                className="h-full max-w-full object-contain rounded-2xl shadow-[0_10px_25px_rgba(0,0,0,0.7)] border border-white/20"
+                onError={(e) => {
+                  // Fallback to flag Emoji if image network request fails
+                  (e.target as HTMLElement).style.display = 'none';
+                  const fallbackEl = (e.target as HTMLElement).nextElementSibling;
+                  if (fallbackEl) (fallbackEl as HTMLElement).style.display = 'block';
+                }}
+              />
+              <span className="hidden text-[90px] sm:text-[110px] leading-none select-none drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]">
+                {question.flagEmoji}
+              </span>
+            </div>
+            <p className="text-[#c4c9ac] text-xs mt-3 font-label-caps uppercase tracking-widest">Which country flag is this?</p>
           </div>
 
           {/* Options */}
-          <div className="w-full max-w-sm grid grid-cols-2 gap-3">
+          <div className="w-full grid grid-cols-2 gap-3">
             {question.options.map((option) => {
-              let btnClass = "border-white/10 bg-white/5 text-white hover:bg-white/10 active:scale-95";
+              let btnClass = "border-white/10 glass-card text-white hover:border-[#c3f400]/40 active:scale-95";
               if (selected !== null) {
-                if (option === question.correctAnswer) btnClass = "border-emerald-500 bg-emerald-900/40 text-emerald-300";
-                else if (option === selected) btnClass = "border-red-500 bg-red-900/40 text-red-300";
-                else btnClass = "border-white/5 bg-white/3 text-white/30";
+                if (option === question.correctAnswer) btnClass = "border-emerald-500 bg-emerald-500/20 text-emerald-300 shadow-[0_0_15px_rgba(16,185,129,0.3)]";
+                else if (option === selected) btnClass = "border-rose-500 bg-rose-500/20 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)]";
+                else btnClass = "border-white/5 bg-white/5 opacity-40 text-white/40";
               }
               return (
                 <button
                   key={option}
                   onClick={() => handleAnswer(option)}
                   disabled={selected !== null}
-                  className={`py-3.5 px-2 rounded-2xl border font-bold text-xs sm:text-sm transition-all ${btnClass}`}
+                  className={`py-4 px-3 rounded-2xl border font-bold text-xs sm:text-sm transition-all shadow-md ${btnClass}`}
                 >
                   {option}
                 </button>
@@ -319,43 +401,58 @@ export default function FlagQuizPage() {
   if (phase === "result") {
     const percentage = Math.round((correctCount / questions.length) * 100);
     return (
-      <div className="min-h-screen bg-base-bg text-on-surface flex flex-col pb-24">
-        <header className="flex items-center gap-3 px-5 py-4 pt-safe">
-          <button onClick={() => router.push("/games")} className="text-white/50 hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="font-black text-lg tracking-tight">Results</h1>
+      <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] flex flex-col pt-20 pb-24 selection:bg-[#c3f400] selection:text-[#161e00]">
+        <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[#131313]/80 border-b border-[#c3f400]/10">
+          <div className="flex justify-between items-center px-4 sm:px-6 h-16 w-full max-w-[1200px] mx-auto">
+            <button
+              onClick={() => router.push("/games")}
+              className="active:scale-95 transition-transform flex items-center gap-2 cursor-pointer text-[#c4c9ac] hover:text-[#c3f400]"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#c3f400]" />
+              <span className="font-label-caps text-[12px] uppercase tracking-widest font-bold">
+                BACK
+              </span>
+            </button>
+            <span className="font-label-caps text-sm text-white font-bold tracking-widest uppercase">RESULTS</span>
+            <div className="w-8" />
+          </div>
         </header>
 
-        <div className="flex-1 flex flex-col items-center px-6 gap-6 pt-4">
+        <div className="flex-1 flex flex-col items-center px-6 gap-6 pt-4 max-w-md mx-auto w-full">
           {error ? (
             <div className="text-center py-12">
-              <p className="text-red-400 font-bold">{error}</p>
-              <button onClick={() => router.push("/games")} className="mt-4 text-primary text-sm underline">Back to Games</button>
+              <p className="text-rose-400 font-bold">{error}</p>
+              <button onClick={() => router.push("/games")} className="mt-4 text-[#c3f400] text-sm underline font-label-caps">Back to Games</button>
             </div>
           ) : (
             <>
-              <div className="text-center">
+              <div className="text-center glass-card p-6 rounded-3xl border border-white/15 w-full">
                 <div className="text-6xl mb-3">{percentage >= 80 ? "🏆" : percentage >= 50 ? "⚽" : "🏳️"}</div>
-                <p className="text-4xl font-black text-white">{totalPoints} <span className="text-white/40 text-2xl">pts</span></p>
-                {streakBonus > 0 && <p className="text-amber-400 text-sm font-bold mt-1">+{streakBonus} streak bonus 🔥</p>}
-                <p className="text-white/50 text-sm mt-2">{correctCount}/{questions.length} correct · {percentage}%</p>
+                <p className="font-display-score text-5xl text-white">{totalPoints} <span className="text-[#c3f400] text-2xl font-label-caps font-bold">PTS</span></p>
+                {streakBonus > 0 && <p className="text-amber-400 text-xs font-label-caps font-bold mt-1">+{streakBonus} STREAK BONUS 🔥</p>}
+                <p className="text-[#c4c9ac] text-xs font-label-mono mt-2">{correctCount}/{questions.length} Correct · {percentage}% Accuracy</p>
               </div>
 
-              <div className="w-full max-w-sm space-y-2">
+              <div className="w-full space-y-2">
                 {answers.map((a, i) => (
-                  <div key={i} className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm ${
-                    a.correct ? "border-emerald-500/30 bg-emerald-900/20" : "border-red-500/20 bg-red-900/10"
+                  <div key={i} className={`flex items-center justify-between px-4 py-3 rounded-xl border text-sm glass-card ${
+                    a.correct ? "border-emerald-500/30 bg-emerald-500/10" : "border-rose-500/30 bg-rose-500/10"
                   }`}>
                     <div className="flex items-center gap-3">
                       {a.correct
                         ? <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                        : <XCircle className="w-4 h-4 text-red-400 shrink-0" />}
-                      <span className="text-white/70 text-xs">{a.correctAnswer}</span>
+                        : <XCircle className="w-4 h-4 text-rose-400 shrink-0" />}
+                      <img
+                        src={getFlagImageUrl(a.correctAnswer, "")}
+                        alt={a.correctAnswer}
+                        className="w-6 h-4 object-cover rounded shadow border border-white/20 shrink-0"
+                        onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                      />
+                      <span className="text-white text-xs font-medium">{a.correctAnswer}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-white/40">
+                    <div className="flex items-center gap-2 text-xs font-label-mono text-[#c4c9ac]">
                       <span>{a.timeSpent}s</span>
-                      <span className={a.correct ? "text-emerald-400 font-bold" : "text-white/20"}>
+                      <span className={a.correct ? "text-[#c3f400] font-bold" : "text-white/20"}>
                         +{resultItems[i]?.points ?? 0}
                       </span>
                     </div>
@@ -363,18 +460,18 @@ export default function FlagQuizPage() {
                 ))}
               </div>
 
-              <div className="w-full max-w-sm flex flex-col gap-3 pt-2">
+              <div className="w-full flex flex-col gap-3 pt-2">
                 <button
                   onClick={() => { setPhase("pick"); setAnswers([]); setCurrentIndex(0); }}
-                  className="w-full py-3 border border-white/10 bg-white/5 rounded-2xl font-bold text-sm text-white/70 hover:bg-white/10 transition-colors"
+                  className="w-full py-3.5 glass-card border border-white/15 rounded-2xl font-label-caps font-bold text-xs uppercase tracking-wider text-white hover:border-[#c3f400]/40 transition-colors"
                 >
                   Try Another Difficulty
                 </button>
                 <button
                   onClick={() => router.push("/games")}
-                  className="w-full py-3 bg-primary text-on-primary rounded-2xl font-bold text-sm"
+                  className="w-full py-4 bg-[#c3f400] text-[#161e00] hover:bg-[#b5e300] rounded-2xl font-label-caps font-bold text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(195,244,0,0.3)]"
                 >
-                  Back to Games
+                  Back to Games Hub
                 </button>
               </div>
             </>

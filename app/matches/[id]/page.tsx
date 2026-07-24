@@ -84,16 +84,47 @@ interface H2hMatch {
   score: string;
 }
 
-function getLeagueFlag(leagueName?: string) {
+function getLeagueFlagUrl(leagueName?: string) {
   const lg = (leagueName || "").toLowerCase();
-  if (lg.includes("premier") || lg.includes("eng")) return "🇬🇧";
-  if (lg.includes("liga") || lg.includes("esp") || lg.includes("spanish")) return "🇪🇸";
-  if (lg.includes("champions") || lg.includes("uefa") || lg.includes("ucl")) return "🇪🇺";
-  if (lg.includes("bundesliga") || lg.includes("ger")) return "🇩🇪";
-  if (lg.includes("serie") || lg.includes("ita")) return "🇮🇹";
-  if (lg.includes("ligue") || lg.includes("fra")) return "🇫🇷";
-  if (lg.includes("mls") || lg.includes("usa") || lg.includes("major")) return "🇺🇸";
-  return "⚽";
+  if (lg.includes("premier") || lg.includes("eng")) return "https://flagcdn.com/w40/gb.png";
+  if (lg.includes("la liga") || lg.includes("esp") || lg.includes("spanish")) return "https://flagcdn.com/w40/es.png";
+  if (lg.includes("champions") || lg.includes("uefa") || lg.includes("ucl")) return "https://flagcdn.com/w40/eu.png";
+  if (lg.includes("bundesliga") || lg.includes("ger")) return "https://flagcdn.com/w40/de.png";
+  if (lg.includes("serie") || lg.includes("ita")) return "https://flagcdn.com/w40/it.png";
+  if (lg.includes("ligue") || lg.includes("fra")) return "https://flagcdn.com/w40/fr.png";
+  if (lg.includes("mls") || lg.includes("usa") || lg.includes("major")) return "https://flagcdn.com/w40/us.png";
+  return null;
+}
+
+function getLeagueLogoUrl(leagueName?: string) {
+  const lg = (leagueName || "").toLowerCase();
+  if (lg.includes("premier") || lg.includes("eng")) return "https://a.espncdn.com/i/leaguelogos/soccer/500/23.png";
+  if (lg.includes("la liga") || lg.includes("esp") || lg.includes("spanish")) return "https://a.espncdn.com/i/leaguelogos/soccer/500/15.png";
+  if (lg.includes("champions") || lg.includes("uefa") || lg.includes("ucl")) return "https://a.espncdn.com/i/leaguelogos/soccer/500/2.png";
+  if (lg.includes("bundesliga") || lg.includes("ger")) return "https://a.espncdn.com/i/leaguelogos/soccer/500/10.png";
+  if (lg.includes("serie") || lg.includes("ita")) return "https://a.espncdn.com/i/leaguelogos/soccer/500/12.png";
+  if (lg.includes("ligue") || lg.includes("fra")) return "https://a.espncdn.com/i/leaguelogos/soccer/500/9.png";
+  if (lg.includes("mls") || lg.includes("usa") || lg.includes("major")) return "https://a.espncdn.com/i/leaguelogos/soccer/500/19.png";
+  return null;
+}
+
+function getTeamFlagUrl(teamName?: string, leagueName?: string) {
+  const t = (teamName || "").toLowerCase();
+  if (t.includes("madrid") || t.includes("barcelona") || t.includes("atletico") || t.includes("sevilla") || t.includes("betis") || t.includes("athletic") || t.includes("girona") || t.includes("valencia")) return "https://flagcdn.com/w40/es.png";
+  if (t.includes("city") || t.includes("united") || t.includes("arsenal") || t.includes("chelsea") || t.includes("liverpool") || t.includes("tottenham") || t.includes("spurs") || t.includes("newcastle") || t.includes("aston") || t.includes("villa") || t.includes("west ham") || t.includes("everton")) return "https://flagcdn.com/w40/gb.png";
+  if (t.includes("miami") || t.includes("lafc") || t.includes("galaxy") || t.includes("cincinnati") || t.includes("crew") || t.includes("red bull") || t.includes("charlotte") || t.includes("atlanta") || t.includes("sounders") || t.includes("portland") || t.includes("austin") || t.includes("orlando") || t.includes("toronto") || t.includes("d.c.")) return "https://flagcdn.com/w40/us.png";
+  if (t.includes("bayern") || t.includes("dortmund") || t.includes("leverkusen") || t.includes("leipzig") || t.includes("frankfurt") || t.includes("stuttgart")) return "https://flagcdn.com/w40/de.png";
+  if (t.includes("inter") || t.includes("milan") || t.includes("juventus") || t.includes("napoli") || t.includes("roma") || t.includes("lazio") || t.includes("atalanta") || t.includes("fiorentina")) return "https://flagcdn.com/w40/it.png";
+  if (t.includes("psg") || t.includes("paris") || t.includes("marseille") || t.includes("lyon") || t.includes("monaco") || t.includes("lille") || t.includes("nice") || t.includes("rennes")) return "https://flagcdn.com/w40/fr.png";
+  return getLeagueFlagUrl(leagueName);
+}
+
+function formatShortName(fullName: string) {
+  if (!fullName) return "Player";
+  const parts = fullName.trim().split(" ");
+  if (parts.length === 1) return parts[0].slice(0, 9);
+  const lastName = parts[parts.length - 1];
+  return lastName.length > 9 ? lastName.slice(0, 9) : lastName;
 }
 
 function TacticalStadiumPitch({ roster }: { roster: RosterTeam }) {
@@ -101,68 +132,70 @@ function TacticalStadiumPitch({ roster }: { roster: RosterTeam }) {
   const starters = players.filter((p) => p.starter !== false);
   const bench = players.filter((p) => p.starter === false);
 
-  const gks = starters.filter((p) => (p.position || "").toUpperCase().includes("GK"));
-  const dfs = starters.filter((p) => (p.position || "").toUpperCase().includes("DF"));
-  const mfs = starters.filter((p) => (p.position || "").toUpperCase().includes("MF"));
-  const fws = starters.filter((p) => (p.position || "").toUpperCase().includes("FW") || (p.position || "").toUpperCase().includes("ST") || (p.position || "").toUpperCase().includes("ATT"));
+  const getPos = (p: RosterPlayer) => (p.position || "").toUpperCase();
 
-  const finalGks = gks.length > 0 ? gks : starters.slice(0, 1);
+  const gks = starters.filter((p) => getPos(p).includes("GK") || getPos(p) === "G");
+  const dfs = starters.filter((p) => getPos(p).includes("DF") || getPos(p).includes("DEF") || getPos(p) === "D" || getPos(p).includes("BACK"));
+  const mfs = starters.filter((p) => getPos(p).includes("MF") || getPos(p).includes("MID") || getPos(p) === "M");
+  const fws = starters.filter((p) => getPos(p).includes("FW") || getPos(p).includes("ATT") || getPos(p).includes("ST") || getPos(p) === "F" || getPos(p).includes("WING"));
+
+  const finalGks = gks.length > 0 ? gks.slice(0, 1) : starters.slice(0, 1);
   const remaining = starters.filter((p) => !finalGks.includes(p));
-  const finalDfs = dfs.length > 0 ? dfs : remaining.slice(0, 4);
+  const finalDfs = dfs.length > 0 ? dfs.slice(0, 4) : remaining.slice(0, 4);
   const remaining2 = remaining.filter((p) => !finalDfs.includes(p));
-  const finalMfs = mfs.length > 0 ? mfs : remaining2.slice(0, 3);
+  const finalMfs = mfs.length > 0 ? mfs.slice(0, 3) : remaining2.slice(0, 3);
   const finalFws = fws.length > 0 ? fws : remaining2.slice(3);
 
   return (
     <div className="space-y-6">
       {/* 3D Pitch Arena */}
-      <div className="relative bg-gradient-to-b from-[#1c4d20] via-[#153e18] to-[#123315] rounded-3xl p-6 border-2 border-emerald-500/40 shadow-[0_0_40px_rgba(20,80,30,0.4)] overflow-hidden min-h-[460px] flex flex-col justify-between select-none">
+      <div className="relative bg-gradient-to-b from-[#1c4d20] via-[#153e18] to-[#123315] rounded-3xl p-4 sm:p-6 border-2 border-emerald-500/40 shadow-[0_0_40px_rgba(20,80,30,0.4)] overflow-hidden min-h-[440px] flex flex-col justify-between select-none">
         {/* Pitch Overlay Texture */}
         <div className="absolute inset-0 border-4 border-white/20 rounded-2xl m-3 pointer-events-none" />
         <div className="absolute top-1/2 left-3 right-3 h-[2px] bg-white/20 -translate-y-1/2 pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 border-2 border-white/20 rounded-full pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-white/30 rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white/20 rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white/30 rounded-full pointer-events-none" />
 
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-48 h-24 border-2 border-t-0 border-white/20 pointer-events-none" />
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-48 h-24 border-2 border-b-0 border-white/20 pointer-events-none" />
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 w-44 h-20 border-2 border-t-0 border-white/20 pointer-events-none" />
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-44 h-20 border-2 border-b-0 border-white/20 pointer-events-none" />
 
         {/* Forwards Row */}
         <div className="relative z-10 flex justify-around items-center pt-2">
           {finalFws.map((p, i) => (
             <div key={p.id || i} className="flex flex-col items-center group cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-[#c3f400] text-[#131313] font-bold font-display-score text-[15px] flex items-center justify-center border-2 border-[#131313] shadow-[0_0_15px_rgba(195,244,0,0.6)] group-hover:scale-110 transition-transform">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#c3f400] text-[#131313] font-bold font-display-score text-xs sm:text-sm flex items-center justify-center border-2 border-[#131313] shadow-[0_0_12px_rgba(195,244,0,0.6)] group-hover:scale-110 transition-transform">
                 {p.jersey || "9"}
               </div>
-              <div className="bg-[#131313]/90 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 text-[11px] font-bold text-white uppercase truncate max-w-[95px] text-center mt-1 shadow-md">
-                {p.name}
+              <div className="bg-[#131313]/90 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/20 text-[9px] sm:text-[10px] font-bold text-white uppercase truncate max-w-[75px] sm:max-w-[85px] text-center mt-1 shadow-md">
+                {formatShortName(p.name)}
               </div>
             </div>
           ))}
         </div>
 
         {/* Midfielders Row */}
-        <div className="relative z-10 flex justify-around items-center my-auto py-4">
+        <div className="relative z-10 flex justify-around items-center my-auto py-3">
           {finalMfs.map((p, i) => (
             <div key={p.id || i} className="flex flex-col items-center group cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-[#00e3fd] text-[#131313] font-bold font-display-score text-[15px] flex items-center justify-center border-2 border-[#131313] shadow-[0_0_15px_rgba(0,227,253,0.6)] group-hover:scale-110 transition-transform">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#00e3fd] text-[#131313] font-bold font-display-score text-xs sm:text-sm flex items-center justify-center border-2 border-[#131313] shadow-[0_0_12px_rgba(0,227,253,0.6)] group-hover:scale-110 transition-transform">
                 {p.jersey || "8"}
               </div>
-              <div className="bg-[#131313]/90 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 text-[11px] font-bold text-white uppercase truncate max-w-[95px] text-center mt-1 shadow-md">
-                {p.name}
+              <div className="bg-[#131313]/90 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/20 text-[9px] sm:text-[10px] font-bold text-white uppercase truncate max-w-[75px] sm:max-w-[85px] text-center mt-1 shadow-md">
+                {formatShortName(p.name)}
               </div>
             </div>
           ))}
         </div>
 
         {/* Defenders Row */}
-        <div className="relative z-10 flex justify-around items-center my-auto py-4">
+        <div className="relative z-10 flex justify-around items-center my-auto py-3">
           {finalDfs.map((p, i) => (
             <div key={p.id || i} className="flex flex-col items-center group cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-white text-[#131313] font-bold font-display-score text-[15px] flex items-center justify-center border-2 border-[#131313] shadow-[0_0_15px_rgba(255,255,255,0.4)] group-hover:scale-110 transition-transform">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white text-[#131313] font-bold font-display-score text-xs sm:text-sm flex items-center justify-center border-2 border-[#131313] shadow-[0_0_12px_rgba(255,255,255,0.4)] group-hover:scale-110 transition-transform">
                 {p.jersey || "4"}
               </div>
-              <div className="bg-[#131313]/90 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 text-[11px] font-bold text-white uppercase truncate max-w-[95px] text-center mt-1 shadow-md">
-                {p.name}
+              <div className="bg-[#131313]/90 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/20 text-[9px] sm:text-[10px] font-bold text-white uppercase truncate max-w-[75px] sm:max-w-[85px] text-center mt-1 shadow-md">
+                {formatShortName(p.name)}
               </div>
             </div>
           ))}
@@ -172,11 +205,11 @@ function TacticalStadiumPitch({ roster }: { roster: RosterTeam }) {
         <div className="relative z-10 flex justify-center items-center pb-2">
           {finalGks.map((p, i) => (
             <div key={p.id || i} className="flex flex-col items-center group cursor-pointer">
-              <div className="w-10 h-10 rounded-full bg-amber-400 text-[#131313] font-bold font-display-score text-[15px] flex items-center justify-center border-2 border-[#131313] shadow-[0_0_15px_rgba(251,191,36,0.6)] group-hover:scale-110 transition-transform">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-amber-400 text-[#131313] font-bold font-display-score text-xs sm:text-sm flex items-center justify-center border-2 border-[#131313] shadow-[0_0_12px_rgba(251,191,36,0.6)] group-hover:scale-110 transition-transform">
                 {p.jersey || "1"}
               </div>
-              <div className="bg-[#131313]/90 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 text-[11px] font-bold text-white uppercase truncate max-w-[95px] text-center mt-1 shadow-md">
-                {p.name}
+              <div className="bg-[#131313]/90 backdrop-blur-md px-1.5 py-0.5 rounded-full border border-white/20 text-[9px] sm:text-[10px] font-bold text-white uppercase truncate max-w-[75px] sm:max-w-[85px] text-center mt-1 shadow-md">
+                {formatShortName(p.name)}
               </div>
             </div>
           ))}
@@ -419,15 +452,27 @@ export default function MatchDetailPage({ params }: MatchDetailsProps) {
               <div className="relative z-10 w-full max-w-[1200px] flex items-center justify-between gap-4">
                 {/* Home Team */}
                 <div className="flex flex-col items-center flex-1 text-center">
-                  <div className="w-20 h-20 md:w-32 md:h-32 mb-4 glass-card rounded-full flex items-center justify-center p-4 shadow-[0_0_25px_rgba(255,255,255,0.05)] border border-white/15">
-                    {displayMatch.teamHomeLogo ? (
-                      <img
-                        className="w-full h-full object-contain drop-shadow-lg"
-                        src={displayMatch.teamHomeLogo}
-                        alt={displayMatch.teamHome}
-                      />
-                    ) : (
-                      <div className="font-headline-md text-2xl text-white">{displayMatch.teamHome.slice(0, 2)}</div>
+                  <div className="relative w-20 h-20 md:w-32 md:h-32 mb-4">
+                    <div className="w-full h-full glass-card rounded-full flex items-center justify-center p-4 shadow-[0_0_25px_rgba(255,255,255,0.05)] border border-white/15 overflow-hidden">
+                      {displayMatch.teamHomeLogo ? (
+                        <img
+                          className="w-full h-full object-contain drop-shadow-lg"
+                          src={displayMatch.teamHomeLogo}
+                          alt={displayMatch.teamHome}
+                        />
+                      ) : (
+                        <div className="font-headline-md text-2xl text-white">{displayMatch.teamHome.slice(0, 2)}</div>
+                      )}
+                    </div>
+                    {/* Circular Flag Badge Overlay */}
+                    {getTeamFlagUrl(displayMatch.teamHome, displayMatch.league) && (
+                      <div className="absolute -bottom-1 -right-1 w-7 h-7 md:w-9 md:h-9 rounded-full border-2 border-[#131313] overflow-hidden shadow-lg bg-[#131313] flex items-center justify-center">
+                        <img
+                          src={getTeamFlagUrl(displayMatch.teamHome, displayMatch.league)!}
+                          alt="Home Team Flag"
+                          className="w-full h-full object-cover scale-110"
+                        />
+                      </div>
                     )}
                   </div>
                   <h2 className="font-headline-md text-[18px] md:text-[24px] text-white tracking-wider uppercase leading-tight">
@@ -450,23 +495,48 @@ export default function MatchDetailPage({ params }: MatchDetailsProps) {
                     <span>{displayMatch.scoreAway ?? 0}</span>
                   </div>
 
-                  <div className="mt-3 flex items-center gap-2 text-[#c4c9ac] font-label-caps text-[11px]">
-                    <span>{getLeagueFlag(displayMatch.league)}</span>
-                    <span className="truncate max-w-[200px]">{displayMatch.league}</span>
+                  <div className="mt-4 flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full text-xs font-label-mono text-[#c4c9ac] shadow-sm">
+                    {getLeagueFlagUrl(displayMatch.league) && (
+                      <img
+                        src={getLeagueFlagUrl(displayMatch.league)!}
+                        alt="Country Flag"
+                        className="w-5 h-3.5 object-cover rounded-sm border border-white/20 shadow-sm"
+                      />
+                    )}
+                    {getLeagueLogoUrl(displayMatch.league) && (
+                      <img
+                        src={getLeagueLogoUrl(displayMatch.league)!}
+                        alt="League Logo"
+                        className="w-4 h-4 object-contain"
+                      />
+                    )}
+                    <span className="truncate max-w-[200px] font-bold text-white uppercase">{displayMatch.league}</span>
                   </div>
                 </div>
 
                 {/* Away Team */}
                 <div className="flex flex-col items-center flex-1 text-center">
-                  <div className="w-20 h-20 md:w-32 md:h-32 mb-4 glass-card rounded-full flex items-center justify-center p-4 shadow-[0_0_25px_rgba(255,255,255,0.05)] border border-white/15">
-                    {displayMatch.teamAwayLogo ? (
-                      <img
-                        className="w-full h-full object-contain drop-shadow-lg"
-                        src={displayMatch.teamAwayLogo}
-                        alt={displayMatch.teamAway}
-                      />
-                    ) : (
-                      <div className="font-headline-md text-2xl text-white">{displayMatch.teamAway.slice(0, 2)}</div>
+                  <div className="relative w-20 h-20 md:w-32 md:h-32 mb-4">
+                    <div className="w-full h-full glass-card rounded-full flex items-center justify-center p-4 shadow-[0_0_25px_rgba(255,255,255,0.05)] border border-white/15 overflow-hidden">
+                      {displayMatch.teamAwayLogo ? (
+                        <img
+                          className="w-full h-full object-contain drop-shadow-lg"
+                          src={displayMatch.teamAwayLogo}
+                          alt={displayMatch.teamAway}
+                        />
+                      ) : (
+                        <div className="font-headline-md text-2xl text-white">{displayMatch.teamAway.slice(0, 2)}</div>
+                      )}
+                    </div>
+                    {/* Circular Flag Badge Overlay */}
+                    {getTeamFlagUrl(displayMatch.teamAway, displayMatch.league) && (
+                      <div className="absolute -bottom-1 -right-1 w-7 h-7 md:w-9 md:h-9 rounded-full border-2 border-[#131313] overflow-hidden shadow-lg bg-[#131313] flex items-center justify-center">
+                        <img
+                          src={getTeamFlagUrl(displayMatch.teamAway, displayMatch.league)!}
+                          alt="Away Team Flag"
+                          className="w-full h-full object-cover scale-110"
+                        />
+                      </div>
                     )}
                   </div>
                   <h2 className="font-headline-md text-[18px] md:text-[24px] text-white tracking-wider uppercase leading-tight">
@@ -524,13 +594,13 @@ export default function MatchDetailPage({ params }: MatchDetailsProps) {
                           <p className="font-body-lg text-white">No timeline events recorded yet.</p>
                         </div>
                       ) : (
-                        keyEvents.map((ev, idx) => (
+                        [...keyEvents].reverse().map((ev, idx, arr) => (
                           <div key={ev.id || idx} className="flex gap-4 group">
                             <div className="flex flex-col items-center w-9 shrink-0">
                               <div className="w-9 h-9 rounded-full bg-[#c3f400] text-[#161e00] flex items-center justify-center font-label-mono font-bold text-[12px] shadow-[0_0_12px_rgba(195,244,0,0.3)]">
                                 {ev.clock}
                               </div>
-                              {idx < keyEvents.length - 1 && (
+                              {idx < arr.length - 1 && (
                                 <div className="w-[2px] flex-1 bg-white/10 mt-2 min-h-[30px]" />
                               )}
                             </div>

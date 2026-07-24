@@ -518,7 +518,7 @@ export default function PenaltyPage() {
   // ── Lobby / Menu Selection screen ───────────────────────────────────────
   if (mode === "menu") {
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: "#0a0a0f" }}>
+      <div className="min-h-screen bg-[#0A0A0A] text-[#e5e2e1] flex flex-col pt-20 pb-24 selection:bg-[#c3f400] selection:text-[#161e00]">
         <style>{`
           @keyframes iconFloat {
             0%,100% { transform: translateY(0px) rotate(0deg) scale(1); }
@@ -527,41 +527,52 @@ export default function PenaltyPage() {
           .icon-float { animation: iconFloat 4s ease-in-out infinite; }
         `}</style>
         
-        <header className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <button onClick={() => router.push("/games")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors">
-            <ArrowLeft className="w-4 h-4" /> Back
-          </button>
-          <h1 className="text-white font-black text-base">Penalty Shootout</h1>
-          <div className="w-6" /> {/* Spacer */}
+        <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[#131313]/80 border-b border-[#c3f400]/10">
+          <div className="flex justify-between items-center px-4 sm:px-6 h-16 w-full max-w-[1200px] mx-auto">
+            <button
+              onClick={() => router.push("/games")}
+              className="active:scale-95 transition-transform flex items-center gap-2 cursor-pointer text-[#c4c9ac] hover:text-[#c3f400]"
+            >
+              <ArrowLeft className="w-5 h-5 text-[#c3f400]" />
+              <span className="font-label-caps text-[12px] uppercase tracking-widest font-bold">
+                BACK
+              </span>
+            </button>
+            <div className="font-label-caps text-[14px] text-white tracking-widest font-bold uppercase flex items-center gap-2">
+              <Target className="w-4 h-4 text-[#c3f400]" />
+              PENALTY SHOOTOUT
+            </div>
+            <div className="w-8" />
+          </div>
         </header>
 
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-8 max-w-sm mx-auto w-full">
-          <div className="w-24 h-24 mb-6 relative icon-float">
+          <div className="w-24 h-24 mb-6 relative">
             <Icon3dPenalty />
           </div>
 
-          <h2 className="text-2xl font-black text-white text-center mb-1">Select Game Mode</h2>
-          <p className="text-xs text-white/40 text-center mb-5">Test your skills or battle against your friends.</p>
+          <h2 className="font-headline-md text-2xl text-white text-center mb-1 uppercase tracking-wider">Select Game Mode</h2>
+          <p className="text-xs text-[#c4c9ac] text-center mb-6 font-medium">Test your skills against AI goalkeepers.</p>
 
           {/* Career Stats Card */}
           {career && (career.totalGames > 0) && (
-            <div className="w-full rounded-2xl border border-green-400/15 p-4 mb-5" style={{ background: "rgba(74,222,128,0.04)" }}>
-              <p className="text-[10px] font-black uppercase tracking-widest text-green-400/60 mb-3 text-center">7-Day Career Stats</p>
+            <div className="w-full glass-card border border-[#c3f400]/20 p-4 mb-6 rounded-2xl">
+              <p className="text-[10px] font-label-caps font-bold uppercase tracking-widest text-[#c3f400] mb-3 text-center">7-Day Career Stats</p>
               <div className="grid grid-cols-3 gap-2">
                 <div className="flex flex-col items-center">
-                  <Star className="w-4 h-4 text-green-400 mb-1" />
-                  <span className="text-xl font-black text-green-400">{career.sevenDayBest}</span>
-                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider mt-0.5">Best Pts</span>
+                  <Star className="w-4 h-4 text-[#c3f400] mb-1" />
+                  <span className="font-display-score text-xl text-[#c3f400]">{career.sevenDayBest}</span>
+                  <span className="text-[9px] text-[#c4c9ac] font-label-mono font-bold uppercase tracking-wider mt-0.5">Best Pts</span>
                 </div>
-                <div className="flex flex-col items-center border-x border-white/8">
-                  <Target className="w-4 h-4 text-amber-400 mb-1" />
-                  <span className="text-xl font-black text-amber-400">{career.totalGoals}</span>
-                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider mt-0.5">Goals</span>
+                <div className="flex flex-col items-center border-x border-white/10">
+                  <Target className="w-4 h-4 text-[#00e3fd] mb-1" />
+                  <span className="font-display-score text-xl text-[#00e3fd]">{career.totalGoals}</span>
+                  <span className="text-[9px] text-[#c4c9ac] font-label-mono font-bold uppercase tracking-wider mt-0.5">Goals</span>
                 </div>
                 <div className="flex flex-col items-center">
-                  <Flame className="w-4 h-4 text-orange-400 mb-1" />
-                  <span className="text-xl font-black text-orange-400">{career.totalGames}</span>
-                  <span className="text-[9px] text-white/30 font-bold uppercase tracking-wider mt-0.5">Games</span>
+                  <Flame className="w-4 h-4 text-amber-400 mb-1" />
+                  <span className="font-display-score text-xl text-amber-400">{career.totalGames}</span>
+                  <span className="text-[9px] text-[#c4c9ac] font-label-mono font-bold uppercase tracking-wider mt-0.5">Games</span>
                 </div>
               </div>
             </div>
@@ -578,32 +589,27 @@ export default function PenaltyPage() {
                 setGameOver(false);
                 setChallengeCreated(null);
               }}
-              className="flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-green-400/20 bg-green-400/5 hover:bg-green-400/10 hover:border-green-400/45 transition-all duration-300 text-left w-full group cursor-pointer"
+              className="flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-[#c3f400]/40 bg-[#c3f400]/10 hover:bg-[#c3f400]/20 hover:border-[#c3f400] transition-all duration-300 text-left w-full group cursor-pointer shadow-[0_0_20px_rgba(195,244,0,0.15)]"
             >
-              <span className="text-base font-black text-green-400 flex items-center gap-2">
-                ⚽ Play Solo
+              <span className="font-label-caps text-base font-bold text-[#c3f400] flex items-center gap-2 uppercase tracking-wider">
+                ⚽ Play Solo Mode
               </span>
-              <span className="text-xs text-white/60">
+              <span className="text-xs text-[#c4c9ac] font-medium">
                 Practice penalties against AI goalkeeper. Earn points for the global leaderboard.
               </span>
             </button>
 
             {/* Multiplayer/Challenge Mode — Coming Soon */}
-            <div className="relative flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-white/8 bg-white/[0.02] text-left w-full cursor-not-allowed overflow-hidden">
-              {/* Coming Soon badge */}
-              <span className="absolute top-3 right-3 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                style={{ background: "rgba(168,85,247,0.15)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
+            <div className="relative flex flex-col items-start gap-1.5 p-5 rounded-2xl border border-white/10 glass-card text-left w-full cursor-not-allowed opacity-50">
+              <span className="absolute top-3 right-3 text-[9px] font-label-caps font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#00e3fd]/20 text-[#00e3fd] border border-[#00e3fd]/30">
                 Coming Soon
               </span>
-              <span className="text-base font-black text-white/30 flex items-center gap-2">
+              <span className="font-label-caps text-base font-bold text-white/50 flex items-center gap-2 uppercase tracking-wider">
                 ⚔️ Challenge a Friend
               </span>
-              <span className="text-xs text-white/25">
-                Play a round and generate a battle link. Send it to a friend to see if they can beat your score.
+              <span className="text-xs text-white/40 font-medium">
+                Play a round and generate a battle link to compete head-to-head.
               </span>
-              {/* Subtle shimmer overlay */}
-              <div className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{ background: "linear-gradient(135deg, transparent 60%, rgba(168,85,247,0.04))" }} />
             </div>
           </div>
         </main>
@@ -769,44 +775,57 @@ export default function PenaltyPage() {
       `}</style>
 
       {/* Header */}
-      <header className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-        <button onClick={() => setMode("menu")} className="flex items-center gap-2 text-white/40 hover:text-white text-sm transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
-        <h1 className="text-white font-black text-base">Penalty Shootout</h1>
-        <div className="flex gap-1.5">
-          {Array.from({ length: 5 }).map((_, i) => {
-            const r = results[i];
-            return (
-              <div key={i} className={`w-6 h-6 rounded-full border flex items-center justify-center text-[10px] font-black transition-all duration-300 ${
-                r === undefined
-                  ? i === currentKick
-                    ? "border-green-400 bg-green-400/20 text-green-400 scale-110"
-                    : "border-white/20 bg-white/5 text-white/30"
-                  : r.goal
-                    ? "border-green-400 bg-green-400/20 text-green-400"
-                    : "border-red-400 bg-red-400/10 text-red-400"
-              }`}>
-                {r === undefined ? i + 1 : r.goal ? "✓" : "✗"}
-              </div>
-            );
-          })}
+      <header className="fixed top-0 w-full z-50 backdrop-blur-xl bg-[#131313]/80 border-b border-[#c3f400]/10">
+        <div className="flex justify-between items-center px-4 sm:px-6 h-16 w-full max-w-[1200px] mx-auto">
+          <button
+            onClick={() => setMode("menu")}
+            className="active:scale-95 transition-transform flex items-center gap-2 cursor-pointer text-[#c4c9ac] hover:text-[#c3f400]"
+          >
+            <ArrowLeft className="w-5 h-5 text-[#c3f400]" />
+            <span className="font-label-caps text-[12px] uppercase tracking-widest font-bold">
+              BACK
+            </span>
+          </button>
+
+          <div className="font-label-caps text-[14px] text-white tracking-widest font-bold uppercase flex items-center gap-2">
+            <Target className="w-4 h-4 text-[#c3f400]" />
+            PENALTY SHOOTOUT
+          </div>
+
+          <div className="flex gap-1.5">
+            {Array.from({ length: 5 }).map((_, i) => {
+              const r = results[i];
+              return (
+                <div key={i} className={`w-6 h-6 rounded-full border flex items-center justify-center text-[10px] font-label-mono font-bold transition-all duration-300 ${
+                  r === undefined
+                    ? i === currentKick
+                      ? "border-[#c3f400] bg-[#c3f400]/20 text-[#c3f400] scale-110 shadow-[0_0_10px_rgba(195,244,0,0.5)]"
+                      : "border-white/20 bg-white/5 text-white/30"
+                    : r.goal
+                      ? "border-emerald-500 bg-emerald-500/20 text-emerald-400"
+                      : "border-rose-500 bg-rose-500/20 text-rose-400"
+                }`}>
+                  {r === undefined ? i + 1 : r.goal ? "✓" : "✗"}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-6 max-w-sm mx-auto w-full">
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-20 pb-24 max-w-sm mx-auto w-full">
         {/* Kick counter */}
-        <div className="mb-4 text-center fade-slide">
-          <p className="text-white/30 text-xs font-bold uppercase tracking-widest mb-1">
-            {submitting ? "Calculating..." : phase === "idle" ? `Kick ${currentKick + 1} of 5` : ""}
+        <div className="mb-4 text-center">
+          <p className="text-[#c4c9ac] text-xs font-label-caps font-bold uppercase tracking-widest mb-1">
+            {submitting ? "CALCULATING..." : phase === "idle" ? `KICK ${currentKick + 1} OF 5` : ""}
           </p>
-          <p className={`text-sm font-bold ${phase === "result" ? (animGoal ? "text-green-400 goal-flash" : "text-red-400 goal-flash") : "text-white/50"}`}>
-            {phase === "animating" ? "Ball is flying..." : phase === "result" ? (animGoal ? "⚡ GOAL!" : "🧤 SAVED!") : "Pick your direction"}
+          <p className={`text-sm font-label-caps font-bold ${phase === "result" ? (animGoal ? "text-emerald-400 text-lg" : "text-rose-400 text-lg") : "text-white/70"}`}>
+            {phase === "animating" ? "BALL IS FLYING..." : phase === "result" ? (animGoal ? "⚡ GOAL!" : "🧤 SAVED!") : "PICK YOUR DIRECTION"}
           </p>
         </div>
 
         {/* Goal visualization */}
-        <div className="w-full mb-6 rounded-3xl overflow-hidden border border-white/8 p-2" style={{ background: "linear-gradient(180deg,#0f172a,#0a0a0f)" }}>
+        <div className="w-full mb-6 rounded-3xl overflow-hidden border border-white/15 p-2 glass-card shadow-[0_0_30px_rgba(0,0,0,0.5)]">
           <GoalSVG
             ballDir={animBallDir}
             goalieDir={animGoalieDir}
@@ -817,12 +836,12 @@ export default function PenaltyPage() {
 
         {/* Direction buttons */}
         {!submitting && phase === "idle" && currentKick < 5 && (
-          <div className="grid grid-cols-3 gap-3 w-full fade-slide">
+          <div className="grid grid-cols-3 gap-3 w-full">
             {(["left", "center", "right"] as Direction[]).map((dir) => (
               <button
                 key={dir}
                 onClick={() => handleKick(dir)}
-                className="dir-btn-idle flex flex-col items-center justify-center gap-2 rounded-2xl py-5 border border-green-400/20 bg-green-400/5 text-green-400 hover:bg-green-400/15 hover:border-green-400/40 transition-all duration-200 font-black select-none"
+                className="flex flex-col items-center justify-center gap-2 rounded-2xl py-5 border border-[#c3f400]/30 glass-card text-[#c3f400] hover:border-[#c3f400] hover:bg-[#c3f400]/10 hover:shadow-[0_0_20px_rgba(195,244,0,0.2)] active:scale-95 transition-all font-label-caps font-bold select-none"
               >
                 <span className="text-2xl">{DIR_ARROW[dir]}</span>
                 <span className="text-xs uppercase tracking-widest">{DIR_LABEL[dir]}</span>
